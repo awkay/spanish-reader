@@ -86,3 +86,28 @@ interface GlossDao {
     @Query("DELETE FROM gloss_cache")
     suspend fun clear()
 }
+
+@Dao
+interface PhraseDao {
+    /** Keep [hashes] under SQLite's bound-variable limit. */
+    @Query("SELECT * FROM phrases WHERE sentence_hash IN (:hashes)")
+    fun observeFor(hashes: List<String>): Flow<List<PhraseEntity>>
+
+    @Query("SELECT * FROM phrases WHERE sentence_hash = :hash")
+    suspend fun forSentence(hash: String): List<PhraseEntity>
+
+    @Upsert
+    suspend fun upsert(phrases: List<PhraseEntity>)
+
+    @Query("SELECT sentence_hash FROM phrase_scans WHERE sentence_hash IN (:hashes)")
+    suspend fun scanned(hashes: List<String>): List<String>
+
+    @Upsert
+    suspend fun markScanned(scans: List<PhraseScanEntity>)
+
+    @Query("DELETE FROM phrases")
+    suspend fun clearPhrases()
+
+    @Query("DELETE FROM phrase_scans")
+    suspend fun clearScans()
+}

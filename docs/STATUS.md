@@ -8,8 +8,8 @@ Nothing has run on real hardware yet; the UI has only been exercised under Robol
 ## Build / verify
 ```
 scripts/install-android-sdk.sh          # each fresh cloud container
-./gradlew :core:test                     # 84 tests (1 live test skipped without env vars)
-./gradlew :app:testDebugUnitTest         # 23 Robolectric tests incl. an end-to-end UI smoke test
+./gradlew :core:test                     # 95 tests (2 live tests skipped without env vars)
+./gradlew :app:testDebugUnitTest         # 28 Robolectric tests incl. UI smoke test and v1→v2 migration
 ./gradlew :app:assembleDebug             # app/build/outputs/apk/debug/app-debug.apk
 ```
 Live LLM check (not run by default):
@@ -28,6 +28,20 @@ Live LLM check (not run by default):
   (auto-turns apply the page-finished rule like manual ones). Swiping away while playing stops following; a
   "Follow" button jumps back. Tapping a word pauses playback. Tapping a NEW word → LEVEL_1 + vocab entry with context sentence. Turning
   forward finishes the pages passed (NEW → KNOWN); "Finish lesson" on the last page. Position is saved. Text size ±.
+- **Rich word sheet**: each gloss now carries structured `verb` (infinitive, tense, mood, person, number,
+  how the form is built, why this form here), `clitics` (pronoun, role normalized to `CliticRole`, what it refers
+  to, note), `roots` (Latin root / compound pattern), and `phraseMeaning`. The sheet shows Expression, Verb,
+  Pronouns (verb split into base + color-coded attached pronouns; one color per role everywhere), Roots and Note
+  cards. Old cached glosses still load and suggest Improve. A malformed `verb`/`clitics` field is dropped, not the
+  whole gloss.
+- **Improve answer** button in the sheet: re-asks with the "improve" model (setting; blank = Claude if an
+  Anthropic key is set, else the usual model), sending the previous answer and asking for a corrected one; the
+  result replaces the cached gloss.
+- **Idioms**: a per-sentence phrase scan (`PhraseFinder`, 15 sentences per call, every provider) runs in the
+  pre-gloss worker for the pages ahead, so idioms made of already-known words are found too; expressions named in
+  a word's gloss are also recorded. Stored in `phrases` / `phrase_scans` (Room v2, auto-migration from v1,
+  tested). The reader underlines expressions (`PhraseLocator` tolerates up to 3 words in between, ignores
+  accents); the selected word is now bold; tapping any word of an expression shows it in the sheet.
 - **Glossing**: `GlossService` = exact cache → live lookup (cached) → any cached gloss of the form (flagged).
   Providers: Ollama Cloud (default), Ollama local, z.ai GLM Coding Plan via Responses API or chat completions, z.ai pay-as-you-go (chat completions send `thinking: disabled`), Anthropic, other
   OpenAI-compatible; per-provider URL/model/key in settings; optional Claude fallback (`FallbackGlosser`);
@@ -75,7 +89,11 @@ Live LLM check (not run by default):
 - z.ai returns HTTP 429 for "insufficient balance" (code 1113); it is retried like a rate limit before failing.
 - Every newline still ends a sentence when "Join wrapped lines" is off.
 - No test proves the glosser concurrency limit of 2 holds.
-- Room schema is still v1 and was changed freely; add migrations once the app is installed with real data.
+- Room schema v2; schemas in `app/schemas/` are also debug assets for the Robolectric migration test. Every
+  future change needs a migration + test.
+- Richer answers cost more output tokens: a 6-word batch took ~19–26 s on z.ai (Responses API). Model quality
+  varies: glm-4.6 once claimed "observándome" needs no accent (wrong); that is what Improve is for.
+- Idiom underlines appear only for pages the pre-gloss worker has scanned (pre-gloss must be on).
 - Robolectric (SDK 36) on JDK 21 needs `--add-opens java.base/jdk.internal.access` (set in `app/build.gradle.kts`).
 - Maven Central intermittently returns 429 through the cloud proxy; just rerun Gradle.
 

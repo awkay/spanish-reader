@@ -21,8 +21,8 @@ class AnthropicGlosser(
     options: GlossOptions = GlossOptions(),
     /** max_tokens for a single word; batches scale up by [tokensPerItem], capped at [maxTokensCap]. */
     private val maxTokens: Int = 1024,
-    private val tokensPerItem: Int = 300,
-    private val maxTokensCap: Int = 8192,
+    private val tokensPerItem: Int = 600,
+    private val maxTokensCap: Int = 16_000,
     baseUrl: String = "https://api.anthropic.com",
 ) : LlmGlosser(httpClient, options) {
     private val endpoint = baseUrl.trimEnd('/') + "/v1/messages"

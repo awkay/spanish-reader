@@ -48,7 +48,9 @@ class PreGlossWorkerTest {
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
                 val body = Json.parseToJsonElement(request.body!!.utf8()).jsonObject
+                val system = body["messages"]!!.jsonArray[0].jsonObject["content"]!!.jsonPrimitive.content
                 val user = body["messages"]!!.jsonArray[1].jsonObject["content"]!!.jsonPrimitive.content
+                if ("idioms" in system) return phraseReply(user)
                 val items = Json.parseToJsonElement(user.substringAfter('\n')).jsonObject["items"]!!.jsonArray
                 val glosses = buildJsonArray {
                     for (item in items) {
@@ -72,6 +74,31 @@ class PreGlossWorkerTest {
             }
         }
         server.start()
+    }
+
+    private val scannedSentences = Collections.synchronizedList(mutableListOf<String>())
+
+    /** Phrase scan: reports "p?sawa p?sawb" as an expression in every sentence. */
+    private fun phraseReply(user: String): MockResponse {
+        val items = Json.parseToJsonElement(user.substringAfter('\n')).jsonObject["sentences"]!!.jsonArray
+        val sentences = buildJsonArray {
+            for (item in items) {
+                val o = item as JsonObject
+                val text = o["sentence"]!!.jsonPrimitive.content
+                scannedSentences += text
+                add(buildJsonObject {
+                    put("id", o["id"]!!.jsonPrimitive.content)
+                    put("phrases", buildJsonArray {
+                        add(buildJsonObject { put("phrase", text.split(" ").take(2).joinToString(" ")); put("meaning", "a phrase") })
+                    })
+                })
+            }
+        }
+        val content = buildJsonObject { put("sentences", sentences) }.toString()
+        val reply = buildJsonObject {
+            put("choices", buildJsonArray { add(buildJsonObject { put("message", buildJsonObject { put("content", content) }) }) })
+        }
+        return MockResponse.Builder().code(200).body(reply.toString()).build()
     }
 
     /** The app's database and settings outlive this test in the Robolectric JVM; leave them as a fresh install. */
@@ -103,8 +130,14 @@ class PreGlossWorkerTest {
         assertEquals(99, glossed.size) // 2 pages × 50 words, minus the known one
         assertEquals("meaning of pcsawa", app.glossCache.getByForm("pcsawa")?.meaningInContext)
 
+        // Each page is one sentence here: pages 1 and 2 were scanned for expressions, once.
+        assertEquals(listOf("pb", "pc"), scannedSentences.map { it.substring(0, 2) })
+        assertEquals("a phrase", app.phrases.forSentence(scannedSentences[0]).single().meaning)
+
         glossed.clear()
+        scannedSentences.clear()
         assertIs<ListenableWorker.Result.Success>(run(2, 2)) // page 2 is cached already; only page 3 is new
         assertEquals(setOf("pd"), glossed.map { it.substring(0, 2) }.toSet())
+        assertEquals(listOf("pd"), scannedSentences.map { it.substring(0, 2) })
     }
 }

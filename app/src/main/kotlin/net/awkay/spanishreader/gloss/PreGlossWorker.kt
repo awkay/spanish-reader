@@ -37,6 +37,8 @@ class PreGlossWorker(context: Context, params: WorkerParameters) : CoroutineWork
             inputData.getInt(KEY_FROM_PAGE, 0),
             inputData.getInt(KEY_PAGE_COUNT, 0),
         )
+        scanPhrases(app, window.map { it.sentenceIndex }.distinct().map(text::sentenceText))
+
         val statuses = app.vocab.statuses(window.mapNotNull { it.normalized })
         val plan = PreGlossPlanner.plan(text, statuses, settings.preGlossSentencesPerWord, window)
             .filter { app.glossCache.get(it.form, it.sentence) == null }
@@ -60,6 +62,25 @@ class PreGlossWorker(context: Context, params: WorkerParameters) : CoroutineWork
             }
         }
         return Result.success(workDataOf(KEY_DONE to done, KEY_TOTAL to plan.size, KEY_FAILED to failed))
+    }
+
+    /**
+     * Idioms made of words the learner already knows never get glossed word by word, so each sentence is also
+     * scanned once for expressions. Best effort: failed batches are simply retried on a later run.
+     */
+    private suspend fun scanPhrases(app: SpanishReaderApp, sentences: List<String>) {
+        val todo = app.phrases.unscanned(sentences.filter { s -> s.count { it == ' ' } >= 1 })
+        if (todo.isEmpty()) return
+        val finder = app.glossService.phraseFinder() ?: return
+        val found = finder.findPhrases(todo)
+        val scanned = ArrayList<String>()
+        todo.zip(found).forEach { (sentence, phrases) ->
+            if (phrases != null) {
+                app.phrases.save(sentence, phrases)
+                scanned += sentence
+            }
+        }
+        app.phrases.markScanned(scanned)
     }
 
     companion object {

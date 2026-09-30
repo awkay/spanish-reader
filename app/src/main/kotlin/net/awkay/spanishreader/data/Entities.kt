@@ -52,6 +52,23 @@ data class GlossEntity(
     @ColumnInfo(name = "stored_at") val storedAtMillis: Long,
 )
 
+/** An idiom or fixed expression found in a sentence (by the phrase scan or a word's gloss). */
+@Entity(tableName = "phrases", primaryKeys = ["sentence_hash", "phrase"])
+data class PhraseEntity(
+    @ColumnInfo(name = "sentence_hash") val sentenceHash: String,
+    /** The expression's words as they appear in the sentence. */
+    val phrase: String,
+    val meaning: String,
+    @ColumnInfo(name = "stored_at") val storedAtMillis: Long,
+)
+
+/** Sentences already sent to the phrase scan, so they aren't scanned again. */
+@Entity(tableName = "phrase_scans")
+data class PhraseScanEntity(
+    @PrimaryKey @ColumnInfo(name = "sentence_hash") val sentenceHash: String,
+    @ColumnInfo(name = "scanned_at") val scannedAtMillis: Long,
+)
+
 class Converters {
     @TypeConverter
     fun statusToCode(status: WordStatus): Int = status.code

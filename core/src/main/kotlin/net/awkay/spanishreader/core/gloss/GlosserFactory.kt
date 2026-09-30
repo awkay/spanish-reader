@@ -72,6 +72,13 @@ object GlosserFactory {
         return if (fallback != null && fallback.isComplete) FallbackGlosser(main, single(fallback, httpClient, options)) else main
     }
 
+    /** The idiom finder for [config] (every provider supports it). */
+    fun createPhraseFinder(config: GlosserConfig, httpClient: OkHttpClient = defaultHttpClient, options: GlossOptions = GlossOptions()): PhraseFinder {
+        val problems = config.problems()
+        require(problems.isEmpty()) { problems.joinToString("; ") }
+        return single(config, httpClient, options) as PhraseFinder
+    }
+
     private fun single(c: GlosserConfig, http: OkHttpClient, options: GlossOptions): Glosser = when (c.provider) {
         GlossProvider.ZAI_RESPONSES -> OpenAiResponsesGlosser(
             baseUrl = c.effectiveBaseUrl, apiKey = c.apiKey.trim().ifEmpty { null }, model = c.effectiveModel,

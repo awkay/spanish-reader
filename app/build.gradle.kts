@@ -25,6 +25,10 @@ android {
         compose = true
     }
 
+    // Exported Room schemas as debug assets, so migration tests (Robolectric) can open older versions.
+    // Debug builds only; release builds don't carry them.
+    sourceSets["debug"].assets.directories.add("$projectDir/schemas")
+
     testOptions {
         unitTests.isIncludeAndroidResources = true
         unitTests.all {

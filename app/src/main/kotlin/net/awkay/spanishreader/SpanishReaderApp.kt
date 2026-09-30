@@ -11,6 +11,7 @@ import net.awkay.spanishreader.data.AppDatabase
 import net.awkay.spanishreader.data.AppSettings
 import net.awkay.spanishreader.data.BackupService
 import net.awkay.spanishreader.data.LessonRepository
+import net.awkay.spanishreader.data.PhraseStore
 import net.awkay.spanishreader.data.RoomGlossCache
 import net.awkay.spanishreader.data.SettingsRepository
 import net.awkay.spanishreader.data.TtsEngine
@@ -23,7 +24,8 @@ class SpanishReaderApp : Application() {
     val database: AppDatabase by lazy { AppDatabase.create(this) }
     val lessons: LessonRepository by lazy { LessonRepository(database) }
     val vocab: VocabRepository by lazy { VocabRepository(database) }
-    val glossCache: RoomGlossCache by lazy { RoomGlossCache(database.glosses()) }
+    val phrases: PhraseStore by lazy { PhraseStore(database.phrases()) }
+    val glossCache: RoomGlossCache by lazy { RoomGlossCache(database.glosses(), phrases) }
     val settings: SettingsRepository by lazy { SettingsRepository(this) }
     val glossService: GlossService by lazy { GlossService(settings, glossCache) }
     val backup: BackupService by lazy { BackupService(database) }

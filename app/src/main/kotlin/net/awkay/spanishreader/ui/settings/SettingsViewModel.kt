@@ -78,6 +78,7 @@ class SettingsViewModel(private val app: SpanishReaderApp) : ViewModel() {
 
     fun clearGlossCache() = viewModelScope.launch {
         app.database.glosses().clear()
+        app.phrases.clear()
         message = "Gloss cache cleared."
     }
 

@@ -23,6 +23,8 @@ data class AppSettings(
     /** Stored per provider so switching back and forth keeps keys and model names. */
     val providerConfigs: Map<GlossProvider, GlosserConfig> = emptyMap(),
     val fallbackToAnthropic: Boolean = false,
+    /** Model (same provider) for "Improve answer"; blank = Claude if an Anthropic key is set, else the usual model. */
+    val improveModel: String = "",
     val preGlossOnImport: Boolean = true,
     val preGlossSentencesPerWord: Int = 3,
     /** Pages glossed ahead of the one being read; 0 = the whole lesson at import. */
@@ -45,6 +47,14 @@ data class AppSettings(
     /** The Anthropic config to fall back to, when enabled and different from the primary. */
     val fallbackGlosser: GlosserConfig?
         get() = if (fallbackToAnthropic && provider != GlossProvider.ANTHROPIC) config(GlossProvider.ANTHROPIC) else null
+
+    /** What "Improve answer" asks: the improve model, else Claude when configured, else the primary. */
+    val improveGlosser: GlosserConfig
+        get() = when {
+            improveModel.isNotBlank() -> primaryGlosser.copy(model = improveModel.trim())
+            provider != GlossProvider.ANTHROPIC && config(GlossProvider.ANTHROPIC).isComplete -> config(GlossProvider.ANTHROPIC)
+            else -> primaryGlosser
+        }
 }
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -69,6 +79,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 )
             },
             fallbackToAnthropic = p[FALLBACK] ?: d.fallbackToAnthropic,
+            improveModel = p[IMPROVE_MODEL] ?: d.improveModel,
             preGlossOnImport = p[PREGLOSS] ?: d.preGlossOnImport,
             preGlossSentencesPerWord = p[PREGLOSS_SENTENCES] ?: d.preGlossSentencesPerWord,
             preGlossPagesAhead = p[PREGLOSS_AHEAD] ?: d.preGlossPagesAhead,
@@ -94,6 +105,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
                 p[providerKey(gp, "model")] = c.model
             }
             p[FALLBACK] = s.fallbackToAnthropic
+            p[IMPROVE_MODEL] = s.improveModel
             p[PREGLOSS] = s.preGlossOnImport
             p[PREGLOSS_SENTENCES] = s.preGlossSentencesPerWord.coerceIn(1, 10)
             p[PREGLOSS_AHEAD] = s.preGlossPagesAhead.coerceIn(0, 50)
@@ -116,6 +128,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     private companion object {
         val PROVIDER = stringPreferencesKey("gloss.provider")
         val FALLBACK = booleanPreferencesKey("gloss.fallbackToAnthropic")
+        val IMPROVE_MODEL = stringPreferencesKey("gloss.improveModel")
         val PREGLOSS = booleanPreferencesKey("gloss.preGlossOnImport")
         val PREGLOSS_SENTENCES = intPreferencesKey("gloss.preGlossSentencesPerWord")
         val PREGLOSS_AHEAD = intPreferencesKey("gloss.preGlossPagesAhead")

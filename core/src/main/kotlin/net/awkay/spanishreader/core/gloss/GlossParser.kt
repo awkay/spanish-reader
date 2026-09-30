@@ -54,14 +54,22 @@ object GlossParser {
         return candidates.filter { it.form.equals(form, ignoreCase = true) }.singleOrNull()
     }
 
+    /** Optional structured fields; a malformed one is dropped rather than losing the whole gloss. */
+    private val OPTIONAL_STRUCTURED = listOf("verb", "clitics")
+
+    private fun tryDecode(obj: JsonObject): Gloss? = try {
+        JsonExtractor.lenientJson.decodeFromJsonElement(Gloss.serializer(), obj)
+    } catch (_: SerializationException) {
+        null
+    } catch (_: IllegalArgumentException) {
+        null
+    }
+
     private fun decode(obj: JsonObject, request: GlossRequest): Gloss? {
-        val gloss = try {
-            JsonExtractor.lenientJson.decodeFromJsonElement(Gloss.serializer(), obj)
-        } catch (_: SerializationException) {
-            return null
-        } catch (_: IllegalArgumentException) {
-            return null
-        }
+        val gloss = tryDecode(obj)
+            ?: OPTIONAL_STRUCTURED.firstNotNullOfOrNull { key -> tryDecode(JsonObject(obj - key)) }
+            ?: tryDecode(JsonObject(obj.filterKeys { it !in OPTIONAL_STRUCTURED }))
+            ?: return null
         if (gloss.meaningInContext.isBlank()) return null
         return gloss.copy(
             form = gloss.form.ifBlank { request.form },
@@ -69,6 +77,37 @@ object GlossParser {
             otherMeanings = gloss.otherMeanings.filter { it.isNotBlank() },
             grammarNote = gloss.grammarNote?.takeIf { it.isNotBlank() },
             phrase = gloss.phrase?.takeIf { it.isNotBlank() },
+            phraseMeaning = gloss.phraseMeaning?.takeIf { it.isNotBlank() },
+            roots = gloss.roots?.takeIf { it.isNotBlank() },
+            verb = gloss.verb?.takeIf { it.infinitive.isNotBlank() },
+            clitics = gloss.clitics.filter { it.pronoun.isNotBlank() },
         )
+    }
+
+    /** Parses a phrase-finder reply: expressions per sentence id. Sentences missing from the reply are absent. */
+    fun parsePhrases(text: String, ids: List<String>): Map<String, List<FoundPhrase>> {
+        val entries = JsonExtractor.candidates(text).mapNotNull { root ->
+            when (root) {
+                is JsonObject -> (root["sentences"] as? JsonArray ?: root["items"] as? JsonArray ?: root["results"] as? JsonArray)
+                is JsonArray -> root
+                else -> null
+            }?.filterIsInstance<JsonObject>()
+        }.firstOrNull { it.isNotEmpty() }
+            ?: throw MalformedGlossResponseException("No phrase JSON found in model output: ${text.take(200)}")
+        val out = LinkedHashMap<String, List<FoundPhrase>>()
+        val remaining = ids.toMutableList()
+        for ((i, e) in entries.withIndex()) {
+            val id = (e["id"] as? JsonPrimitive)?.content?.takeIf { it in remaining }
+                ?: ids.getOrNull(i)?.takeIf { it in remaining && e["id"] == null }
+                ?: continue
+            val phrases = (e["phrases"] as? JsonArray).orEmpty().filterIsInstance<JsonObject>().mapNotNull { p ->
+                val phrase = (p["phrase"] as? JsonPrimitive)?.content?.trim().orEmpty()
+                if (phrase.isEmpty() || ' ' !in phrase) null
+                else FoundPhrase(phrase, (p["meaning"] as? JsonPrimitive)?.content?.trim().orEmpty())
+            }
+            out[id] = phrases
+            remaining.remove(id)
+        }
+        return out
     }
 }

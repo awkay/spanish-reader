@@ -27,10 +27,12 @@ data class GlossOptions(
  * Shared batching, concurrency limiting and parse-retry for chat-style LLM providers.
  * Subclasses only build the HTTP request and pull the reply text out of the response body.
  */
+private const val PHRASE_BATCH = 15
+
 abstract class LlmGlosser(
     protected val httpClient: OkHttpClient,
     val options: GlossOptions,
-) : Glosser {
+) : Glosser, PhraseFinder {
     private val permits = Semaphore(options.maxConcurrency)
 
     protected abstract fun buildRequest(system: String, user: String, itemCount: Int): Request
@@ -49,6 +51,40 @@ abstract class LlmGlosser(
                 .associateBy { it.id }
         }
         return requests.map { results.getValue(it.id) }
+    }
+
+    override suspend fun findPhrases(sentences: List<String>): List<List<FoundPhrase>?> {
+        if (sentences.isEmpty()) return emptyList()
+        val indexed = sentences.mapIndexed { i, s -> i.toString() to s }
+        val results = coroutineScope {
+            indexed.chunked(PHRASE_BATCH)
+                .map { batch -> async { permits.withPermit { phraseBatch(batch) } } }
+                .awaitAll()
+                .fold(HashMap<String, List<FoundPhrase>>()) { acc, m -> acc.apply { putAll(m) } }
+        }
+        return indexed.map { (id, _) -> results[id] }
+    }
+
+    /** One call for up to [PHRASE_BATCH] sentences; retries once on an unparseable reply, then gives up quietly. */
+    private suspend fun phraseBatch(batch: List<Pair<String, String>>): Map<String, List<FoundPhrase>> {
+        for (attempt in 0..1) {
+            try {
+                val body = httpClient.executeWithRetry(
+                    buildRequest(GlossPrompt.PHRASE_SYSTEM, GlossPrompt.phraseUser(batch, isRetry = attempt > 0), batch.size),
+                    options.retry,
+                )
+                return GlossParser.parsePhrases(replyText(body), batch.map { it.first })
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: MalformedGlossResponseException) {
+                continue
+            } catch (_: SerializationException) {
+                continue
+            } catch (_: Exception) {
+                break
+            }
+        }
+        return emptyMap()
     }
 
     private suspend fun glossBatch(batch: List<GlossRequest>): List<GlossResult> {

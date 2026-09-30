@@ -61,6 +61,8 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withLink
@@ -87,6 +89,7 @@ fun ReaderScreen(lessonId: Long, onBack: () -> Unit, onListen: () -> Unit) {
     val selection by vm.selection.collectAsStateWithLifecycle()
     val audio by vm.audio.collectAsStateWithLifecycle()
     val following by vm.following.collectAsStateWithLifecycle()
+    val phraseSpans by vm.phraseSpans.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -156,7 +159,7 @@ fun ReaderScreen(lessonId: Long, onBack: () -> Unit, onListen: () -> Unit) {
             val scroll = rememberScrollState()
             Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = 20.dp, vertical = 12.dp)) {
                 PageText(
-                    page, statuses, selection?.token, fontSize,
+                    page, statuses, selection?.token, fontSize, phraseSpans,
                     highlightSentence = spoken?.takeIf { it.pageIndex == index }?.sentenceIndex,
                     scroll = scroll.takeIf { following },
                     onTap = vm::onWordTapped,
@@ -195,8 +198,10 @@ fun ReaderScreen(lessonId: Long, onBack: () -> Unit, onListen: () -> Unit) {
         WordSheet(
             selection = sel,
             status = statuses[sel.form] ?: WordStatus.NEW,
+            phrases = phraseSpans[sel.token.index].orEmpty(),
             onStatus = vm::setStatus,
             onRetry = vm::retryLookup,
+            onImprove = vm::improve,
             onSpeak = { vm.speak(sel.token.text) },
             onDismiss = vm::dismissSelection,
         )
@@ -244,6 +249,7 @@ private fun PageText(
     statuses: Map<String, WordStatus>,
     selected: Token?,
     fontSize: Int,
+    phraseSpans: Map<Int, List<PhraseSpan>>,
     highlightSentence: Int?,
     /** When set, the page scrolls to keep the highlighted sentence in view. */
     scroll: ScrollState?,
@@ -251,21 +257,29 @@ private fun PageText(
 ) {
     val onSurface = MaterialTheme.colorScheme.onSurface
     val highlightColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
-    val built: PageAnnotation = remember(page, statuses, selected, onSurface) {
+    val built: PageAnnotation = remember(page, statuses, selected, onSurface, phraseSpans) {
         val tokens = page.tokens.dropWhile { !it.isWord && it.text.isBlank() }.dropLastWhile { it.text.isBlank() }
         val ranges = HashMap<Int, IntRange>()
+        // Expressions are underlined, including the spaces between their adjacent words.
+        val underlined = HashSet<Int>()
+        for (t in tokens) phraseSpans[t.index]?.forEach { span ->
+            underlined += span.tokenIndices
+            span.tokenIndices.forEach { i -> if (i + 2 in span.tokenIndices) underlined += i + 1 }
+        }
         val text = buildAnnotatedString {
             for (t in tokens) {
                 val start = length
                 val form = t.normalized
                 if (form == null) {
-                    append(t.text)
+                    if (t.index in underlined) withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) { append(t.text) }
+                    else append(t.text)
                 } else {
                     val status = statuses[form] ?: WordStatus.NEW
                     val style = SpanStyle(
                         color = onSurface,
                         background = StatusColors.background(status),
-                        textDecoration = if (t == selected) TextDecoration.Underline else TextDecoration.None,
+                        fontWeight = if (t == selected) FontWeight.Bold else null,
+                        textDecoration = if (t.index in underlined) TextDecoration.Underline else TextDecoration.None,
                     )
                     withLink(LinkAnnotation.Clickable(tag = t.index.toString(), styles = TextLinkStyles(style = style)) { onTap(t) }) {
                         append(t.text)

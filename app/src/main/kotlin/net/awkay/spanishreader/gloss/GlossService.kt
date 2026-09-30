@@ -10,6 +10,7 @@ import net.awkay.spanishreader.core.gloss.GlossResult
 import net.awkay.spanishreader.core.gloss.Glosser
 import net.awkay.spanishreader.core.gloss.GlosserFactory
 import net.awkay.spanishreader.core.gloss.GlosserConfig
+import net.awkay.spanishreader.core.gloss.PhraseFinder
 import net.awkay.spanishreader.data.SettingsRepository
 import okhttp3.OkHttpClient
 
@@ -25,7 +26,36 @@ class GlossService(
     private val settings: SettingsRepository,
     private val cache: GlossCache,
     private val factory: (GlosserConfig, GlosserConfig?) -> Glosser = { p, f -> GlosserFactory.create(p, f, sharedHttp) },
+    private val phraseFactory: (GlosserConfig) -> PhraseFinder = { GlosserFactory.createPhraseFinder(it, sharedHttp) },
 ) {
+    /** The idiom finder for the primary provider, or null when glossing isn't configured. */
+    suspend fun phraseFinder(): PhraseFinder? {
+        val primary = settings.current().primaryGlosser
+        return if (primary.isComplete) phraseFactory(primary) else null
+    }
+
+    /**
+     * "Improve answer": asks again with the stronger model from settings, showing the model the answer the learner
+     * found unhelpful. A good result replaces the cached gloss.
+     */
+    suspend fun improve(form: String, sentence: String, previous: Gloss?): LookupResult {
+        val config = settings.current().improveGlosser
+        val problems = config.problems()
+        if (problems.isNotEmpty()) return LookupResult.Failed(problems.joinToString("\n") + "\nSet it up in Settings.")
+        val glosser = try {
+            factory(config, null)
+        } catch (e: IllegalArgumentException) {
+            return LookupResult.Failed(e.message ?: "Glossing is not configured")
+        }
+        return when (val r = glosser.gloss(listOf(GlossRequest(form, sentence, previous = previous))).single()) {
+            is GlossResult.Success -> {
+                cache.put(form, sentence, r.gloss)
+                LookupResult.Found(r.gloss)
+            }
+            is GlossResult.Failure -> LookupResult.Failed(r.error)
+        }
+    }
+
     private val lock = Mutex()
     private var built: Triple<GlosserConfig, GlosserConfig?, Glosser>? = null
 

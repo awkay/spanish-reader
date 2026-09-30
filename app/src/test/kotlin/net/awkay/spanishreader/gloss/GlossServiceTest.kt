@@ -41,7 +41,7 @@ class GlossServiceTest {
 
     @Test
     fun unconfiguredGlosserReportsWhatIsMissing() = runTest {
-        val service = GlossService(settings(), InMemoryGlossCache()) { _, _ -> Fake(false) }
+        val service = GlossService(settings(), InMemoryGlossCache(), factory = { _, _ -> Fake(false) })
         val r = assertIs<LookupResult.Failed>(service.lookup("casa", "Mi casa."))
         assertTrue("API key is required" in r.message, r.message)
     }
@@ -53,15 +53,49 @@ class GlossServiceTest {
         s.updateProvider(configured)
         val cache = InMemoryGlossCache()
         val live = Fake(false)
-        val service = GlossService(s, cache) { _, _ -> live }
+        val service = GlossService(s, cache, factory = { _, _ -> live })
         assertEquals("live", assertIs<LookupResult.Found>(service.lookup("banco", "Fui al banco.")).gloss.meaningInContext)
         service.lookup("banco", "Fui al banco.")
         assertEquals(1, live.calls)
 
-        val offline = GlossService(s, cache) { _, _ -> Fake(true) }
+        val offline = GlossService(s, cache, factory = { _, _ -> Fake(true) })
         val r = assertIs<LookupResult.Found>(offline.lookup("banco", "Otro banco."))
         assertTrue(r.fromOtherSentence)
         assertIs<LookupResult.Failed>(offline.lookup("perro", "El perro."))
+    }
+
+    @Test
+    fun improveUsesTheImproveModelSendsThePreviousAnswerAndReplacesTheCache() = runTest {
+        val s = settings()
+        s.update { it.copy(provider = GlossProvider.ZAI, improveModel = "glm-5.3") }
+        s.updateProvider(configured)
+        val cache = InMemoryGlossCache()
+        val seen = mutableListOf<Pair<GlosserConfig, GlossRequest>>()
+        val service = GlossService(s, cache, factory = { p, _ ->
+            object : Glosser {
+                override suspend fun gloss(requests: List<GlossRequest>) = requests.map {
+                    seen += p to it
+                    GlossResult.Success(it.id, Gloss(it.form, it.form, "noun", if (it.previous != null) "better" else "first"))
+                }
+            }
+        })
+        service.lookup("banco", "Me senté en el banco.")
+        val previous = cache.get("banco", "Me senté en el banco.")!!
+        val r = assertIs<LookupResult.Found>(service.improve("banco", "Me senté en el banco.", previous))
+        assertEquals("better", r.gloss.meaningInContext)
+        assertEquals("glm-5.3", seen.last().first.model)
+        assertEquals("first", seen.last().second.previous?.meaningInContext)
+        assertEquals("better", cache.get("banco", "Me senté en el banco.")?.meaningInContext)
+    }
+
+    @Test
+    fun improveFallsBackToClaudeWhenConfigured() = runTest {
+        val s = settings()
+        s.update { it.copy(provider = GlossProvider.ZAI) }
+        s.updateProvider(configured)
+        assertEquals(configured, s.current().improveGlosser)
+        s.updateProvider(GlosserConfig(GlossProvider.ANTHROPIC, apiKey = "a"))
+        assertEquals(GlossProvider.ANTHROPIC, s.current().improveGlosser.provider)
     }
 
     @Test
