@@ -12,8 +12,20 @@ android {
         applicationId = "net.awkay.spanishreader"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1"
+        // CI sets VERSION_CODE to the workflow run number so every release installs as an update.
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
+        versionName = "0.1." + (System.getenv("VERSION_CODE") ?: "0")
+    }
+
+    // One fixed debug key (committed; this app is personal and never published) so APKs built locally and by
+    // GitHub Actions can all be installed over each other.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     compileOptions {

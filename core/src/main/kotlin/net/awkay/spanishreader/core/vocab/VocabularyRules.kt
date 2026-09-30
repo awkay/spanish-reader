@@ -41,8 +41,8 @@ object VocabularyRules {
         if (entry.status == status) entry else entry.copy(status = status, lastSeenMillis = now)
 
     /**
-     * LingQ's "paging moves to known" rule: returns the distinct forms on a finished page that are still NEW
-     * (or have no status yet) and should become KNOWN. Ignored and in-progress words are left alone.
+     * Forms on a finished page that are still NEW (or have no status yet), in page order without repeats.
+     * Ignored and in-progress words are left alone.
      */
     fun onPageFinished(pageWordForms: Collection<String>, currentStatuses: Map<String, WordStatus>): List<String> =
         pageWordForms.asSequence()
@@ -50,14 +50,38 @@ object VocabularyRules {
             .filter { (currentStatuses[it] ?: WordStatus.NEW) == WordStatus.NEW }
             .toList()
 
-    /** Applies [onPageFinished] and produces the KNOWN entries to upsert. */
+    /**
+     * Turning past a page: every word still NEW on it enters the vocabulary at LEVEL_1 (never KNOWN — only the
+     * learner marks words as known), with the sentence it appeared in and any AI lemma/meaning from [details].
+     */
     fun applyPageFinished(
         pageWordForms: Collection<String>,
         entries: Map<String, VocabEntry>,
         now: Long,
+        details: Map<String, WordDetail> = emptyMap(),
     ): List<VocabEntry> =
+        onPageFinished(pageWordForms, entries.mapValues { it.value.status }).map { form ->
+            val d = details[form]
+            val existing = entries[form]
+            existing?.copy(
+                status = WordStatus.LEVEL_1,
+                lemma = existing.lemma ?: d?.lemma,
+                translation = existing.translation ?: d?.translation,
+                contextSentence = existing.contextSentence ?: d?.contextSentence,
+                lastSeenMillis = now,
+            ) ?: VocabEntry(
+                form = form, lemma = d?.lemma, status = WordStatus.LEVEL_1, translation = d?.translation,
+                contextSentence = d?.contextSentence, firstSeenMillis = now, lastSeenMillis = now,
+            )
+        }
+
+    /** The learner's explicit "these are all known": every word on the page still NEW becomes KNOWN. */
+    fun markNewAsKnown(pageWordForms: Collection<String>, entries: Map<String, VocabEntry>, now: Long): List<VocabEntry> =
         onPageFinished(pageWordForms, entries.mapValues { it.value.status }).map { form ->
             entries[form]?.copy(status = WordStatus.KNOWN, lastSeenMillis = now)
                 ?: VocabEntry(form = form, status = WordStatus.KNOWN, firstSeenMillis = now, lastSeenMillis = now)
         }
 }
+
+/** What is known about a word when it is added automatically: where it was seen and what the AI said it means. */
+data class WordDetail(val contextSentence: String? = null, val lemma: String? = null, val translation: String? = null)

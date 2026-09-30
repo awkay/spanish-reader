@@ -54,6 +54,10 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
@@ -173,7 +177,7 @@ fun ReaderScreen(lessonId: Long, onBack: () -> Unit, onListen: () -> Unit) {
                         Button(onClick = {
                             scope.launch {
                                 val n = vm.finishLesson()
-                                Toast.makeText(context, "Lesson finished: $n words moved to Known", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Lesson finished: $n words added at level 1", Toast.LENGTH_SHORT).show()
                                 onBack()
                             }
                         }) { Text("Finish lesson") }
@@ -184,8 +188,20 @@ fun ReaderScreen(lessonId: Long, onBack: () -> Unit, onListen: () -> Unit) {
                         }
                     }
                 }
+                val blueOnPage = page.wordForms.distinct().count { (statuses[it] ?: WordStatus.NEW) == WordStatus.NEW }
+                if (blueOnPage > 0) {
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                val n = vm.markPageKnown(index)
+                                Toast.makeText(context, "$n words marked Known", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp),
+                    ) { Text("Mark all $blueOnPage blue words Known") }
+                }
                 Text(
-                    "Turning the page marks the remaining blue words as Known.",
+                    "Turning the page adds the remaining blue words to your vocabulary at level 1.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 8.dp, bottom = 32.dp),
@@ -240,8 +256,15 @@ private fun PlayerBar(
     }
 }
 
-/** The page as an annotated string, plus each sentence's character range in it (for the audio highlight). */
-private class PageAnnotation(val text: AnnotatedString, val sentenceRanges: Map<Int, IntRange>)
+/**
+ * The page as an annotated string, plus each sentence's character range (for the audio highlight) and each colored
+ * word's range and color (status colors are drawn as separate rounded boxes, not as text background).
+ */
+private class PageAnnotation(
+    val text: AnnotatedString,
+    val sentenceRanges: Map<Int, IntRange>,
+    val coloredWords: List<Pair<IntRange, Color>>,
+)
 
 @Composable
 private fun PageText(
@@ -260,6 +283,7 @@ private fun PageText(
     val built: PageAnnotation = remember(page, statuses, selected, onSurface, phraseSpans) {
         val tokens = page.tokens.dropWhile { !it.isWord && it.text.isBlank() }.dropLastWhile { it.text.isBlank() }
         val ranges = HashMap<Int, IntRange>()
+        val colored = ArrayList<Pair<IntRange, Color>>()
         // Expressions are underlined, including the spaces between their adjacent words.
         val underlined = HashSet<Int>()
         for (t in tokens) phraseSpans[t.index]?.forEach { span ->
@@ -275,9 +299,10 @@ private fun PageText(
                     else append(t.text)
                 } else {
                     val status = statuses[form] ?: WordStatus.NEW
+                    val color = StatusColors.background(status)
+                    if (color.alpha > 0f) colored += (start until start + t.text.length) to color
                     val style = SpanStyle(
                         color = onSurface,
-                        background = StatusColors.background(status),
                         fontWeight = if (t == selected) FontWeight.Bold else null,
                         textDecoration = if (t.index in underlined) TextDecoration.Underline else TextDecoration.None,
                     )
@@ -291,9 +316,29 @@ private fun PageText(
                 }
             }
         }
-        PageAnnotation(text, ranges)
+        PageAnnotation(text, ranges, colored)
     }
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
+    val density = LocalDensity.current
+    val fontPx = with(density) { fontSize.sp.toPx() }
+    val padX = with(density) { 1.dp.toPx() }
+    val corner = CornerRadius(with(density) { 5.dp.toPx() })
+    // Boxes hug the letters (not the full 1.6× line), so lines and neighbouring words stay visibly apart.
+    val boxes: List<Pair<Rect, Color>> = remember(layout, built) {
+        val l = layout ?: return@remember emptyList()
+        built.coloredWords.mapNotNull { (r, color) ->
+            if (r.last >= l.layoutInput.text.length) return@mapNotNull null
+            val line = l.getLineForOffset(r.first)
+            if (l.getLineForOffset(r.last) != line) return@mapNotNull null
+            val baseline = l.getLineBaseline(line)
+            Rect(
+                left = l.getBoundingBox(r.first).left - padX,
+                top = baseline - fontPx * 0.92f,
+                right = l.getBoundingBox(r.last).right + padX,
+                bottom = baseline + fontPx * 0.30f,
+            ) to color
+        }
+    }
     val range = highlightSentence?.let { built.sentenceRanges[it] }
 
     LaunchedEffect(range, layout, scroll != null) {
@@ -316,6 +361,7 @@ private fun PageText(
         modifier = Modifier.drawBehind {
             val l = layout
             if (l != null && range != null) drawPath(l.getPathForRange(range.first, range.last + 1), highlightColor)
+            for ((rect, color) in boxes) drawRoundRect(color, rect.topLeft, rect.size, corner)
         },
     )
 }

@@ -72,21 +72,32 @@ class VocabularyTest {
     }
 
     @Test
-    fun `finishing a page moves remaining NEW words to KNOWN`() {
+    fun `finishing a page selects the remaining NEW words`() {
         val page = listOf("el", "perro", "come", "el", "hueso", "uf", "ya")
         val statuses = mapOf("perro" to LEVEL_1, "come" to NEW, "uf" to IGNORED, "ya" to KNOWN)
         assertEquals(listOf("el", "come", "hueso"), VocabularyRules.onPageFinished(page, statuses))
     }
 
     @Test
-    fun `applyPageFinished builds KNOWN entries`() {
+    fun `applyPageFinished adds unmarked words at LEVEL_1 with details, never KNOWN`() {
         val existing = mapOf("come" to entry("come", NEW), "perro" to entry("perro", RECOGNIZED))
-        val updated = VocabularyRules.applyPageFinished(listOf("come", "perro", "gato"), existing, now = 42)
+        val details = mapOf("gato" to WordDetail("El gato duerme.", "gato", "cat"), "come" to WordDetail("Él come.", "comer", "eats"))
+        val updated = VocabularyRules.applyPageFinished(listOf("come", "perro", "gato"), existing, now = 42, details = details)
         assertEquals(
-            listOf(entry("come", NEW).copy(status = KNOWN, lastSeenMillis = 42),
-                VocabEntry("gato", status = KNOWN, firstSeenMillis = 42, lastSeenMillis = 42)),
+            listOf(
+                entry("come", NEW).copy(status = LEVEL_1, lemma = "comer", translation = "eats", contextSentence = "Él come.", lastSeenMillis = 42),
+                VocabEntry("gato", "gato", LEVEL_1, "cat", "El gato duerme.", firstSeenMillis = 42, lastSeenMillis = 42),
+            ),
             updated,
         )
+        assertEquals(LEVEL_1, VocabularyRules.applyPageFinished(listOf("sin"), emptyMap(), now = 1).single().status)
+    }
+
+    @Test
+    fun `marking a page known only touches NEW words`() {
+        val existing = mapOf("perro" to entry("perro", RECOGNIZED), "uf" to entry("uf", IGNORED))
+        val updated = VocabularyRules.markNewAsKnown(listOf("el", "perro", "uf", "el"), existing, now = 9)
+        assertEquals(listOf(VocabEntry("el", status = KNOWN, firstSeenMillis = 9, lastSeenMillis = 9)), updated)
     }
 
     @Test

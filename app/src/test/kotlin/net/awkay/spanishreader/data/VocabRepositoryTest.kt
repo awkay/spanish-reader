@@ -34,27 +34,43 @@ class VocabRepositoryTest : DbTestBase() {
     }
 
     @Test
-    fun finishPagePromotesOnlyNewWords() = runTest {
+    fun finishPageAddsUnmarkedWordsAtLevel1WithTheirGloss() = runTest {
+        val cache = net.awkay.spanishreader.core.gloss.InMemoryGlossCache()
+        cache.put("come", "El gato come.", net.awkay.spanishreader.core.gloss.Gloss("come", "comer", "verb", "eats"))
+        val repo = VocabRepository(db, cache) { now }
         repo.tap("gato", null)
         repo.setStatus("juan", WordStatus.IGNORED)
         repo.setStatus("perro", WordStatus.KNOWN)
         now = 5_000
-        val promoted = repo.finishPage(listOf("el", "gato", "juan", "perro", "come", "el"))
-        assertEquals(listOf("el", "come"), promoted)
+        val words = listOf("el", "gato", "juan", "perro", "come", "el").map { it to "El gato come." }
+        assertEquals(listOf("el", "come"), repo.finishPage(words))
         assertEquals(
             mapOf(
-                "el" to WordStatus.KNOWN, "gato" to WordStatus.LEVEL_1, "juan" to WordStatus.IGNORED,
-                "perro" to WordStatus.KNOWN, "come" to WordStatus.KNOWN,
+                "el" to WordStatus.LEVEL_1, "gato" to WordStatus.LEVEL_1, "juan" to WordStatus.IGNORED,
+                "perro" to WordStatus.KNOWN, "come" to WordStatus.LEVEL_1,
             ),
             repo.statuses(listOf("el", "gato", "juan", "perro", "come")),
         )
-        assertEquals(5_000, repo.get("come")?.lastSeenMillis)
+        val come = repo.get("come")!!
+        assertEquals("comer", come.lemma)
+        assertEquals("eats", come.translation)
+        assertEquals("El gato come.", come.contextSentence)
+        assertEquals(5_000, come.lastSeenMillis)
+        assertNull(repo.get("el")!!.translation) // never glossed: added without a meaning
+    }
+
+    @Test
+    fun markNewAsKnownIsExplicitAndOnlyTouchesBlueWords() = runTest {
+        repo.tap("gato", null)
+        assertEquals(listOf("el", "come"), repo.markNewAsKnown(listOf("el", "gato", "come")))
+        assertEquals(WordStatus.LEVEL_1, repo.get("gato")!!.status)
+        assertEquals(WordStatus.KNOWN, repo.get("el")!!.status)
     }
 
     @Test
     fun largePagesAreChunkedUnderTheBindLimit() = runTest {
         val forms = (1..2_500).map { "palabra$it" }
-        assertEquals(2_500, repo.finishPage(forms).size)
+        assertEquals(2_500, repo.finishPage(forms.map { it to "s" }).size)
         assertEquals(2_500, repo.statuses(forms).size)
     }
 

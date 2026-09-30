@@ -22,7 +22,9 @@ Current state and next steps: `docs/STATUS.md` — read it first.
 
 Rules:
 - Tapping a NEW word sets it to LEVEL_1 and adds it to the vocabulary.
-- **Finishing a page promotes every word still NEW on it to KNOWN.** Without this rule the page stays blue forever.
+- **Finishing a page adds every word still NEW on it to the vocabulary at LEVEL_1** (with its sentence and any AI
+  lemma/meaning). Words become KNOWN **only when the reader marks them** (per word, or the explicit
+  "Mark all blue words Known" button on a page). Never auto-promote to KNOWN.
 - Vocabulary is keyed by **lowercased written form** (`hablo` ≠ `hablas`, `sí` ≠ `si`). Lemma is stored for grouping.
 
 ## Architecture decisions (settled — don't relitigate)
@@ -48,6 +50,11 @@ Rules:
 - `./gradlew :app:testDebugUnitTest` — Room/DAO tests under Robolectric. `./gradlew :app:assembleDebug` builds the APK.
 - Android module needs the Android SDK: run `scripts/install-android-sdk.sh` in each fresh container. The environment must allow
   `dl.google.com` and `maven.google.com`.
+
+## Releases
+- `.github/workflows/release.yml`: every push to `main` runs the tests, builds the debug APK (versionCode = run
+  number) and publishes it as a GitHub Release `build-<n>`. Signed with the committed `app/debug.keystore` so
+  releases install as updates over each other and over local builds.
 
 ## Conventions
 - No colors in shell scripts.

@@ -23,7 +23,7 @@ import java.io.File
 class SpanishReaderApp : Application() {
     val database: AppDatabase by lazy { AppDatabase.create(this) }
     val lessons: LessonRepository by lazy { LessonRepository(database) }
-    val vocab: VocabRepository by lazy { VocabRepository(database) }
+    val vocab: VocabRepository by lazy { VocabRepository(database, glossCache = glossCache) }
     val phrases: PhraseStore by lazy { PhraseStore(database.phrases()) }
     val glossCache: RoomGlossCache by lazy { RoomGlossCache(database.glosses(), phrases) }
     val settings: SettingsRepository by lazy { SettingsRepository(this) }

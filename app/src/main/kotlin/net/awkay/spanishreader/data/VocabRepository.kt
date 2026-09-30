@@ -4,7 +4,9 @@ import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import net.awkay.spanishreader.core.vocab.VocabEntry
+import net.awkay.spanishreader.core.gloss.GlossCache
 import net.awkay.spanishreader.core.vocab.VocabularyRules
+import net.awkay.spanishreader.core.vocab.WordDetail
 import net.awkay.spanishreader.core.vocab.WordStatus
 
 /**
@@ -13,6 +15,8 @@ import net.awkay.spanishreader.core.vocab.WordStatus
  */
 class VocabRepository(
     private val db: AppDatabase,
+    /** Where AI glosses live; words added by the page rule take their lemma and meaning from here. */
+    private val glossCache: GlossCache? = null,
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
     private val dao = db.vocab()
@@ -66,11 +70,34 @@ class VocabRepository(
         }
     }
 
-    /** "Paging moves to known": every form on the page that is still NEW becomes KNOWN. Returns the promoted forms. */
-    suspend fun finishPage(pageForms: Collection<String>): List<String> = db.withTransaction {
-        val promoted = VocabularyRules.applyPageFinished(pageForms, entries(pageForms), clock())
-        promoted.chunked(MAX_BIND_ARGS).forEach { dao.upsertAll(it.map(VocabEntity::from)) }
-        promoted.map { it.form }
+    /**
+     * Turning past a page: its words still NEW enter the vocabulary at LEVEL_1 (only the learner marks words KNOWN),
+     * with their sentence and, when pre-glossing got to them, the AI lemma and meaning. [pageWords] are
+     * (normalized form, sentence) in page order. Returns the forms added.
+     */
+    suspend fun finishPage(pageWords: List<Pair<String, String>>): List<String> {
+        val forms = pageWords.map { it.first }
+        val firstSentence = LinkedHashMap<String, String>()
+        pageWords.forEach { (form, sentence) -> firstSentence.putIfAbsent(form, sentence) }
+        val newForms = VocabularyRules.onPageFinished(forms, statuses(forms))
+        // Gloss lookups happen outside the transaction; they only read the cache.
+        val details = newForms.associateWith { form ->
+            val sentence = firstSentence.getValue(form)
+            val gloss = glossCache?.let { it.get(form, sentence) ?: it.getByForm(form) }
+            WordDetail(sentence, gloss?.lemma, gloss?.meaningInContext)
+        }
+        return db.withTransaction {
+            val added = VocabularyRules.applyPageFinished(forms, entries(forms), clock(), details)
+            added.chunked(MAX_BIND_ARGS).forEach { dao.upsertAll(it.map(VocabEntity::from)) }
+            added.map { it.form }
+        }
+    }
+
+    /** The learner's explicit "all the blue words here are known". Returns the forms marked. */
+    suspend fun markNewAsKnown(pageForms: Collection<String>): List<String> = db.withTransaction {
+        val marked = VocabularyRules.markNewAsKnown(pageForms, entries(pageForms), clock())
+        marked.chunked(MAX_BIND_ARGS).forEach { dao.upsertAll(it.map(VocabEntity::from)) }
+        marked.map { it.form }
     }
 
     private companion object {

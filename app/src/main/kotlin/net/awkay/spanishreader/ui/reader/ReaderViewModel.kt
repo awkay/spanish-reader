@@ -128,7 +128,8 @@ class ReaderViewModel(private val app: SpanishReaderApp, private val lessonId: L
     }
 
     /**
-     * The reader settled on [page]. Moving forward finishes every page passed over: its still-NEW words become KNOWN.
+     * The reader settled on [page]. Moving forward finishes every page passed over: its still-NEW words enter the
+     * vocabulary at LEVEL_1. Only the learner makes words KNOWN.
      */
     fun onPageSettled(page: Int) {
         val c = _content.value ?: return
@@ -136,7 +137,7 @@ class ReaderViewModel(private val app: SpanishReaderApp, private val lessonId: L
         lastPage = page
         viewModelScope.launch {
             if (page > from) {
-                for (p in from until page) app.vocab.finishPage(c.pages[p].wordForms)
+                for (p in from until page) app.vocab.finishPage(pageWords(c, p))
             }
             app.lessons.setCurrentPage(lessonId, page)
             preGlossAround(page)
@@ -194,12 +195,22 @@ class ReaderViewModel(private val app: SpanishReaderApp, private val lessonId: L
         following.value = false
     }
 
-    /** Finishing the last page; returns the number of words promoted to KNOWN. */
+    /** (normalized form, sentence) for every word on [page], in order. */
+    private fun pageWords(c: ReaderContent, page: Int): List<Pair<String, String>> =
+        c.pages[page].tokens.mapNotNull { t -> t.normalized?.let { it to c.text.sentenceFor(t) } }
+
+    /** Explicit "every blue word on this page is known". Returns how many words were marked. */
+    suspend fun markPageKnown(page: Int): Int {
+        val c = _content.value ?: return 0
+        return app.vocab.markNewAsKnown(c.pages.getOrNull(page)?.wordForms ?: return 0).size
+    }
+
+    /** Finishing the last page; returns the number of words added at LEVEL_1. */
     suspend fun finishLesson(): Int {
         val c = _content.value ?: return 0
         val last = c.pages.lastIndex
         if (last < 0) return 0
-        val promoted = app.vocab.finishPage(c.pages[last].wordForms).size
+        val promoted = app.vocab.finishPage(pageWords(c, last)).size
         app.lessons.setCurrentPage(lessonId, last)
         return promoted
     }

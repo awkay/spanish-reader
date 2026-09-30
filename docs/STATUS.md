@@ -23,9 +23,12 @@ Live LLM check (not run by default):
   rename, delete, "Pre-gloss now".
 - **Reader**: `HorizontalPager` of ~250-word pages (setting), words colored by status via `LinkAnnotation`,
   tap → bottom sheet (meaning in context, lemma, POS, grammar note, other meanings, idiom/phrase, pronounce button,
-  status chips 1–4 / Known / Ignore). **Follow-along audio in the reader**: player bar (prev / play-pause / next /
+  status chips 1–4 / Known / Ignore). Status colors are drawn as separate rounded boxes hugging each word (not
+  text backgrounds), so lines and neighbouring words stay apart. **Page rule (changed at Tony's request)**:
+  turning past a page adds its still-blue words at LEVEL_1 with their sentence and any cached AI lemma/meaning;
+  nothing becomes KNOWN automatically. A "Mark all N blue words Known" button on each page does that explicitly. **Follow-along audio in the reader**: player bar (prev / play-pause / next /
   loop); the spoken sentence is tinted on the colored page, the page scrolls to it and turns automatically
-  (auto-turns apply the page-finished rule like manual ones). Swiping away while playing stops following; a
+  (auto-turns apply the page rule like manual ones). Swiping away while playing stops following; a
   "Follow" button jumps back. Tapping a word pauses playback. Tapping a NEW word → LEVEL_1 + vocab entry with context sentence. Turning
   forward finishes the pages passed (NEW → KNOWN); "Finish lesson" on the last page. Position is saved. Text size ±.
 - **Rich word sheet**: each gloss now carries structured `verb` (infinitive, tense, mood, person, number,
@@ -78,6 +81,13 @@ Live LLM check (not run by default):
   `glm-5.3-flash` and `glm-4.6` both produce excellent glosses (clitics in `dáselo`, idiom `echar de menos`);
   ~2 s/word with thinking disabled, ~7–9 s for a 3-word batch.
 - Ollama Cloud, Anthropic and Google Cloud TTS have not been tried with real keys.
+
+## Releases
+- GitHub Actions (`.github/workflows/release.yml`) builds and tests on every push to `main` and publishes the APK
+  as Release `build-<run number>`; versionCode = run number. Signed with the committed `app/debug.keystore`
+  (same key as the APKs built in the first sessions), so releases install as updates.
+- `ReaderScreenshotTest` renders the reader to `$SCREENSHOT_DIR/reader.png` (Robolectric native graphics) when
+  that env var is set; skipped otherwise.
 
 ## Known issues / unverified
 - Never installed on a device. Listen mode (MediaController/ExoPlayer/TTS file synthesis) has no automated test.
