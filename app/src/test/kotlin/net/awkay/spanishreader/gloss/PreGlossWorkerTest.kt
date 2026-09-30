@@ -5,6 +5,7 @@ import androidx.work.ListenableWorker
 import androidx.work.testing.TestListenableWorkerBuilder
 import androidx.work.testing.WorkManagerTestInitHelper
 import androidx.work.workDataOf
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -22,6 +23,7 @@ import net.awkay.spanishreader.SpanishReaderApp
 import net.awkay.spanishreader.core.gloss.GlossProvider
 import net.awkay.spanishreader.core.gloss.GlosserConfig
 import net.awkay.spanishreader.core.text.Tokenizer
+import net.awkay.spanishreader.data.AppSettings
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -72,10 +74,13 @@ class PreGlossWorkerTest {
         server.start()
     }
 
+    /** The app's database and settings outlive this test in the Robolectric JVM; leave them as a fresh install. */
     @After
-    fun tearDown() {
+    fun tearDown() = runBlocking(Dispatchers.IO) {
         server.close()
-        app.database.close()
+        app.database.clearAllTables()
+        app.settings.updateProvider(GlosserConfig(GlossProvider.OPENAI_COMPATIBLE))
+        app.settings.update { AppSettings() }
     }
 
     @Test

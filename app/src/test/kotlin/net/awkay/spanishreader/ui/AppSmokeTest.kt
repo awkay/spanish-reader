@@ -12,11 +12,13 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.testing.WorkManagerTestInitHelper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import net.awkay.spanishreader.MainActivity
 import net.awkay.spanishreader.ShareInbox
 import net.awkay.spanishreader.SpanishReaderApp
 import net.awkay.spanishreader.core.vocab.WordStatus
+import net.awkay.spanishreader.data.AppSettings
 import org.junit.Before
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -38,6 +40,11 @@ class AppSmokeTest {
     @Before
     fun setUp() {
         WorkManagerTestInitHelper.initializeTestWorkManager(app)
+        // Other Robolectric tests in this JVM share the app's database and settings; start from a fresh install.
+        runBlocking(Dispatchers.IO) {
+            app.database.clearAllTables()
+            app.settings.update { AppSettings() }
+        }
     }
 
     private fun waitForText(text: String) = compose.waitUntil(10_000) {
