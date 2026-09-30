@@ -47,6 +47,10 @@ Live LLM check (not run by default):
   The plan also works on z.ai's Anthropic-compatible endpoint (provider "Anthropic Claude", base URL
   `https://api.z.ai/api/anthropic`, model `glm-4.6`; also `open.bigmodel.cn/api/anthropic`), verified live,
   but it is slower (~25 s vs ~16 s for a 3-word batch) because thinking stays on.
+  The coding endpoint reroutes models for this key: glm-4.6/4.7 → glm-5.3-flash, glm-5.1 → glm-5.3 (see the
+  `model` field in responses), so configure `glm-5.3-flash` or `glm-5.3` directly. z.ai's plan notice
+  (docs.z.ai/devpack/notice/usage-revision) distinguishes Legacy V1 / Legacy V2 / credits plans but documents no
+  separate endpoint for legacy plans.
   `glm-5.3-flash` and `glm-4.6` both produce excellent glosses (clitics in `dáselo`, idiom `echar de menos`);
   ~2 s/word with thinking disabled, ~7–9 s for a 3-word batch.
 - Ollama Cloud, Anthropic and Google Cloud TTS have not been tried with real keys.
