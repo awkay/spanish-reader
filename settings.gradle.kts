@@ -31,4 +31,4 @@ dependencyResolutionManagement {
 rootProject.name = "spanish-reader"
 
 include(":core")
-// TODO: include(":app") once the Android SDK is available in the build environment.
+include(":app")

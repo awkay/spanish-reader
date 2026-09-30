@@ -1,0 +1,67 @@
+package net.awkay.spanishreader.data
+
+import androidx.room.withTransaction
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import net.awkay.spanishreader.core.vocab.VocabEntry
+import net.awkay.spanishreader.core.vocab.VocabularyRules
+import net.awkay.spanishreader.core.vocab.WordStatus
+
+/**
+ * Applies core [VocabularyRules] to the database. All forms must already be normalized (Tokenizer.normalize).
+ * Forms absent from the table are NEW.
+ */
+class VocabRepository(
+    private val db: AppDatabase,
+    private val clock: () -> Long = System::currentTimeMillis,
+) {
+    private val dao = db.vocab()
+
+    fun observeAll(): Flow<List<VocabEntry>> = dao.observeAll().map { rows -> rows.map { it.toEntry() } }
+
+    fun observeByStatus(status: WordStatus): Flow<List<VocabEntry>> =
+        dao.observeByStatus(status).map { rows -> rows.map { it.toEntry() } }
+
+    suspend fun get(form: String): VocabEntry? = dao.get(form)?.toEntry()
+
+    /** Entries for the given forms; forms without a row are omitted (i.e. NEW). */
+    suspend fun entries(forms: Collection<String>): Map<String, VocabEntry> =
+        forms.distinct().chunked(MAX_BIND_ARGS).flatMap { dao.getAll(it) }.associate { it.form to it.toEntry() }
+
+    suspend fun statuses(forms: Collection<String>): Map<String, WordStatus> =
+        entries(forms).mapValues { it.value.status }
+
+    /** A NEW word was tapped: auto-add at LEVEL_1. Returns the resulting entry. */
+    suspend fun tap(form: String, contextSentence: String?): VocabEntry = db.withTransaction {
+        val updated = VocabularyRules.onTap(dao.get(form)?.toEntry(), form, clock(), contextSentence)
+        dao.upsert(VocabEntity.from(updated))
+        updated
+    }
+
+    suspend fun setStatus(form: String, status: WordStatus, contextSentence: String? = null): VocabEntry =
+        db.withTransaction {
+            val now = clock()
+            val existing = dao.get(form)?.toEntry()
+                ?: VocabEntry(form, status = WordStatus.NEW, contextSentence = contextSentence, firstSeenMillis = now, lastSeenMillis = now)
+            val updated = VocabularyRules.setStatus(existing, status, now)
+            dao.upsert(VocabEntity.from(updated))
+            updated
+        }
+
+    /** Stores lemma/translation from a gloss without touching status. No-op for words without a row. */
+    suspend fun annotate(form: String, lemma: String?, translation: String?) = db.withTransaction {
+        dao.get(form)?.let { dao.upsert(it.copy(lemma = lemma ?: it.lemma, translation = translation ?: it.translation)) }
+    }
+
+    /** "Paging moves to known": every form on the page that is still NEW becomes KNOWN. Returns the promoted forms. */
+    suspend fun finishPage(pageForms: Collection<String>): List<String> = db.withTransaction {
+        val promoted = VocabularyRules.applyPageFinished(pageForms, entries(pageForms), clock())
+        promoted.chunked(MAX_BIND_ARGS).forEach { dao.upsertAll(it.map(VocabEntity::from)) }
+        promoted.map { it.form }
+    }
+
+    private companion object {
+        /** SQLite's historical SQLITE_MAX_VARIABLE_NUMBER on older Android versions. */
+        const val MAX_BIND_ARGS = 900
+    }
+}

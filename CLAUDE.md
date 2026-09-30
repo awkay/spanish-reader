@@ -29,7 +29,7 @@ Rules:
 - **Kotlin + Jetpack Compose**, native. Not a PWA/ClojureScript: listen mode needs reliable background audio.
 - **Local-first**: Room/SQLite on device, no server. JSON backup/export later.
 - **`:core`** = pure Kotlin/JVM module (no Android deps): tokenizer, sentences, pagination, status rules, glossing
-  clients. All logic that can be unit-tested on the JVM lives here. **`:app`** = Android UI/DB/audio (not yet created).
+  clients. All logic that can be unit-tested on the JVM lives here. **`:app`** = Android UI/DB/audio.
 - **Glossing is provider-pluggable** behind `Glosser`:
   - Default: **Ollama Cloud** with a large Kimi-class model, via the OpenAI-compatible client (`https://ollama.com/v1`).
     Model name must be a setting, never hard-coded — hosted model lineups change.
@@ -45,7 +45,8 @@ Rules:
 ## Build & test
 - Gradle wrapper, Kotlin DSL, version catalog `gradle/libs.versions.toml`.
 - `./gradlew :core:test` — JUnit 5; HTTP clients tested with OkHttp MockWebServer.
-- Android module needs the Android SDK. In Claude Code cloud sessions the environment must allow
+- `./gradlew :app:testDebugUnitTest` — Room/DAO tests under Robolectric. `./gradlew :app:assembleDebug` builds the APK.
+- Android module needs the Android SDK: run `scripts/install-android-sdk.sh` in each fresh container. The environment must allow
   `dl.google.com` and `maven.google.com`.
 
 ## Conventions

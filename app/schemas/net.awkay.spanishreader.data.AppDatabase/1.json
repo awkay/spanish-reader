@@ -1,0 +1,181 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "88b31fbd3c0b863f964fba986cb69382",
+    "entities": [
+      {
+        "tableName": "lessons",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `text` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `current_page` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "text",
+            "columnName": "text",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAtMillis",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currentPage",
+            "columnName": "current_page",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "vocab",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`form` TEXT NOT NULL, `lemma` TEXT, `status` INTEGER NOT NULL, `translation` TEXT, `context_sentence` TEXT, `first_seen` INTEGER NOT NULL, `last_seen` INTEGER NOT NULL, `times_seen` INTEGER NOT NULL, PRIMARY KEY(`form`))",
+        "fields": [
+          {
+            "fieldPath": "form",
+            "columnName": "form",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lemma",
+            "columnName": "lemma",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "translation",
+            "columnName": "translation",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contextSentence",
+            "columnName": "context_sentence",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "firstSeenMillis",
+            "columnName": "first_seen",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastSeenMillis",
+            "columnName": "last_seen",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timesSeen",
+            "columnName": "times_seen",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "form"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_vocab_status",
+            "unique": false,
+            "columnNames": [
+              "status"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_vocab_status` ON `${TABLE_NAME}` (`status`)"
+          },
+          {
+            "name": "index_vocab_lemma",
+            "unique": false,
+            "columnNames": [
+              "lemma"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_vocab_lemma` ON `${TABLE_NAME}` (`lemma`)"
+          }
+        ]
+      },
+      {
+        "tableName": "gloss_cache",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`form_key` TEXT NOT NULL, `sentence_hash` TEXT NOT NULL, `json` TEXT NOT NULL, `stored_at` INTEGER NOT NULL, PRIMARY KEY(`form_key`, `sentence_hash`))",
+        "fields": [
+          {
+            "fieldPath": "formKey",
+            "columnName": "form_key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sentenceHash",
+            "columnName": "sentence_hash",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "json",
+            "columnName": "json",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "storedAtMillis",
+            "columnName": "stored_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "form_key",
+            "sentence_hash"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_gloss_cache_form_key_stored_at",
+            "unique": false,
+            "columnNames": [
+              "form_key",
+              "stored_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_gloss_cache_form_key_stored_at` ON `${TABLE_NAME}` (`form_key`, `stored_at`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '88b31fbd3c0b863f964fba986cb69382')"
+    ]
+  }
+}
