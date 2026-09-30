@@ -161,7 +161,7 @@ private fun LessonCard(
             Box {
                 IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, "More") }
                 DropdownMenu(menu, onDismissRequest = { menu = false }) {
-                    DropdownMenuItem(text = { Text("Pre-gloss now") }, onClick = { menu = false; onPreGloss() })
+                    DropdownMenuItem(text = { Text("Pre-gloss whole lesson") }, onClick = { menu = false; onPreGloss() })
                     DropdownMenuItem(text = { Text("Rename") }, onClick = { menu = false; onRename() })
                     DropdownMenuItem(text = { Text("Delete") }, onClick = { menu = false; onDelete() })
                 }

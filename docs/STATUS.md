@@ -8,8 +8,8 @@ Nothing has run on real hardware yet; the UI has only been exercised under Robol
 ## Build / verify
 ```
 scripts/install-android-sdk.sh          # each fresh cloud container
-./gradlew :core:test                     # 79 tests (1 live test skipped without env vars)
-./gradlew :app:testDebugUnitTest         # 22 Robolectric tests incl. an end-to-end UI smoke test
+./gradlew :core:test                     # 84 tests (1 live test skipped without env vars)
+./gradlew :app:testDebugUnitTest         # 23 Robolectric tests incl. an end-to-end UI smoke test
 ./gradlew :app:assembleDebug             # app/build/outputs/apk/debug/app-debug.apk
 ```
 Live LLM check (not run by default):
@@ -23,14 +23,20 @@ Live LLM check (not run by default):
   rename, delete, "Pre-gloss now".
 - **Reader**: `HorizontalPager` of ~250-word pages (setting), words colored by status via `LinkAnnotation`,
   tap → bottom sheet (meaning in context, lemma, POS, grammar note, other meanings, idiom/phrase, pronounce button,
-  status chips 1–4 / Known / Ignore). Tapping a NEW word → LEVEL_1 + vocab entry with context sentence. Turning
+  status chips 1–4 / Known / Ignore). **Follow-along audio in the reader**: player bar (prev / play-pause / next /
+  loop); the spoken sentence is tinted on the colored page, the page scrolls to it and turns automatically
+  (auto-turns apply the page-finished rule like manual ones). Swiping away while playing stops following; a
+  "Follow" button jumps back. Tapping a word pauses playback. Tapping a NEW word → LEVEL_1 + vocab entry with context sentence. Turning
   forward finishes the pages passed (NEW → KNOWN); "Finish lesson" on the last page. Position is saved. Text size ±.
 - **Glossing**: `GlossService` = exact cache → live lookup (cached) → any cached gloss of the form (flagged).
   Providers: Ollama Cloud (default), Ollama local, z.ai GLM Coding Plan via Responses API or chat completions, z.ai pay-as-you-go (chat completions send `thinking: disabled`), Anthropic, other
   OpenAI-compatible; per-provider URL/model/key in settings; optional Claude fallback (`FallbackGlosser`);
-  "Test connection" button. **Pre-gloss on import** via WorkManager (`PreGlossWorker`, network constraint, retry
-  with backoff, progress shown in library), up to N sentences per word (setting, default 3).
-- **Listen**: Media3 `MediaSessionService` + ExoPlayer playlist of one audio file per sentence (background playback,
+  "Test connection" button. **Windowed pre-gloss** via WorkManager (`PreGlossWorker`, network constraint, retry
+  with backoff, progress shown in library): at import the first N pages (setting "pages ahead", default 3;
+  0 = whole lesson), then the reader keeps it N pages ahead as you turn pages. Runs per lesson are appended
+  (`APPEND_OR_REPLACE`) and skip cached words. Library menu "Pre-gloss whole lesson" does everything at once.
+- **Listen**: shared app-scoped engine `LessonAudio` (used by the reader and the listen screen) driving a Media3
+  `MediaSessionService` + ExoPlayer playlist of one audio file per sentence (background playback,
   lock-screen/notification controls). Audio is synthesized sentence-by-sentence and cached content-addressed in
   `filesDir/tts` (`SentenceAudioCache`). Engines: on-device Android TTS (default; accent es-MX/es-US/… and voice
   picker) or Google Cloud TTS (API key + voice name, MP3). Current sentence highlighted and auto-scrolled; tap a
@@ -61,8 +67,10 @@ Live LLM check (not run by default):
 
 ## Known issues / unverified
 - Never installed on a device. Listen mode (MediaController/ExoPlayer/TTS file synthesis) has no automated test.
-- Listen mode synthesizes in the screen's ViewModel: leaving the listen screen stops synthesis of further
-  sentences (already-queued sentences keep playing). Moving synthesis into `PlaybackService` would fix this.
+- Audio synthesis runs in the app-scoped `LessonAudio`, so it survives leaving screens, but not the app process
+  being killed while in the background (the service keeps playing what is queued). Moving it into
+  `PlaybackService` would make it fully robust.
+- On-device TTS WAV cache is large (~100 MB for a 5,000-word chapter); clear it in Settings.
 - On-device TTS output format is assumed to be WAV (true for Google's engine).
 - z.ai returns HTTP 429 for "insufficient balance" (code 1113); it is retried like a rate limit before failing.
 - Every newline still ends a sentence when "Join wrapped lines" is off.
@@ -72,8 +80,9 @@ Live LLM check (not run by default):
 - Maven Central intermittently returns 429 through the cloud proxy; just rerun Gradle.
 
 ## Next
-1. Install on a phone (`adb install app/build/outputs/apk/debug/app-debug.apk`) and test end to end.
-2. Move listen-mode synthesis into the service; add a sentence-highlight overlay in the reader while listening.
+1. Install on a phone (`adb install app/build/outputs/apk/debug/app-debug.apk`) and test end to end,
+   especially follow-along audio (never run on a device).
+2. Move synthesis into `PlaybackService`; save the listening position.
 3. Web article extraction for shared URLs; EPUB import.
 4. Offline dictionary fallback (kaikki.org Wiktionary extract).
 5. Azure Neural TTS option; LingQ-style daily stats.

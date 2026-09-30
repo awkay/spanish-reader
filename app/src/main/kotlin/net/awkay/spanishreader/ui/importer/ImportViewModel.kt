@@ -59,7 +59,8 @@ class ImportViewModel(private val app: SpanishReaderApp) : ViewModel() {
             try {
                 app.settings.update { it.copy(joinWrappedLines = joinWrappedLines) }
                 val id = app.lessons.import(title, text, joinWrappedLines)
-                if (app.settings.current().preGlossOnImport) PreGlossWorker.enqueue(app, id)
+                val settings = app.settings.current()
+                if (settings.preGlossOnImport) PreGlossWorker.enqueue(app, id, 0, settings.preGlossPagesAhead)
                 onSaved(id)
             } catch (e: IllegalArgumentException) {
                 error = e.message

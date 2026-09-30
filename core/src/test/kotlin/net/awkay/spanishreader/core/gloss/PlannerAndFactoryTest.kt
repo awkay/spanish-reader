@@ -109,3 +109,21 @@ class ZaiRequestTest {
         }
     }
 }
+
+class PreGlossWindowTest {
+    private val text = net.awkay.spanishreader.core.text.Tokenizer.tokenize("Uno dos. Tres cuatro. Cinco seis. Siete ocho.")
+    private val pages = net.awkay.spanishreader.core.text.Paginator.paginate(text, wordsPerPage = 2)
+
+    private fun forms(from: Int, count: Int) =
+        PreGlossPlanner.plan(text, emptyMap(), tokens = PreGlossPlanner.window(pages, from, count)).map { it.form }
+
+    @Test
+    fun `window limits planning to the pages ahead`() {
+        assertEquals(4, pages.size)
+        assertEquals(listOf("Tres", "cuatro", "Cinco", "seis"), forms(1, 2))
+        assertEquals(listOf("Siete", "ocho"), forms(3, 5))
+        assertEquals(listOf("Cinco", "seis", "Siete", "ocho"), forms(2, 0))
+        assertEquals(listOf("Uno", "dos"), forms(-4, 1))
+        assertEquals(emptyList(), PreGlossPlanner.window(emptyList(), 0, 3))
+    }
+}

@@ -47,6 +47,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import net.awkay.spanishreader.audio.AudioState
+import net.awkay.spanishreader.audio.LessonAudio
 import net.awkay.spanishreader.ui.BackButton
 import net.awkay.spanishreader.ui.appViewModel
 
@@ -54,7 +56,8 @@ import net.awkay.spanishreader.ui.appViewModel
 @Composable
 fun ListenScreen(lessonId: Long, onBack: () -> Unit, onRead: () -> Unit) {
     val vm = appViewModel(key = "listen-$lessonId") { ListenViewModel(it, lessonId) }
-    val s by vm.state.collectAsStateWithLifecycle()
+    val ui by vm.ui.collectAsStateWithLifecycle()
+    val s = ui.audio
     val list = rememberLazyListState()
 
     // Lock-screen / notification controls need notification permission on Android 13+.
@@ -62,7 +65,7 @@ fun ListenScreen(lessonId: Long, onBack: () -> Unit, onRead: () -> Unit) {
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= 33) notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
-    LaunchedEffect(s.current, s.loaded) {
+    LaunchedEffect(s.current, ui.loaded) {
         if (s.sentences.isNotEmpty()) list.animateScrollToItem((s.current - 2).coerceAtLeast(0))
     }
 
@@ -74,10 +77,12 @@ fun ListenScreen(lessonId: Long, onBack: () -> Unit, onRead: () -> Unit) {
                 actions = { IconButton(onClick = onRead) { Icon(Icons.AutoMirrored.Filled.MenuBook, "Read") } },
             )
         },
-        bottomBar = { Controls(s, vm) },
+        bottomBar = { Controls(s, vm.audio) },
     ) { padding ->
-        if (!s.loaded) {
-            Box(Modifier.fillMaxSize().padding(padding), Alignment.Center) { CircularProgressIndicator() }
+        if (!ui.loaded || ui.missing) {
+            Box(Modifier.fillMaxSize().padding(padding), Alignment.Center) {
+                if (ui.missing) Text("This lesson no longer exists.") else CircularProgressIndicator()
+            }
             return@Scaffold
         }
         LazyColumn(Modifier.fillMaxSize().padding(padding), state = list) {
@@ -89,7 +94,7 @@ fun ListenScreen(lessonId: Long, onBack: () -> Unit, onRead: () -> Unit) {
                     fontWeight = if (current) FontWeight.SemiBold else FontWeight.Normal,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { vm.seekTo(i) }
+                        .clickable { vm.audio.playFrom(i) }
                         .padding(horizontal = 12.dp, vertical = 2.dp)
                         .background(
                             if (current) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
@@ -103,7 +108,7 @@ fun ListenScreen(lessonId: Long, onBack: () -> Unit, onRead: () -> Unit) {
 }
 
 @Composable
-private fun Controls(s: ListenState, vm: ListenViewModel) {
+private fun Controls(s: AudioState, audio: LessonAudio) {
     Surface(tonalElevation = 3.dp) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
             s.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
@@ -114,20 +119,20 @@ private fun Controls(s: ListenState, vm: ListenViewModel) {
                 )
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = vm::previous) { Icon(Icons.Default.SkipPrevious, "Previous sentence") }
-                IconButton(onClick = vm::replay) { Icon(Icons.Default.Replay, "Replay sentence") }
-                FilledIconButton(onClick = vm::playPause, modifier = Modifier.size(56.dp)) {
+                IconButton(onClick = audio::previous) { Icon(Icons.Default.SkipPrevious, "Previous sentence") }
+                IconButton(onClick = audio::replay) { Icon(Icons.Default.Replay, "Replay sentence") }
+                FilledIconButton(onClick = audio::playPause, modifier = Modifier.size(56.dp)) {
                     if (s.preparing) CircularProgressIndicator(Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
                     else Icon(if (s.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, if (s.isPlaying) "Pause" else "Play")
                 }
-                FilledTonalIconToggleButton(checked = s.loop, onCheckedChange = { vm.toggleLoop() }) {
+                FilledTonalIconToggleButton(checked = s.loop, onCheckedChange = { audio.toggleLoop() }) {
                     Icon(Icons.Default.RepeatOne, "Loop sentence")
                 }
-                IconButton(onClick = vm::next) { Icon(Icons.Default.SkipNext, "Next sentence") }
+                IconButton(onClick = audio::next) { Icon(Icons.Default.SkipNext, "Next sentence") }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Speed %.2f×".format(s.speed), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 8.dp))
-                Slider(value = s.speed, onValueChange = vm::setSpeed, valueRange = 0.5f..2f, steps = 29, modifier = Modifier.weight(1f))
+                Slider(value = s.speed, onValueChange = audio::setSpeed, valueRange = 0.5f..2f, steps = 29, modifier = Modifier.weight(1f))
             }
         }
     }

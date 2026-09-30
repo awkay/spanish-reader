@@ -76,7 +76,8 @@ fun SettingsScreen(onBack: () -> Unit) {
                 Toggle("Fall back to Claude when this provider fails", s.fallbackToAnthropic) { v -> vm.update { it.copy(fallbackToAnthropic = v) } }
                 if (s.fallbackToAnthropic) ProviderFields(s, GlossProvider.ANTHROPIC, vm)
             }
-            Toggle("Pre-gloss new lessons in the background", s.preGlossOnImport) { v -> vm.update { it.copy(preGlossOnImport = v) } }
+            Toggle("Pre-gloss in the background as you read", s.preGlossOnImport) { v -> vm.update { it.copy(preGlossOnImport = v) } }
+            NumberSlider("Pages pre-glossed ahead (0 = whole lesson)", s.preGlossPagesAhead, 0..20) { v -> vm.update { it.copy(preGlossPagesAhead = v) } }
             NumberSlider("Sentences pre-glossed per word", s.preGlossSentencesPerWord, 1..10) { v -> vm.update { it.copy(preGlossSentencesPerWord = v) } }
 
             HorizontalDivider()

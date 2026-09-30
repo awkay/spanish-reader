@@ -48,7 +48,9 @@ class LibraryViewModel(private val app: SpanishReaderApp) : ViewModel() {
         infos.filter { it.state != WorkInfo.State.CANCELLED }
             .groupBy { info -> info.tags.firstNotNullOfOrNull { it.removePrefix("pregloss-lesson-").takeIf { t -> t != it }?.toLongOrNull() } }
             .mapNotNull { (id, list) ->
-                val info = list.firstOrNull { !it.state.isFinished } ?: list.firstOrNull { it.state == WorkInfo.State.FAILED }
+                val info = list.firstOrNull { it.state == WorkInfo.State.RUNNING }
+                    ?: list.firstOrNull { !it.state.isFinished }
+                    ?: list.firstOrNull { it.state == WorkInfo.State.FAILED }?.takeIf { list.none { i -> i.state == WorkInfo.State.SUCCEEDED } }
                 val state = when (info?.state) {
                     WorkInfo.State.RUNNING -> PreGlossState.Running(
                         info.progress.getInt(PreGlossWorker.KEY_DONE, 0), info.progress.getInt(PreGlossWorker.KEY_TOTAL, 0),

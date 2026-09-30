@@ -25,6 +25,8 @@ data class AppSettings(
     val fallbackToAnthropic: Boolean = false,
     val preGlossOnImport: Boolean = true,
     val preGlossSentencesPerWord: Int = 3,
+    /** Pages glossed ahead of the one being read; 0 = the whole lesson at import. */
+    val preGlossPagesAhead: Int = 3,
     val wordsPerPage: Int = Paginator.DEFAULT_WORDS_PER_PAGE,
     val readerFontSize: Int = 20,
     val joinWrappedLines: Boolean = true,
@@ -69,6 +71,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             fallbackToAnthropic = p[FALLBACK] ?: d.fallbackToAnthropic,
             preGlossOnImport = p[PREGLOSS] ?: d.preGlossOnImport,
             preGlossSentencesPerWord = p[PREGLOSS_SENTENCES] ?: d.preGlossSentencesPerWord,
+            preGlossPagesAhead = p[PREGLOSS_AHEAD] ?: d.preGlossPagesAhead,
             wordsPerPage = p[WORDS_PER_PAGE] ?: d.wordsPerPage,
             readerFontSize = p[FONT_SIZE] ?: d.readerFontSize,
             joinWrappedLines = p[JOIN_LINES] ?: d.joinWrappedLines,
@@ -93,6 +96,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             p[FALLBACK] = s.fallbackToAnthropic
             p[PREGLOSS] = s.preGlossOnImport
             p[PREGLOSS_SENTENCES] = s.preGlossSentencesPerWord.coerceIn(1, 10)
+            p[PREGLOSS_AHEAD] = s.preGlossPagesAhead.coerceIn(0, 50)
             p[WORDS_PER_PAGE] = s.wordsPerPage.coerceIn(50, 1000)
             p[FONT_SIZE] = s.readerFontSize.coerceIn(12, 40)
             p[JOIN_LINES] = s.joinWrappedLines
@@ -114,6 +118,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val FALLBACK = booleanPreferencesKey("gloss.fallbackToAnthropic")
         val PREGLOSS = booleanPreferencesKey("gloss.preGlossOnImport")
         val PREGLOSS_SENTENCES = intPreferencesKey("gloss.preGlossSentencesPerWord")
+        val PREGLOSS_AHEAD = intPreferencesKey("gloss.preGlossPagesAhead")
         val WORDS_PER_PAGE = intPreferencesKey("reader.wordsPerPage")
         val FONT_SIZE = intPreferencesKey("reader.fontSize")
         val JOIN_LINES = booleanPreferencesKey("import.joinWrappedLines")
