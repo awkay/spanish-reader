@@ -26,7 +26,7 @@ Live LLM check (not run by default):
   status chips 1–4 / Known / Ignore). Tapping a NEW word → LEVEL_1 + vocab entry with context sentence. Turning
   forward finishes the pages passed (NEW → KNOWN); "Finish lesson" on the last page. Position is saved. Text size ±.
 - **Glossing**: `GlossService` = exact cache → live lookup (cached) → any cached gloss of the form (flagged).
-  Providers: Ollama Cloud (default), Ollama local, z.ai GLM (sends `thinking: disabled`), Anthropic, other
+  Providers: Ollama Cloud (default), Ollama local, z.ai GLM Coding Plan / pay-as-you-go (send `thinking: disabled`), Anthropic, other
   OpenAI-compatible; per-provider URL/model/key in settings; optional Claude fallback (`FallbackGlosser`);
   "Test connection" button. **Pre-gloss on import** via WorkManager (`PreGlossWorker`, network constraint, retry
   with backoff, progress shown in library), up to N sentences per word (setting, default 3).
@@ -42,7 +42,11 @@ Live LLM check (not run by default):
 
 ## Verified against real services
 - z.ai (key from Tony, not stored in the repo): the supplied key is a **GLM Coding Plan** key. It works only with
-  base URL `https://api.z.ai/api/coding/paas/v4`; the pay-as-you-go URL returns 429 "Insufficient balance".
+  `https://api.z.ai/api/coding/paas/v4` (provider preset "z.ai GLM Coding Plan"); the pay-as-you-go
+  `/api/paas/v4` returns 429 "Insufficient balance", and v2/v3 paths don't exist (404).
+  The plan also works on z.ai's Anthropic-compatible endpoint (provider "Anthropic Claude", base URL
+  `https://api.z.ai/api/anthropic`, model `glm-4.6`; also `open.bigmodel.cn/api/anthropic`), verified live,
+  but it is slower (~25 s vs ~16 s for a 3-word batch) because thinking stays on.
   `glm-5.3-flash` and `glm-4.6` both produce excellent glosses (clitics in `dáselo`, idiom `echar de menos`);
   ~2 s/word with thinking disabled, ~7–9 s for a 3-word batch.
 - Ollama Cloud, Anthropic and Google Cloud TTS have not been tried with real keys.

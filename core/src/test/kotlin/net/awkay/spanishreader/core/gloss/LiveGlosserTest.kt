@@ -9,7 +9,8 @@ import kotlin.test.assertTrue
 
 /**
  * Hits a real OpenAI-compatible endpoint. Skipped unless LIVE_GLOSS_BASE_URL, LIVE_GLOSS_API_KEY and
- * LIVE_GLOSS_MODEL are set, e.g. z.ai: https://api.z.ai/api/paas/v4 (or .../api/coding/paas/v4 for the coding plan).
+ * LIVE_GLOSS_MODEL are set, e.g. z.ai: https://api.z.ai/api/coding/paas/v4 (Coding Plan), https://api.z.ai/api/paas/v4,
+ * or the Anthropic-compatible https://api.z.ai/api/anthropic (uses the Anthropic client).
  */
 class LiveGlosserTest {
     private val baseUrl = System.getenv("LIVE_GLOSS_BASE_URL").orEmpty()
@@ -19,7 +20,12 @@ class LiveGlosserTest {
     @Test
     fun `glosses a small batch against a live endpoint`() = runBlocking {
         assumeTrue(baseUrl.isNotEmpty() && apiKey.isNotEmpty() && model.isNotEmpty(), "live gloss env not set")
-        val provider = if ("z.ai" in baseUrl) GlossProvider.ZAI else GlossProvider.OPENAI_COMPATIBLE
+        val provider = when {
+            "/anthropic" in baseUrl || "anthropic.com" in baseUrl -> GlossProvider.ANTHROPIC
+            "z.ai/api/coding" in baseUrl -> GlossProvider.ZAI_CODING
+            "z.ai" in baseUrl -> GlossProvider.ZAI
+            else -> GlossProvider.OPENAI_COMPATIBLE
+        }
         val glosser = GlosserFactory.create(GlosserConfig(provider, baseUrl, apiKey, model))
         val requests = listOf(
             GlossRequest("banco", "Me senté en un banco del parque.", "1"),

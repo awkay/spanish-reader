@@ -41,6 +41,7 @@ class PlannerAndFactoryTest {
         )
         assertTrue(GlosserConfig(GlossProvider.OLLAMA_CLOUD, apiKey = "k", model = "kimi").isComplete)
         assertEquals("https://ollama.com/v1", GlosserConfig().effectiveBaseUrl)
+        assertEquals("https://api.z.ai/api/coding/paas/v4", GlosserConfig(GlossProvider.ZAI_CODING).effectiveBaseUrl)
         assertTrue(GlosserConfig(GlossProvider.OLLAMA_LOCAL, model = "m").problems().single().contains("base URL"))
         assertTrue(GlosserConfig(GlossProvider.OLLAMA_LOCAL, baseUrl = "10.0.0.2:11434", model = "m").problems().single().contains("http"))
         assertEquals("claude-haiku-4-5", GlosserConfig(GlossProvider.ANTHROPIC, apiKey = "k").effectiveModel)
@@ -93,13 +94,17 @@ class ZaiRequestTest {
         mockwebserver3.MockWebServer().use { server ->
             server.start()
             val reply = """{"choices":[{"message":{"content":"{\"glosses\":[{\"id\":\"casa\",\"form\":\"casa\",\"lemma\":\"casa\",\"partOfSpeech\":\"noun\",\"meaningInContext\":\"house\"}]}"}}]}"""
-            repeat(2) { server.enqueue(mockwebserver3.MockResponse.Builder().code(200).body(reply).build()) }
+            repeat(3) { server.enqueue(mockwebserver3.MockResponse.Builder().code(200).body(reply).build()) }
             val base = server.url("/v4").toString()
             GlosserFactory.create(GlosserConfig(GlossProvider.ZAI, base, "k", "glm")).gloss("casa", "Mi casa.")
+            GlosserFactory.create(GlosserConfig(GlossProvider.ZAI_CODING, base, "k", "glm")).gloss("casa", "Mi casa.")
             GlosserFactory.create(GlosserConfig(GlossProvider.OPENAI_COMPATIBLE, base, "k", "m")).gloss("casa", "Mi casa.")
-            val zai = kotlinx.serialization.json.Json.parseToJsonElement(server.takeRequest().body!!.utf8()) as kotlinx.serialization.json.JsonObject
-            val other = kotlinx.serialization.json.Json.parseToJsonElement(server.takeRequest().body!!.utf8()) as kotlinx.serialization.json.JsonObject
+            fun body() = kotlinx.serialization.json.Json.parseToJsonElement(server.takeRequest().body!!.utf8()) as kotlinx.serialization.json.JsonObject
+            val zai = body()
+            val coding = body()
+            val other = body()
             assertEquals("""{"type":"disabled"}""", zai["thinking"].toString())
+            assertEquals("""{"type":"disabled"}""", coding["thinking"].toString())
             assertTrue("thinking" !in other)
         }
     }

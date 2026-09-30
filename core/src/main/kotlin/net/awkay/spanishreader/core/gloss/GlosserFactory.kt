@@ -14,10 +14,16 @@ enum class GlossProvider(
 ) {
     OLLAMA_CLOUD("Ollama Cloud", "https://ollama.com/v1", true, null),
     OLLAMA_LOCAL("Ollama (local network)", null, false, null),
-    /** Pay-as-you-go endpoint; GLM Coding Plan keys need https://api.z.ai/api/coding/paas/v4 instead. */
-    ZAI("z.ai GLM", "https://api.z.ai/api/paas/v4", true, null),
+    /** GLM Coding Plan subscription keys only work on the coding endpoint. */
+    ZAI_CODING("z.ai GLM Coding Plan", "https://api.z.ai/api/coding/paas/v4", true, null),
+
+    /** Pay-as-you-go z.ai balance; Coding Plan keys get HTTP 429 "Insufficient balance" here. */
+    ZAI("z.ai GLM (pay-as-you-go)", "https://api.z.ai/api/paas/v4", true, null),
     ANTHROPIC("Anthropic Claude", "https://api.anthropic.com", true, "claude-haiku-4-5"),
     OPENAI_COMPATIBLE("Other OpenAI-compatible", null, false, null),
+    ;
+
+    val isZai: Boolean get() = this == ZAI || this == ZAI_CODING
 }
 
 /** User-editable glossing settings. Blank [baseUrl]/[model] mean "use the provider default". */
@@ -68,7 +74,7 @@ object GlosserFactory {
             baseUrl = c.effectiveBaseUrl, apiKey = c.apiKey.trim().ifEmpty { null }, model = c.effectiveModel,
             httpClient = http, options = options,
             // GLM models reason by default; glossing doesn't need it and it roughly doubles latency.
-            extraParams = if (c.provider == GlossProvider.ZAI) mapOf("thinking" to buildJsonObject { put("type", "disabled") }) else emptyMap(),
+            extraParams = if (c.provider.isZai) mapOf("thinking" to buildJsonObject { put("type", "disabled") }) else emptyMap(),
         )
     }
 

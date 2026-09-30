@@ -145,7 +145,7 @@ private fun ProviderFields(s: AppSettings, provider: GlossProvider, vm: Settings
 
 private fun modelHint(p: GlossProvider) = when (p) {
     GlossProvider.OLLAMA_CLOUD -> "e.g. a Kimi model from ollama.com/search?c=cloud"
-    GlossProvider.ZAI -> "e.g. glm-5.3-flash (Coding Plan keys: base URL …/api/coding/paas/v4)"
+    GlossProvider.ZAI, GlossProvider.ZAI_CODING -> "e.g. glm-5.3-flash or glm-4.6"
     else -> "model name"
 }
 
