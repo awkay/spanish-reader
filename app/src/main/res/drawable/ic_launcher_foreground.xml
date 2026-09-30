@@ -1,0 +1,11 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- An open book: blue (new) page on the left, yellow (learning) page on the right. -->
+    <path android:fillColor="#64B5F6" android:pathData="M30,36 L52,40 L52,74 L30,70 Z" />
+    <path android:fillColor="#FFC107" android:pathData="M56,40 L78,36 L78,70 L56,74 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M35,46 L47,48 L47,50 L35,48 Z M35,53 L47,55 L47,57 L35,55 Z M35,60 L47,62 L47,64 L35,62 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M61,48 L73,46 L73,48 L61,50 Z M61,55 L73,53 L73,55 L61,57 Z M61,62 L73,60 L73,62 L61,64 Z" />
+</vector>

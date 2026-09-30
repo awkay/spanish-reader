@@ -86,3 +86,21 @@ class PlannerAndFactoryTest {
         assertTrue(fallback.seen.isEmpty())
     }
 }
+
+class ZaiRequestTest {
+    @Test
+    fun `zai requests disable thinking, other providers do not send it`() = kotlinx.coroutines.test.runTest {
+        mockwebserver3.MockWebServer().use { server ->
+            server.start()
+            val reply = """{"choices":[{"message":{"content":"{\"glosses\":[{\"id\":\"casa\",\"form\":\"casa\",\"lemma\":\"casa\",\"partOfSpeech\":\"noun\",\"meaningInContext\":\"house\"}]}"}}]}"""
+            repeat(2) { server.enqueue(mockwebserver3.MockResponse.Builder().code(200).body(reply).build()) }
+            val base = server.url("/v4").toString()
+            GlosserFactory.create(GlosserConfig(GlossProvider.ZAI, base, "k", "glm")).gloss("casa", "Mi casa.")
+            GlosserFactory.create(GlosserConfig(GlossProvider.OPENAI_COMPATIBLE, base, "k", "m")).gloss("casa", "Mi casa.")
+            val zai = kotlinx.serialization.json.Json.parseToJsonElement(server.takeRequest().body!!.utf8()) as kotlinx.serialization.json.JsonObject
+            val other = kotlinx.serialization.json.Json.parseToJsonElement(server.takeRequest().body!!.utf8()) as kotlinx.serialization.json.JsonObject
+            assertEquals("""{"type":"disabled"}""", zai["thinking"].toString())
+            assertTrue("thinking" !in other)
+        }
+    }
+}

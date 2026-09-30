@@ -22,7 +22,14 @@ class VocabRepository(
     fun observeByStatus(status: WordStatus): Flow<List<VocabEntry>> =
         dao.observeByStatus(status).map { rows -> rows.map { it.toEntry() } }
 
+    /** Every stored form's status, for coloring text. Absent forms are NEW. */
+    fun observeStatuses(): Flow<Map<String, WordStatus>> =
+        dao.observeStatuses().map { rows -> rows.associate { it.form to it.status } }
+
     suspend fun get(form: String): VocabEntry? = dao.get(form)?.toEntry()
+
+    /** Forgets [form] entirely; it becomes NEW again. */
+    suspend fun delete(form: String) = dao.delete(form)
 
     /** Entries for the given forms; forms without a row are omitted (i.e. NEW). */
     suspend fun entries(forms: Collection<String>): Map<String, VocabEntry> =
@@ -48,9 +55,15 @@ class VocabRepository(
             updated
         }
 
-    /** Stores lemma/translation from a gloss without touching status. No-op for words without a row. */
+    /**
+     * Fills in lemma/translation from a gloss where they are still missing, without touching status (the first
+     * gloss matches the saved context sentence). No-op for words without a row.
+     */
     suspend fun annotate(form: String, lemma: String?, translation: String?) = db.withTransaction {
-        dao.get(form)?.let { dao.upsert(it.copy(lemma = lemma ?: it.lemma, translation = translation ?: it.translation)) }
+        dao.get(form)?.let {
+            val updated = it.copy(lemma = it.lemma ?: lemma, translation = it.translation ?: translation)
+            if (updated != it) dao.upsert(updated)
+        }
     }
 
     /** "Paging moves to known": every form on the page that is still NEW becomes KNOWN. Returns the promoted forms. */

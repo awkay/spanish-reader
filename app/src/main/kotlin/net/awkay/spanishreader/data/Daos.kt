@@ -19,6 +19,15 @@ interface LessonDao {
     @Query("SELECT * FROM lessons WHERE id = :id")
     suspend fun get(id: Long): LessonEntity?
 
+    @Query("SELECT * FROM lessons WHERE id = :id")
+    fun observe(id: Long): Flow<LessonEntity?>
+
+    @Query("SELECT * FROM lessons ORDER BY created_at")
+    suspend fun getAll(): List<LessonEntity>
+
+    @Query("UPDATE lessons SET title = :title WHERE id = :id")
+    suspend fun rename(id: Long, title: String)
+
     @Query("UPDATE lessons SET current_page = :page WHERE id = :id")
     suspend fun setCurrentPage(id: Long, page: Int)
 
@@ -38,6 +47,16 @@ interface VocabDao {
     @Query("SELECT * FROM vocab ORDER BY last_seen DESC")
     fun observeAll(): Flow<List<VocabEntity>>
 
+    @Query("SELECT * FROM vocab")
+    suspend fun getAllOnce(): List<VocabEntity>
+
+    /** Lightweight projection for coloring text: every stored form and its status. */
+    @Query("SELECT form, status FROM vocab")
+    fun observeStatuses(): Flow<List<FormStatus>>
+
+    @Query("DELETE FROM vocab WHERE form = :form")
+    suspend fun delete(form: String)
+
     @Query("SELECT * FROM vocab WHERE status = :status ORDER BY last_seen DESC")
     fun observeByStatus(status: WordStatus): Flow<List<VocabEntity>>
 
@@ -47,6 +66,8 @@ interface VocabDao {
     @Upsert
     suspend fun upsertAll(entities: List<VocabEntity>)
 }
+
+data class FormStatus(val form: String, val status: WordStatus)
 
 @Dao
 interface GlossDao {
@@ -58,4 +79,10 @@ interface GlossDao {
 
     @Upsert
     suspend fun upsert(entity: GlossEntity)
+
+    @Query("SELECT COUNT(*) FROM gloss_cache")
+    suspend fun count(): Int
+
+    @Query("DELETE FROM gloss_cache")
+    suspend fun clear()
 }

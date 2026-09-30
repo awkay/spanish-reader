@@ -2,6 +2,7 @@ package net.awkay.spanishreader.core.gloss
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
@@ -25,6 +26,8 @@ class OpenAiCompatibleGlosser(
     private val model: String,
     httpClient: OkHttpClient = OkHttpClient(),
     options: GlossOptions = GlossOptions(),
+    /** Provider-specific top-level request fields, e.g. z.ai's `thinking` switch. */
+    private val extraParams: Map<String, JsonElement> = emptyMap(),
 ) : LlmGlosser(httpClient, options) {
     private val endpoint = baseUrl.trimEnd('/') + "/chat/completions"
 
@@ -33,6 +36,7 @@ class OpenAiCompatibleGlosser(
             put("model", model)
             put("temperature", options.temperature)
             putJsonObject("response_format") { put("type", "json_object") }
+            extraParams.forEach { (k, v) -> put(k, v) }
             putJsonArray("messages") {
                 addJsonObject {
                     put("role", "system")

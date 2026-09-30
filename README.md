@@ -12,9 +12,11 @@ tapping a word asks an LLM for its meaning in that specific sentence.
   - `gloss` — `Glosser` interface with a shared prompt, robust JSON extraction, batching, concurrency limiting and
     retry; `OpenAiCompatibleGlosser` (Ollama local/cloud, z.ai GLM, anything with `/chat/completions`),
     `AnthropicGlosser` (raw HTTP to the Messages API), `GlossCache` + `InMemoryGlossCache`, `CachingGlosser`.
-- `app` — Android (Compose, Room, Media3, WorkManager; AGP 9 with built-in Kotlin). So far: Room database
-  (`lessons`, `vocab` keyed by normalized form, `gloss_cache`), `VocabRepository` applying core `VocabularyRules`,
-  `RoomGlossCache`, and a placeholder library screen. Room schemas are exported to `app/schemas/`.
+- `core` additions: `ImportCleaner`, `TextDecoding`, `ListenScript`, `PreGlossPlanner`, `GlosserFactory` +
+  `FallbackGlosser`, `SentenceAudioCache` + `GoogleCloudSynthesizer`, JSON backup format and merge rules.
+- `app` — Android (Compose, Room, Media3, WorkManager, DataStore; AGP 9 with built-in Kotlin): import (share sheet,
+  paste, .txt), library, paged reader with word bottom sheet, listen mode (per-sentence TTS audio in a Media3
+  service), vocabulary list, settings, backup. See `docs/STATUS.md` for details.
 
 ## Building and testing
 

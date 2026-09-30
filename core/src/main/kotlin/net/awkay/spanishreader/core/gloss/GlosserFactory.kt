@@ -1,6 +1,9 @@
 package net.awkay.spanishreader.core.gloss
 
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 
 enum class GlossProvider(
     val label: String,
@@ -11,6 +14,7 @@ enum class GlossProvider(
 ) {
     OLLAMA_CLOUD("Ollama Cloud", "https://ollama.com/v1", true, null),
     OLLAMA_LOCAL("Ollama (local network)", null, false, null),
+    /** Pay-as-you-go endpoint; GLM Coding Plan keys need https://api.z.ai/api/coding/paas/v4 instead. */
     ZAI("z.ai GLM", "https://api.z.ai/api/paas/v4", true, null),
     ANTHROPIC("Anthropic Claude", "https://api.anthropic.com", true, "claude-haiku-4-5"),
     OPENAI_COMPATIBLE("Other OpenAI-compatible", null, false, null),
@@ -47,7 +51,7 @@ object GlosserFactory {
     fun create(
         primary: GlosserConfig,
         fallback: GlosserConfig? = null,
-        httpClient: OkHttpClient = OkHttpClient(),
+        httpClient: OkHttpClient = defaultHttpClient,
         options: GlossOptions = GlossOptions(),
     ): Glosser {
         val problems = primary.problems()
@@ -63,7 +67,18 @@ object GlosserFactory {
         else -> OpenAiCompatibleGlosser(
             baseUrl = c.effectiveBaseUrl, apiKey = c.apiKey.trim().ifEmpty { null }, model = c.effectiveModel,
             httpClient = http, options = options,
+            // GLM models reason by default; glossing doesn't need it and it roughly doubles latency.
+            extraParams = if (c.provider == GlossProvider.ZAI) mapOf("thinking" to buildJsonObject { put("type", "disabled") }) else emptyMap(),
         )
+    }
+
+    /** LLM batches can take tens of seconds; OkHttp's 10 s read timeout is far too short. */
+    val defaultHttpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS)
+            .callTimeout(180, TimeUnit.SECONDS)
+            .build()
     }
 }
 

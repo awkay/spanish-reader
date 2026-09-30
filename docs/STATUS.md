@@ -2,52 +2,66 @@
 
 _Last updated: 2026-09-30_
 
-## Done
-- **`:core` module** (pure Kotlin/JVM, package `net.awkay.spanishreader.core`). `./gradlew :core:test` → 51 tests, all passing.
-  - `text/`: `Tokenizer` (lossless; WORD/PUNCT/WHITESPACE; normalized = NFC + Spanish-locale lowercase, accents kept),
-    `SentenceSegmenter`, `Paginator` (~250 words/page, breaks only at sentence boundaries).
-  - `vocab/`: `WordStatus` (NEW/LEVEL_1/RECOGNIZED/FAMILIAR/LEARNED/KNOWN/IGNORED), `VocabEntry`,
-    `VocabularyRules` (tap → LEVEL_1 auto-add; page finished → remaining NEW become KNOWN), `LessonStats`.
-  - `gloss/`: `Glosser` interface; `OpenAiCompatibleGlosser` (Ollama local/cloud, z.ai GLM) and `AnthropicGlosser`
-    (Haiku 4.5, raw HTTP) on a shared `LlmGlosser` base with batching (20/request), concurrency limit (2),
-    retry/backoff on 429/5xx honoring Retry-After, one retry on malformed JSON. `GlossCache` + `InMemoryGlossCache`,
-    `CachingGlosser` (only sends cache misses).
-- **Environment**: `dl.google.com` and `maven.google.com` both reachable from cloud sessions now.
-  `scripts/install-android-sdk.sh` installs cmdline-tools + `platforms;android-37.0` + build-tools 36 into
-  `~/android-sdk` and writes `local.properties` (gitignored). Must be rerun in each fresh cloud container.
-- **Build**: Gradle wrapper upgraded 8.14.3 → **9.8.0** (AGP 9 requires Gradle 9; also clears the Kotlin 2.5 issue).
-  AGP 9.4.1 with built-in Kotlin (no `kotlin-android` plugin), KSP 2.3.12, Kotlin 2.4.20.
-- **`:app` module skeleton** (`net.awkay.spanishreader`): compileSdk 37 (required by Compose BOM 2026.09.00),
-  targetSdk 36, minSdk 26. Compose/Material3, Room 2.8.5, Media3 1.11.1, WorkManager 2.12 wired in.
-  `./gradlew :app:assembleDebug` builds a debug APK. `SpanishReaderApp` holds the DB and repositories;
-  `MainActivity` shows a placeholder `LibraryScreen` listing lessons.
-- **Room data layer** (`app/.../data/`), schema v1 exported to `app/schemas/`:
-  - `lessons` (id, title, text, created_at, current_page), `vocab` (PK = normalized form; status stored as
-    `WordStatus.code` via TypeConverter; indexed by status and lemma), `gloss_cache` (PK form_key + sentence_hash,
-    gloss stored as JSON).
-  - `VocabRepository`: `tap`, `setStatus`, `annotate` (lemma/translation from gloss, status untouched),
-    `finishPage` (page-finished rule, transactional, chunked under SQLite's bind-variable limit), `statuses`, flows.
-  - `RoomGlossCache` implements core `GlossCache`; corrupt/old-schema rows are treated as misses.
-  - `./gradlew :app:testDebugUnitTest` → 13 Robolectric tests, all passing.
+**All planned features are written and build into a debug APK, ready for testing on a device.**
+Nothing has run on real hardware yet; the UI has only been exercised under Robolectric.
+
+## Build / verify
+```
+scripts/install-android-sdk.sh          # each fresh cloud container
+./gradlew :core:test                     # 79 tests (1 live test skipped without env vars)
+./gradlew :app:testDebugUnitTest         # 22 Robolectric tests incl. an end-to-end UI smoke test
+./gradlew :app:assembleDebug             # app/build/outputs/apk/debug/app-debug.apk
+```
+Live LLM check (not run by default):
+`LIVE_GLOSS_BASE_URL=https://api.z.ai/api/coding/paas/v4 LIVE_GLOSS_API_KEY=… LIVE_GLOSS_MODEL=glm-5.3-flash ./gradlew :core:test --tests '*LiveGlosserTest*' --rerun`
+
+## Features (app)
+- **Import**: share sheet (`ACTION_SEND` text/plain, incl. shared .txt streams), "Open with" for .txt, paste button,
+  file picker. Text is cleaned (`ImportCleaner`: CRLF, invisible chars, hard-wrap joining toggle, hyphen rejoin);
+  .txt decoding handles BOMs, UTF-8 and Windows-1252. A bare URL gets a warning (article extraction not built).
+- **Library**: lessons with word count, new/learning counts, % known, page progress, pre-gloss progress/failure;
+  rename, delete, "Pre-gloss now".
+- **Reader**: `HorizontalPager` of ~250-word pages (setting), words colored by status via `LinkAnnotation`,
+  tap → bottom sheet (meaning in context, lemma, POS, grammar note, other meanings, idiom/phrase, pronounce button,
+  status chips 1–4 / Known / Ignore). Tapping a NEW word → LEVEL_1 + vocab entry with context sentence. Turning
+  forward finishes the pages passed (NEW → KNOWN); "Finish lesson" on the last page. Position is saved. Text size ±.
+- **Glossing**: `GlossService` = exact cache → live lookup (cached) → any cached gloss of the form (flagged).
+  Providers: Ollama Cloud (default), Ollama local, z.ai GLM (sends `thinking: disabled`), Anthropic, other
+  OpenAI-compatible; per-provider URL/model/key in settings; optional Claude fallback (`FallbackGlosser`);
+  "Test connection" button. **Pre-gloss on import** via WorkManager (`PreGlossWorker`, network constraint, retry
+  with backoff, progress shown in library), up to N sentences per word (setting, default 3).
+- **Listen**: Media3 `MediaSessionService` + ExoPlayer playlist of one audio file per sentence (background playback,
+  lock-screen/notification controls). Audio is synthesized sentence-by-sentence and cached content-addressed in
+  `filesDir/tts` (`SentenceAudioCache`). Engines: on-device Android TTS (default; accent es-MX/es-US/… and voice
+  picker) or Google Cloud TTS (API key + voice name, MP3). Current sentence highlighted and auto-scrolled; tap a
+  sentence to jump; prev/next/replay, loop sentence (repeat-one), speed 0.5–2× (persisted).
+- **Vocabulary**: filter chips (Learning, 1–4, Known, Ignored, All) with counts, search (form/lemma/meaning),
+  expand for context sentence, change status, forget word.
+- **Settings**: glossing, pre-gloss, words per page, text size, TTS engine/voice, test voice, clear audio/gloss
+  caches, **JSON backup export/restore** (restore merges: newer `lastSeen` wins, nothing deleted).
+
+## Verified against real services
+- z.ai (key from Tony, not stored in the repo): the supplied key is a **GLM Coding Plan** key. It works only with
+  base URL `https://api.z.ai/api/coding/paas/v4`; the pay-as-you-go URL returns 429 "Insufficient balance".
+  `glm-5.3-flash` and `glm-4.6` both produce excellent glosses (clitics in `dáselo`, idiom `echar de menos`);
+  ~2 s/word with thinking disabled, ~7–9 s for a 3-word batch.
+- Ollama Cloud, Anthropic and Google Cloud TTS have not been tried with real keys.
 
 ## Known issues / unverified
-- Glossers are only tested against MockWebServer — never against a real Ollama, z.ai, or Anthropic endpoint.
-- Every newline ends a sentence. Hard-wrapped text (e.g. pasted from PDFs/emails) will split mid-sentence;
-  consider joining single newlines at import.
-- No test proves the concurrency limit of 2 holds.
-- APK never installed on a device/emulator; UI is untested.
+- Never installed on a device. Listen mode (MediaController/ExoPlayer/TTS file synthesis) has no automated test.
+- Listen mode synthesizes in the screen's ViewModel: leaving the listen screen stops synthesis of further
+  sentences (already-queued sentences keep playing). Moving synthesis into `PlaybackService` would fix this.
+- On-device TTS output format is assumed to be WAV (true for Google's engine).
+- z.ai returns HTTP 429 for "insufficient balance" (code 1113); it is retried like a rate limit before failing.
+- Every newline still ends a sentence when "Join wrapped lines" is off.
+- No test proves the glosser concurrency limit of 2 holds.
+- Room schema is still v1 and was changed freely; add migrations once the app is installed with real data.
 - Robolectric (SDK 36) on JDK 21 needs `--add-opens java.base/jdk.internal.access` (set in `app/build.gradle.kts`).
-- Maven Central intermittently returns 429 through the cloud proxy; just rerun the Gradle command.
-- Repositories still use `maven("https://maven.google.com")` rather than `google()`; either works now.
+- Maven Central intermittently returns 429 through the cloud proxy; just rerun Gradle.
 
-## Next (in order)
-1. **Import**: share-sheet intent (`ACTION_SEND` text/plain) → create lesson (title = first line/sentence),
-   paste screen, .txt via `ACTION_OPEN_DOCUMENT`. Consider joining hard-wrapped single newlines here.
-2. **Reader screen**: tokenize + paginate lesson text, status-colored words (statuses via `VocabRepository.statuses`),
-   tap → bottom sheet (gloss via `CachingGlosser` + `RoomGlossCache`, status buttons), page turn → `finishPage`,
-   persist `current_page`.
-3. **Settings**: glosser provider, base URL, API key, model name (default Ollama Cloud, Kimi-class model);
-   DataStore Preferences. Build the `Glosser` from settings.
-4. **Pre-gloss on import** as a background job (WorkManager) using `CachingGlosser`.
-5. **Listen mode**: on-device TTS (es-MX/es-US) first with sentence highlighting via Media3; cloud TTS + MP3 cache after.
-6. Vocabulary screen, lesson stats in library, JSON backup/export.
+## Next
+1. Install on a phone (`adb install app/build/outputs/apk/debug/app-debug.apk`) and test end to end.
+2. Move listen-mode synthesis into the service; add a sentence-highlight overlay in the reader while listening.
+3. Web article extraction for shared URLs; EPUB import.
+4. Offline dictionary fallback (kaikki.org Wiktionary extract).
+5. Azure Neural TTS option; LingQ-style daily stats.
