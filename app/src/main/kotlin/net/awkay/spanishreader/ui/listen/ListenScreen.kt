@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
@@ -74,7 +75,13 @@ fun ListenScreen(lessonId: Long, onBack: () -> Unit, onRead: () -> Unit) {
             TopAppBar(
                 title = { Text(s.title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = { BackButton(onBack) },
-                actions = { IconButton(onClick = onRead) { Icon(Icons.AutoMirrored.Filled.MenuBook, "Read") } },
+                actions = {
+                    IconButton(onClick = vm::toggleTranslations) {
+                        Icon(Icons.Default.Translate, if (ui.showTranslations) "Hide translations" else "Show translations",
+                            tint = if (ui.showTranslations) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    IconButton(onClick = onRead) { Icon(Icons.AutoMirrored.Filled.MenuBook, "Read") }
+                },
             )
         },
         bottomBar = { Controls(s, vm.audio) },
@@ -88,11 +95,8 @@ fun ListenScreen(lessonId: Long, onBack: () -> Unit, onRead: () -> Unit) {
         LazyColumn(Modifier.fillMaxSize().padding(padding), state = list) {
             itemsIndexed(s.sentences, key = { _, it -> it.sentenceIndex }) { i, sentence ->
                 val current = i == s.current
-                Text(
-                    sentence.text,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = if (current) FontWeight.SemiBold else FontWeight.Normal,
-                    modifier = Modifier
+                Column(
+                    Modifier
                         .fillMaxWidth()
                         .clickable { vm.audio.playFrom(i) }
                         .padding(horizontal = 12.dp, vertical = 2.dp)
@@ -101,7 +105,21 @@ fun ListenScreen(lessonId: Long, onBack: () -> Unit, onRead: () -> Unit) {
                             RoundedCornerShape(8.dp),
                         )
                         .padding(horizontal = 8.dp, vertical = 8.dp),
-                )
+                ) {
+                    Text(
+                        sentence.text,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = if (current) FontWeight.SemiBold else FontWeight.Normal,
+                    )
+                    if (ui.showTranslations) {
+                        val t = ui.translations[sentence.text]
+                        Text(
+                            t ?: if (current) "Translating…" else "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
         }
     }

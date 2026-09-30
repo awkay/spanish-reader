@@ -87,11 +87,11 @@ class RichGlossTest {
     }
 
     @Test
-    fun `phrase replies are parsed and single words dropped`() {
-        val text = """{"sentences":[{"id":"0","phrases":[{"phrase":"echar de menos","meaning":"to miss"},{"phrase":"casa","meaning":"house"}]},{"id":"1","phrases":[]}]}"""
-        val parsed = GlossParser.parsePhrases(text, listOf("0", "1", "2"))
-        assertEquals(listOf(FoundPhrase("echar de menos", "to miss")), parsed["0"])
-        assertEquals(emptyList(), parsed["1"])
+    fun `sentence replies are parsed and single-word phrases dropped`() {
+        val text = """{"sentences":[{"id":"0","translation":"I will miss my family.","phrases":[{"phrase":"echar de menos","meaning":"to miss"},{"phrase":"casa","meaning":"house"}]},{"id":"1","phrases":[]}]}"""
+        val parsed = GlossParser.parseSentences(text, listOf("0", "1", "2"))
+        assertEquals(SentenceAnalysis("I will miss my family.", listOf(FoundPhrase("echar de menos", "to miss"))), parsed["0"])
+        assertEquals(SentenceAnalysis(null, emptyList()), parsed["1"])
         assertNull(parsed["2"])
     }
 
@@ -121,27 +121,31 @@ class RichGlossTest {
     }
 
     @Test
-    fun `phrase finder batches sentences through the provider`() = runTest {
+    fun `sentence analyzer batches sentences through the provider`() = runTest {
         MockWebServer().use { server ->
             server.start()
-            val reply = """{"sentences":[{"id":"0","phrases":[{"phrase":"sin embargo","meaning":"however"}]},{"id":"1","phrases":[]}]}"""
+            val reply = """{"sentences":[{"id":"0","translation":"However, he arrived.","phrases":[{"phrase":"sin embargo","meaning":"however"}]},{"id":"1","translation":"Hello.","phrases":[]}]}"""
             val body = """{"choices":[{"message":{"content":${Json.encodeToString(kotlinx.serialization.serializer<String>(), reply)}}}]}"""
             server.enqueue(MockResponse.Builder().code(200).body(body).build())
-            val finder = GlosserFactory.createPhraseFinder(GlosserConfig(GlossProvider.OPENAI_COMPATIBLE, server.url("/v1").toString(), model = "m"))
-            val found = finder.findPhrases(listOf("Sin embargo, llegó.", "Hola."))
-            assertEquals(listOf(listOf(FoundPhrase("sin embargo", "however")), emptyList()), found)
+            val analyzer = GlosserFactory.createSentenceAnalyzer(GlosserConfig(GlossProvider.OPENAI_COMPATIBLE, server.url("/v1").toString(), model = "m"))
+            val found = analyzer.analyze(listOf("Sin embargo, llegó.", "Hola."))
+            assertEquals(
+                listOf(SentenceAnalysis("However, he arrived.", listOf(FoundPhrase("sin embargo", "however"))), SentenceAnalysis("Hello.", emptyList())),
+                found,
+            )
             val sent = Json.parseToJsonElement(server.takeRequest().body!!.utf8()).jsonObject
-            assertTrue("idioms" in sent["messages"]!!.jsonArray[0].jsonObject["content"]!!.jsonPrimitive.content)
+            val system = sent["messages"]!!.jsonArray[0].jsonObject["content"]!!.jsonPrimitive.content
+            assertTrue("idioms" in system && "translation" in system)
         }
     }
 
     @Test
-    fun `phrase finder reports null for a failed batch`() = runTest {
+    fun `sentence analyzer reports null for a failed batch`() = runTest {
         MockWebServer().use { server ->
             server.start()
             repeat(2) { server.enqueue(MockResponse.Builder().code(200).body("""{"choices":[{"message":{"content":"no json"}}]}""").build()) }
-            val finder = GlosserFactory.createPhraseFinder(GlosserConfig(GlossProvider.OPENAI_COMPATIBLE, server.url("/v1").toString(), model = "m"))
-            assertEquals(listOf(null), finder.findPhrases(listOf("Hola.")))
+            val analyzer = GlosserFactory.createSentenceAnalyzer(GlosserConfig(GlossProvider.OPENAI_COMPATIBLE, server.url("/v1").toString(), model = "m"))
+            assertEquals(listOf(null), analyzer.analyze(listOf("Hola.")))
         }
     }
 }

@@ -10,7 +10,8 @@ import net.awkay.spanishreader.core.gloss.GlossResult
 import net.awkay.spanishreader.core.gloss.Glosser
 import net.awkay.spanishreader.core.gloss.GlosserFactory
 import net.awkay.spanishreader.core.gloss.GlosserConfig
-import net.awkay.spanishreader.core.gloss.PhraseFinder
+import net.awkay.spanishreader.core.gloss.SentenceAnalyzer
+import net.awkay.spanishreader.data.PhraseStore
 import net.awkay.spanishreader.data.SettingsRepository
 import okhttp3.OkHttpClient
 
@@ -26,12 +27,30 @@ class GlossService(
     private val settings: SettingsRepository,
     private val cache: GlossCache,
     private val factory: (GlosserConfig, GlosserConfig?) -> Glosser = { p, f -> GlosserFactory.create(p, f, sharedHttp) },
-    private val phraseFactory: (GlosserConfig) -> PhraseFinder = { GlosserFactory.createPhraseFinder(it, sharedHttp) },
+    private val sentenceFactory: (GlosserConfig) -> SentenceAnalyzer = { GlosserFactory.createSentenceAnalyzer(it, sharedHttp) },
+    private val sentences: PhraseStore? = null,
 ) {
-    /** The idiom finder for the primary provider, or null when glossing isn't configured. */
-    suspend fun phraseFinder(): PhraseFinder? {
+    /** The sentence translator / idiom finder for the primary provider, or null when glossing isn't configured. */
+    suspend fun sentenceAnalyzer(): SentenceAnalyzer? {
         val primary = settings.current().primaryGlosser
-        return if (primary.isComplete) phraseFactory(primary) else null
+        return if (primary.isComplete) sentenceFactory(primary) else null
+    }
+
+    /**
+     * The English translation of [sentence]: stored one if any, else asks the model (which also yields the sentence's
+     * idioms) and stores both. Failure carries a message for the UI.
+     */
+    suspend fun translate(sentence: String): Result<String> {
+        sentences?.translation(sentence)?.let { return Result.success(it) }
+        val analyzer = sentenceAnalyzer()
+            ?: return Result.failure(IllegalStateException("Glossing is not configured. Set it up in Settings."))
+        val analysis = analyzer.analyze(listOf(sentence)).single()
+        val translation = analysis?.translation
+            ?: return Result.failure(IllegalStateException("The model didn't return a translation. Try again."))
+        sentences?.save(sentence, analysis.phrases)
+        sentences?.saveTranslation(sentence, translation)
+        sentences?.markScanned(listOf(sentence))
+        return Result.success(translation)
     }
 
     /**

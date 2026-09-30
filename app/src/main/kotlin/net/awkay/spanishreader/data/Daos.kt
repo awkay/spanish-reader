@@ -108,6 +108,21 @@ interface PhraseDao {
     @Query("DELETE FROM phrases")
     suspend fun clearPhrases()
 
+    @Upsert
+    suspend fun upsertTranslation(t: SentenceTranslationEntity)
+
+    @Query("SELECT translation FROM sentence_translations WHERE sentence_hash = :hash")
+    suspend fun translation(hash: String): String?
+
+    @Query("SELECT sentence_hash FROM sentence_translations WHERE sentence_hash IN (:hashes)")
+    suspend fun translated(hashes: List<String>): List<String>
+
+    @Query("SELECT * FROM sentence_translations WHERE sentence_hash IN (:hashes)")
+    fun observeTranslations(hashes: List<String>): Flow<List<SentenceTranslationEntity>>
+
+    @Query("DELETE FROM sentence_translations")
+    suspend fun clearTranslations()
+
     @Query("DELETE FROM phrase_scans")
     suspend fun clearScans()
 }

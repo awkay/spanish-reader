@@ -62,6 +62,14 @@ data class PhraseEntity(
     @ColumnInfo(name = "stored_at") val storedAtMillis: Long,
 )
 
+/** English translation of a whole sentence, keyed like the gloss cache (SHA-256 of the normalized sentence). */
+@Entity(tableName = "sentence_translations")
+data class SentenceTranslationEntity(
+    @PrimaryKey @ColumnInfo(name = "sentence_hash") val sentenceHash: String,
+    val translation: String,
+    @ColumnInfo(name = "stored_at") val storedAtMillis: Long,
+)
+
 /** Sentences already sent to the phrase scan, so they aren't scanned again. */
 @Entity(tableName = "phrase_scans")
 data class PhraseScanEntity(

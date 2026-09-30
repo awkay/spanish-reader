@@ -139,10 +139,17 @@ data class CliticSplit(val base: String, val attached: List<String>) {
 @Serializable
 data class FoundPhrase(val phrase: String, val meaning: String = "")
 
-/** Finds idioms and fixed expressions sentence by sentence, independently of which words get glossed. */
-interface PhraseFinder {
-    /** One list per input sentence, in order; null for a sentence whose batch failed. */
-    suspend fun findPhrases(sentences: List<String>): List<List<FoundPhrase>?>
+/** What one sentence-level call yields: an English translation and the expressions in the sentence. */
+@Serializable
+data class SentenceAnalysis(val translation: String?, val phrases: List<FoundPhrase>)
+
+/**
+ * Analyzes whole sentences (translation + idioms), independently of which words get glossed, so idioms made of
+ * already-known words are found too.
+ */
+interface SentenceAnalyzer {
+    /** One result per input sentence, in order; null for a sentence whose batch failed. */
+    suspend fun analyze(sentences: List<String>): List<SentenceAnalysis?>
 }
 
 /**

@@ -55,8 +55,17 @@ data class WordSelection(
     /** An "Improve answer" request is in flight; the current gloss stays visible meanwhile. */
     val improving: Boolean = false,
     val improveError: String? = null,
+    /** The whole sentence in English, shown under it in the sheet. */
+    val translation: TranslationState = TranslationState.Hidden,
 ) {
     val form: String get() = token.normalized!!
+}
+
+sealed interface TranslationState {
+    data object Hidden : TranslationState
+    data object Loading : TranslationState
+    data class Shown(val text: String) : TranslationState
+    data class Failed(val message: String) : TranslationState
 }
 
 /** An expression located in the text: which word tokens it covers, for underlining and the word sheet. */
@@ -222,6 +231,7 @@ class ReaderViewModel(private val app: SpanishReaderApp, private val lessonId: L
         // Looking a word up while listening: pause so the audio doesn't run away from you.
         if (audio.value.isPlaying) app.audio.pause()
         _selection.value = WordSelection(token, sentence)
+        showTranslation()
         lookupJob?.cancel()
         lookupJob = viewModelScope.launch {
             app.vocab.tap(form, sentence)
@@ -260,6 +270,20 @@ class ReaderViewModel(private val app: SpanishReaderApp, private val lessonId: L
                     is LookupResult.Failed -> cur.copy(improving = false, improveError = result.message)
                 }
             }
+        }
+    }
+
+    /** Loads the sentence's English translation: stored instantly, or fetched once and stored. */
+    fun showTranslation() {
+        val sel = _selection.value ?: return
+        if (sel.translation is TranslationState.Loading || sel.translation is TranslationState.Shown) return
+        _selection.update { it?.copy(translation = TranslationState.Loading) }
+        viewModelScope.launch {
+            val state = app.glossService.translate(sel.sentence).fold(
+                onSuccess = { TranslationState.Shown(it) },
+                onFailure = { TranslationState.Failed(it.message ?: "Translation failed") },
+            )
+            _selection.update { if (it?.sentence == sel.sentence) it.copy(translation = state) else it }
         }
     }
 

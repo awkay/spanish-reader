@@ -27,7 +27,7 @@ class SpanishReaderApp : Application() {
     val phrases: PhraseStore by lazy { PhraseStore(database.phrases()) }
     val glossCache: RoomGlossCache by lazy { RoomGlossCache(database.glosses(), phrases) }
     val settings: SettingsRepository by lazy { SettingsRepository(this) }
-    val glossService: GlossService by lazy { GlossService(settings, glossCache) }
+    val glossService: GlossService by lazy { GlossService(settings, glossCache, sentences = phrases) }
     val backup: BackupService by lazy { BackupService(database) }
     val deviceTts: DeviceTts by lazy { DeviceTts(this) }
     val audioCache: SentenceAudioCache by lazy { SentenceAudioCache(File(filesDir, "tts")) }

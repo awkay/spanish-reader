@@ -37,7 +37,7 @@ class PreGlossWorker(context: Context, params: WorkerParameters) : CoroutineWork
             inputData.getInt(KEY_FROM_PAGE, 0),
             inputData.getInt(KEY_PAGE_COUNT, 0),
         )
-        scanPhrases(app, window.map { it.sentenceIndex }.distinct().map(text::sentenceText))
+        analyzeSentences(app, window.map { it.sentenceIndex }.distinct().map(text::sentenceText))
 
         val statuses = app.vocab.statuses(window.mapNotNull { it.normalized })
         val plan = PreGlossPlanner.plan(text, statuses, settings.preGlossSentencesPerWord, window)
@@ -65,18 +65,20 @@ class PreGlossWorker(context: Context, params: WorkerParameters) : CoroutineWork
     }
 
     /**
-     * Idioms made of words the learner already knows never get glossed word by word, so each sentence is also
-     * scanned once for expressions. Best effort: failed batches are simply retried on a later run.
+     * Each sentence is analyzed once: its English translation, and its idioms (idioms made of words the learner
+     * already knows never get glossed word by word). Sentences that already have a translation are skipped. Best
+     * effort: failed batches are simply retried on a later run.
      */
-    private suspend fun scanPhrases(app: SpanishReaderApp, sentences: List<String>) {
-        val todo = app.phrases.unscanned(sentences.filter { s -> s.count { it == ' ' } >= 1 })
+    private suspend fun analyzeSentences(app: SpanishReaderApp, sentences: List<String>) {
+        val todo = app.phrases.untranslated(sentences.filter { s -> s.any { it.isLetter() } })
         if (todo.isEmpty()) return
-        val finder = app.glossService.phraseFinder() ?: return
-        val found = finder.findPhrases(todo)
+        val analyzer = app.glossService.sentenceAnalyzer() ?: return
+        val results = analyzer.analyze(todo)
         val scanned = ArrayList<String>()
-        todo.zip(found).forEach { (sentence, phrases) ->
-            if (phrases != null) {
-                app.phrases.save(sentence, phrases)
+        todo.zip(results).forEach { (sentence, analysis) ->
+            if (analysis != null) {
+                app.phrases.save(sentence, analysis.phrases)
+                analysis.translation?.let { app.phrases.saveTranslation(sentence, it) }
                 scanned += sentence
             }
         }

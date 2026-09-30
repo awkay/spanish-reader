@@ -72,11 +72,11 @@ object GlosserFactory {
         return if (fallback != null && fallback.isComplete) FallbackGlosser(main, single(fallback, httpClient, options)) else main
     }
 
-    /** The idiom finder for [config] (every provider supports it). */
-    fun createPhraseFinder(config: GlosserConfig, httpClient: OkHttpClient = defaultHttpClient, options: GlossOptions = GlossOptions()): PhraseFinder {
+    /** The sentence translator / idiom finder for [config] (every provider supports it). */
+    fun createSentenceAnalyzer(config: GlosserConfig, httpClient: OkHttpClient = defaultHttpClient, options: GlossOptions = GlossOptions()): SentenceAnalyzer {
         val problems = config.problems()
         require(problems.isEmpty()) { problems.joinToString("; ") }
-        return single(config, httpClient, options) as PhraseFinder
+        return single(config, httpClient, options) as SentenceAnalyzer
     }
 
     private fun single(c: GlosserConfig, http: OkHttpClient, options: GlossOptions): Glosser = when (c.provider) {

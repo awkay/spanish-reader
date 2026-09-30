@@ -9,7 +9,7 @@ Nothing has run on real hardware yet; the UI has only been exercised under Robol
 ```
 scripts/install-android-sdk.sh          # each fresh cloud container
 ./gradlew :core:test                     # 95 tests (2 live tests skipped without env vars)
-./gradlew :app:testDebugUnitTest         # 28 Robolectric tests incl. UI smoke test and v1→v2 migration
+./gradlew :app:testDebugUnitTest         # 32 Robolectric tests incl. UI smoke test and v1→v3 migration
 ./gradlew :app:assembleDebug             # app/build/outputs/apk/debug/app-debug.apk
 ```
 Live LLM check (not run by default):
@@ -40,10 +40,13 @@ Live LLM check (not run by default):
 - **Improve answer** button in the sheet: re-asks with the "improve" model (setting; blank = Claude if an
   Anthropic key is set, else the usual model), sending the previous answer and asking for a corrected one; the
   result replaces the cached gloss.
-- **Idioms**: a per-sentence phrase scan (`PhraseFinder`, 15 sentences per call, every provider) runs in the
-  pre-gloss worker for the pages ahead, so idioms made of already-known words are found too; expressions named in
-  a word's gloss are also recorded. Stored in `phrases` / `phrase_scans` (Room v2, auto-migration from v1,
-  tested). The reader underlines expressions (`PhraseLocator` tolerates up to 3 words in between, ignores
+- **Sentence analysis (translation + idioms)**: one per-sentence call (`SentenceAnalyzer`, 15 sentences per call,
+  every provider) in the pre-gloss worker for the pages ahead returns each sentence's English translation and its
+  idioms, so idioms made of already-known words are found too; expressions named in a word's gloss are also
+  recorded. Stored per sentence fingerprint (SHA-256 of the NFC-normalized, whitespace-collapsed sentence) in
+  `sentence_translations`, `phrases`, `phrase_scans` (Room v3; auto-migrations 1→2→3, tested). The word sheet shows
+  the translation under the Spanish sentence (stored, or fetched once via `GlossService.translate`); the listen
+  screen has a translations toggle. The reader underlines expressions (`PhraseLocator` tolerates up to 3 words in between, ignores
   accents); the selected word is now bold; tapping any word of an expression shows it in the sheet.
 - **Glossing**: `GlossService` = exact cache → live lookup (cached) → any cached gloss of the form (flagged).
   Providers: Ollama Cloud (default), Ollama local, z.ai GLM Coding Plan via Responses API or chat completions, z.ai pay-as-you-go (chat completions send `thinking: disabled`), Anthropic, other
@@ -99,7 +102,7 @@ Live LLM check (not run by default):
 - z.ai returns HTTP 429 for "insufficient balance" (code 1113); it is retried like a rate limit before failing.
 - Every newline still ends a sentence when "Join wrapped lines" is off.
 - No test proves the glosser concurrency limit of 2 holds.
-- Room schema v2; schemas in `app/schemas/` are also debug assets for the Robolectric migration test. Every
+- Room schema v3; schemas in `app/schemas/` are also debug assets for the Robolectric migration test. Every
   future change needs a migration + test.
 - Richer answers cost more output tokens: a 6-word batch took ~19–26 s on z.ai (Responses API). Model quality
   varies: glm-4.6 once claimed "observándome" needs no accent (wrong); that is what Improve is for.

@@ -24,6 +24,18 @@ class PhraseStoreTest : DbTestBase() {
     }
 
     @Test
+    fun translationsAreStoredOncePerSentence() = runTest {
+        val s1 = "El perro come."
+        val s2 = "El gato duerme."
+        store.saveTranslation(s1, " The dog eats. ")
+        assertEquals("The dog eats.", store.translation("El  perro come.")) // same fingerprint despite spacing
+        assertEquals(listOf(s2), store.untranslated(listOf(s1, s2)))
+        assertEquals(mapOf(s1 to "The dog eats."), store.observeTranslations(listOf(s1, s2)).first())
+        store.clear()
+        assertEquals(null, store.translation(s1))
+    }
+
+    @Test
     fun glossCacheRecordsTheExpressionAGlossMentions() = runTest {
         val cache = RoomGlossCache(db.glosses(), store) { now }
         val sentence = "Se me olvidó la llave."

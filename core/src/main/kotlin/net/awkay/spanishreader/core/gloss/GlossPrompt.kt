@@ -52,20 +52,22 @@ object GlossPrompt {
         return "Gloss these items:\n$items$improve${reminder(isRetry)}"
     }
 
-    val PHRASE_SYSTEM: String = """
-        You find idioms and fixed multi-word expressions in Spanish sentences for a learner of Latin American Spanish.
-        Include: idioms ("echar de menos", "dar a luz"), fixed expressions ("sin embargo", "a lo mejor", "de repente"),
-        verb + preposition combinations with their own meaning ("darse cuenta de", "acabar de" + infinitive, "tratarse de"),
-        and pronoun constructions with a special meaning ("se me olvidó", "me cae bien").
-        Do not list ordinary literal word combinations.
-        For each expression give "phrase": its words exactly as they appear in the sentence, in order, only the expression's
-        own words; and "meaning": a short English meaning in this sentence.
+    val SENTENCE_SYSTEM: String = """
+        You help an English-speaking learner of Latin American Spanish with whole sentences. For each sentence give:
+        - "translation": a natural, faithful English translation of the whole sentence (not word-for-word, but keep
+          its meaning, tense and register).
+        - "phrases": the idioms and fixed multi-word expressions in it. Include idioms ("echar de menos", "dar a luz"),
+          fixed expressions ("sin embargo", "a lo mejor", "de repente"), verb + preposition combinations with their own
+          meaning ("darse cuenta de", "acabar de" + infinitive, "tratarse de"), and pronoun constructions with a special
+          meaning ("se me olvidó", "me cae bien"). Do not list ordinary literal word combinations. For each give
+          "phrase": its words exactly as they appear in the sentence, in order, only the expression's own words; and
+          "meaning": a short English meaning in this sentence.
         Respond with ONLY a JSON object, no markdown fences and no commentary, shaped exactly like:
-        {"sentences":[{"id":"1","phrases":[{"phrase":"...","meaning":"..."}]}]}
+        {"sentences":[{"id":"1","translation":"...","phrases":[{"phrase":"...","meaning":"..."}]}]}
         Include exactly one entry per sentence; use "phrases":[] when there are none.
     """.trimIndent()
 
-    fun phraseUser(sentences: List<Pair<String, String>>, isRetry: Boolean = false): String {
+    fun sentenceUser(sentences: List<Pair<String, String>>, isRetry: Boolean = false): String {
         val items = buildJsonObject {
             putJsonArray("sentences") {
                 for ((id, text) in sentences) addJsonObject {
@@ -74,7 +76,7 @@ object GlossPrompt {
                 }
             }
         }
-        return "Find the expressions in these sentences:\n$items${reminder(isRetry)}"
+        return "Translate these sentences and find their expressions:\n$items${reminder(isRetry)}"
     }
 
     private val previousJson = kotlinx.serialization.json.Json { explicitNulls = false }

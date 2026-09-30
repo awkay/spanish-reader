@@ -84,8 +84,8 @@ object GlossParser {
         )
     }
 
-    /** Parses a phrase-finder reply: expressions per sentence id. Sentences missing from the reply are absent. */
-    fun parsePhrases(text: String, ids: List<String>): Map<String, List<FoundPhrase>> {
+    /** Parses a sentence-analysis reply per sentence id. Sentences missing from the reply are absent. */
+    fun parseSentences(text: String, ids: List<String>): Map<String, SentenceAnalysis> {
         val entries = JsonExtractor.candidates(text).mapNotNull { root ->
             when (root) {
                 is JsonObject -> (root["sentences"] as? JsonArray ?: root["items"] as? JsonArray ?: root["results"] as? JsonArray)
@@ -93,8 +93,8 @@ object GlossParser {
                 else -> null
             }?.filterIsInstance<JsonObject>()
         }.firstOrNull { it.isNotEmpty() }
-            ?: throw MalformedGlossResponseException("No phrase JSON found in model output: ${text.take(200)}")
-        val out = LinkedHashMap<String, List<FoundPhrase>>()
+            ?: throw MalformedGlossResponseException("No sentence JSON found in model output: ${text.take(200)}")
+        val out = LinkedHashMap<String, SentenceAnalysis>()
         val remaining = ids.toMutableList()
         for ((i, e) in entries.withIndex()) {
             val id = (e["id"] as? JsonPrimitive)?.content?.takeIf { it in remaining }
@@ -105,7 +105,8 @@ object GlossParser {
                 if (phrase.isEmpty() || ' ' !in phrase) null
                 else FoundPhrase(phrase, (p["meaning"] as? JsonPrimitive)?.content?.trim().orEmpty())
             }
-            out[id] = phrases
+            val translation = (e["translation"] as? JsonPrimitive)?.content?.trim()?.takeIf { it.isNotEmpty() }
+            out[id] = SentenceAnalysis(translation, phrases)
             remaining.remove(id)
         }
         return out

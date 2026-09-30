@@ -27,12 +27,12 @@ data class GlossOptions(
  * Shared batching, concurrency limiting and parse-retry for chat-style LLM providers.
  * Subclasses only build the HTTP request and pull the reply text out of the response body.
  */
-private const val PHRASE_BATCH = 15
+private const val SENTENCE_BATCH = 15
 
 abstract class LlmGlosser(
     protected val httpClient: OkHttpClient,
     val options: GlossOptions,
-) : Glosser, PhraseFinder {
+) : Glosser, SentenceAnalyzer {
     private val permits = Semaphore(options.maxConcurrency)
 
     protected abstract fun buildRequest(system: String, user: String, itemCount: Int): Request
@@ -53,27 +53,27 @@ abstract class LlmGlosser(
         return requests.map { results.getValue(it.id) }
     }
 
-    override suspend fun findPhrases(sentences: List<String>): List<List<FoundPhrase>?> {
+    override suspend fun analyze(sentences: List<String>): List<SentenceAnalysis?> {
         if (sentences.isEmpty()) return emptyList()
         val indexed = sentences.mapIndexed { i, s -> i.toString() to s }
         val results = coroutineScope {
-            indexed.chunked(PHRASE_BATCH)
-                .map { batch -> async { permits.withPermit { phraseBatch(batch) } } }
+            indexed.chunked(SENTENCE_BATCH)
+                .map { batch -> async { permits.withPermit { sentenceBatch(batch) } } }
                 .awaitAll()
-                .fold(HashMap<String, List<FoundPhrase>>()) { acc, m -> acc.apply { putAll(m) } }
+                .fold(HashMap<String, SentenceAnalysis>()) { acc, m -> acc.apply { putAll(m) } }
         }
         return indexed.map { (id, _) -> results[id] }
     }
 
-    /** One call for up to [PHRASE_BATCH] sentences; retries once on an unparseable reply, then gives up quietly. */
-    private suspend fun phraseBatch(batch: List<Pair<String, String>>): Map<String, List<FoundPhrase>> {
+    /** One call for up to [SENTENCE_BATCH] sentences; retries once on an unparseable reply, then gives up quietly. */
+    private suspend fun sentenceBatch(batch: List<Pair<String, String>>): Map<String, SentenceAnalysis> {
         for (attempt in 0..1) {
             try {
                 val body = httpClient.executeWithRetry(
-                    buildRequest(GlossPrompt.PHRASE_SYSTEM, GlossPrompt.phraseUser(batch, isRetry = attempt > 0), batch.size),
+                    buildRequest(GlossPrompt.SENTENCE_SYSTEM, GlossPrompt.sentenceUser(batch, isRetry = attempt > 0), batch.size),
                     options.retry,
                 )
-                return GlossParser.parsePhrases(replyText(body), batch.map { it.first })
+                return GlossParser.parseSentences(replyText(body), batch.map { it.first })
             } catch (e: CancellationException) {
                 throw e
             } catch (_: MalformedGlossResponseException) {

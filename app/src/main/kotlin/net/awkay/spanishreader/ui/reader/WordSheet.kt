@@ -68,6 +68,7 @@ fun WordSheet(
     onStatus: (WordStatus) -> Unit,
     onRetry: () -> Unit,
     onImprove: () -> Unit,
+    onTranslate: () -> Unit,
     onSpeak: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -117,6 +118,17 @@ fun WordSheet(
                 }
             }
             Text("“${selection.sentence}”", style = MaterialTheme.typography.bodyMedium, fontStyle = FontStyle.Italic)
+            when (val t = selection.translation) {
+                TranslationState.Hidden -> Unit
+                TranslationState.Loading -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                    Text("Translating…", style = MaterialTheme.typography.bodySmall)
+                }
+                is TranslationState.Shown -> Text(t.text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                is TranslationState.Failed -> TextButton(onClick = onTranslate) {
+                    Text("${t.message} — tap to retry", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+            }
             Text("Status", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 4.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 val choices = listOf(

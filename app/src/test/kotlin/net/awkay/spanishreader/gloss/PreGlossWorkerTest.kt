@@ -88,6 +88,7 @@ class PreGlossWorkerTest {
                 scannedSentences += text
                 add(buildJsonObject {
                     put("id", o["id"]!!.jsonPrimitive.content)
+                    put("translation", "English of " + text.take(2))
                     put("phrases", buildJsonArray {
                         add(buildJsonObject { put("phrase", text.split(" ").take(2).joinToString(" ")); put("meaning", "a phrase") })
                     })
@@ -133,6 +134,7 @@ class PreGlossWorkerTest {
         // Each page is one sentence here: pages 1 and 2 were scanned for expressions, once.
         assertEquals(listOf("pb", "pc"), scannedSentences.map { it.substring(0, 2) })
         assertEquals("a phrase", app.phrases.forSentence(scannedSentences[0]).single().meaning)
+        assertEquals("English of pb", app.phrases.translation(scannedSentences[0]))
 
         glossed.clear()
         scannedSentences.clear()

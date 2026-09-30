@@ -56,18 +56,19 @@ class LiveGlosserTest {
     }
 
     @Test
-    fun `finds idioms made of common words`() = runBlocking {
-        val finder = GlosserFactory.createPhraseFinder(config())
+    fun `translates sentences and finds idioms made of common words`() = runBlocking {
+        val analyzer = GlosserFactory.createSentenceAnalyzer(config())
         val sentences = listOf(
             "Sin embargo, no se dio cuenta de nada.",
             "A lo mejor llueve mañana.",
             "El perro come pan.",
         )
-        val found = finder.findPhrases(sentences)
+        val found = analyzer.analyze(sentences)
         found.forEachIndexed { i, p -> println("${sentences[i]} -> $p") }
-        val first = found[0]!!.map { it.phrase.lowercase() }
+        val first = found[0]!!.phrases.map { it.phrase.lowercase() }
         assertTrue(first.any { "sin embargo" in it } && first.any { "cuenta" in it }, first.toString())
-        assertTrue(found[1]!!.any { "a lo mejor" in it.phrase.lowercase() })
-        assertTrue(found[2]!!.isEmpty())
+        assertTrue(found[1]!!.phrases.any { "a lo mejor" in it.phrase.lowercase() })
+        assertTrue(found[2]!!.phrases.isEmpty())
+        assertTrue("dog" in found[2]!!.translation!!.lowercase(), found[2]!!.translation)
     }
 }

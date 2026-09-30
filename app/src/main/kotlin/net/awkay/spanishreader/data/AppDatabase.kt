@@ -8,14 +8,18 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
 /**
- * Schema history (exported to app/schemas/): v1 lessons, vocab, gloss_cache; v2 adds phrases + phrase_scans.
+ * Schema history (exported to app/schemas/): v1 lessons, vocab, gloss_cache; v2 adds phrases + phrase_scans;
+ * v3 adds sentence_translations.
  * Every change needs a migration now that the app is installed with real data.
  */
 @Database(
-    entities = [LessonEntity::class, VocabEntity::class, GlossEntity::class, PhraseEntity::class, PhraseScanEntity::class],
-    version = 2,
+    entities = [
+        LessonEntity::class, VocabEntity::class, GlossEntity::class, PhraseEntity::class, PhraseScanEntity::class,
+        SentenceTranslationEntity::class,
+    ],
+    version = 3,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2)],
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {

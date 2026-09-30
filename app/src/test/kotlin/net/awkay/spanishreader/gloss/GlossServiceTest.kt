@@ -99,6 +99,29 @@ class GlossServiceTest {
     }
 
     @Test
+    fun translateUsesTheStoredTranslationOrFetchesAndStoresIt() = runTest {
+        val s = settings()
+        s.update { it.copy(provider = GlossProvider.ZAI) }
+        s.updateProvider(configured)
+        val db = androidx.room.Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), net.awkay.spanishreader.data.AppDatabase::class.java)
+            .allowMainThreadQueries().build()
+        val store = net.awkay.spanishreader.data.PhraseStore(db.phrases())
+        var calls = 0
+        val analyzer = object : net.awkay.spanishreader.core.gloss.SentenceAnalyzer {
+            override suspend fun analyze(sentences: List<String>) = sentences.map {
+                calls++
+                net.awkay.spanishreader.core.gloss.SentenceAnalysis("However, he arrived.", listOf(net.awkay.spanishreader.core.gloss.FoundPhrase("sin embargo", "however")))
+            }
+        }
+        val service = GlossService(s, InMemoryGlossCache(), factory = { _, _ -> Fake(false) }, sentenceFactory = { analyzer }, sentences = store)
+        assertEquals("However, he arrived.", service.translate("Sin embargo, llegó.").getOrThrow())
+        assertEquals("However, he arrived.", service.translate("Sin embargo, llegó.").getOrThrow())
+        assertEquals(1, calls)
+        assertEquals("sin embargo", store.forSentence("Sin embargo, llegó.").single().phrase)
+        db.close()
+    }
+
+    @Test
     fun settingsPersistPerProvider() = runTest {
         val s = settings()
         s.updateProvider(configured)

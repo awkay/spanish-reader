@@ -6,7 +6,10 @@ import kotlinx.coroutines.flow.flowOf
 import net.awkay.spanishreader.core.gloss.FoundPhrase
 import net.awkay.spanishreader.core.gloss.GlossCache
 
-/** Idioms and fixed expressions per sentence, keyed like the gloss cache (hash of the sentence text). */
+/**
+ * Per-sentence knowledge: idioms/fixed expressions and whole-sentence translations, keyed like the gloss cache
+ * (SHA-256 of the normalized sentence text), so a sentence is analyzed once whichever lesson it appears in.
+ */
 class PhraseStore(
     private val dao: PhraseDao,
     private val clock: () -> Long = System::currentTimeMillis,
@@ -45,9 +48,34 @@ class PhraseStore(
         }
     }
 
+    suspend fun saveTranslation(sentence: String, translation: String) {
+        if (translation.isBlank()) return
+        dao.upsertTranslation(SentenceTranslationEntity(GlossCache.sentenceHash(sentence), translation.trim(), clock()))
+    }
+
+    suspend fun translation(sentence: String): String? = dao.translation(GlossCache.sentenceHash(sentence))
+
+    /** The subset of [sentences] with no stored translation yet. */
+    suspend fun untranslated(sentences: Collection<String>): List<String> {
+        val byHash = sentences.distinct().associateBy(GlossCache::sentenceHash)
+        val done = byHash.keys.chunked(MAX_BIND_ARGS).flatMap { dao.translated(it) }.toSet()
+        return byHash.filterKeys { it !in done }.values.toList()
+    }
+
+    /** Translations for [sentences], keyed by sentence text; updates as translations arrive. */
+    fun observeTranslations(sentences: List<String>): Flow<Map<String, String>> {
+        val textByHash = sentences.distinct().associateBy(GlossCache::sentenceHash)
+        if (textByHash.isEmpty()) return flowOf(emptyMap())
+        val flows = textByHash.keys.chunked(MAX_BIND_ARGS).map { dao.observeTranslations(it) }
+        return combine(flows) { chunks ->
+            chunks.asList().flatten().associate { textByHash.getValue(it.sentenceHash) to it.translation }
+        }
+    }
+
     suspend fun clear() {
         dao.clearPhrases()
         dao.clearScans()
+        dao.clearTranslations()
     }
 
     private companion object {
