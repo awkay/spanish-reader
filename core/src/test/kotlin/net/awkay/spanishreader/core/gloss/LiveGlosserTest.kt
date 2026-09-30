@@ -22,6 +22,7 @@ class LiveGlosserTest {
         assumeTrue(baseUrl.isNotEmpty() && apiKey.isNotEmpty() && model.isNotEmpty(), "live gloss env not set")
         val provider = when {
             "/anthropic" in baseUrl || "anthropic.com" in baseUrl -> GlossProvider.ANTHROPIC
+            "z.ai/api/v1" in baseUrl -> GlossProvider.ZAI_RESPONSES
             "z.ai/api/coding" in baseUrl -> GlossProvider.ZAI_CODING
             "z.ai" in baseUrl -> GlossProvider.ZAI
             else -> GlossProvider.OPENAI_COMPATIBLE

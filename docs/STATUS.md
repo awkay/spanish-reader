@@ -26,7 +26,7 @@ Live LLM check (not run by default):
   status chips 1–4 / Known / Ignore). Tapping a NEW word → LEVEL_1 + vocab entry with context sentence. Turning
   forward finishes the pages passed (NEW → KNOWN); "Finish lesson" on the last page. Position is saved. Text size ±.
 - **Glossing**: `GlossService` = exact cache → live lookup (cached) → any cached gloss of the form (flagged).
-  Providers: Ollama Cloud (default), Ollama local, z.ai GLM Coding Plan / pay-as-you-go (send `thinking: disabled`), Anthropic, other
+  Providers: Ollama Cloud (default), Ollama local, z.ai GLM Coding Plan via Responses API or chat completions, z.ai pay-as-you-go (chat completions send `thinking: disabled`), Anthropic, other
   OpenAI-compatible; per-provider URL/model/key in settings; optional Claude fallback (`FallbackGlosser`);
   "Test connection" button. **Pre-gloss on import** via WorkManager (`PreGlossWorker`, network constraint, retry
   with backoff, progress shown in library), up to N sentences per word (setting, default 3).
@@ -41,7 +41,11 @@ Live LLM check (not run by default):
   caches, **JSON backup export/restore** (restore merges: newer `lastSeen` wins, nothing deleted).
 
 ## Verified against real services
-- z.ai (key from Tony, not stored in the repo): the supplied key is a **GLM Coding Plan** key. It works only with
+- z.ai (key from Tony, not stored in the repo): **recommended setup is provider "z.ai GLM Coding Plan (Responses
+  API)"** = `https://api.z.ai/api/v1/responses` (`OpenAiResponsesGlosser`, `reasoning.effort=low`, JSON output).
+  It serves the model actually requested (glm-4.6 stays glm-4.6) and is the fastest route: ~7–8 s for a 3-word
+  batch. `/api/v1/chat/completions` returns 403 for this key; only `/responses` works there.
+- The supplied key is a **GLM Coding Plan** key. It works only with
   `https://api.z.ai/api/coding/paas/v4` (provider preset "z.ai GLM Coding Plan"); the pay-as-you-go
   `/api/paas/v4` returns 429 "Insufficient balance", and v2/v3 paths don't exist (404).
   The plan also works on z.ai's Anthropic-compatible endpoint (provider "Anthropic Claude", base URL

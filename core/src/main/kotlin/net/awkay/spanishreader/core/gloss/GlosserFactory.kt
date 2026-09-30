@@ -14,7 +14,13 @@ enum class GlossProvider(
 ) {
     OLLAMA_CLOUD("Ollama Cloud", "https://ollama.com/v1", true, null),
     OLLAMA_LOCAL("Ollama (local network)", null, false, null),
-    /** GLM Coding Plan subscription keys only work on the coding endpoint. */
+    /**
+     * GLM Coding Plan via the OpenAI Responses API. Unlike the chat-completions coding endpoint, it serves the model
+     * actually requested (e.g. glm-4.6) instead of rerouting to the newest one.
+     */
+    ZAI_RESPONSES("z.ai GLM Coding Plan (Responses API)", "https://api.z.ai/api/v1", true, null),
+
+    /** GLM Coding Plan subscription keys only work on the coding endpoints. */
     ZAI_CODING("z.ai GLM Coding Plan", "https://api.z.ai/api/coding/paas/v4", true, null),
 
     /** Pay-as-you-go z.ai balance; Coding Plan keys get HTTP 429 "Insufficient balance" here. */
@@ -23,7 +29,7 @@ enum class GlossProvider(
     OPENAI_COMPATIBLE("Other OpenAI-compatible", null, false, null),
     ;
 
-    val isZai: Boolean get() = this == ZAI || this == ZAI_CODING
+    val isZai: Boolean get() = this == ZAI || this == ZAI_CODING || this == ZAI_RESPONSES
 }
 
 /** User-editable glossing settings. Blank [baseUrl]/[model] mean "use the provider default". */
@@ -67,6 +73,10 @@ object GlosserFactory {
     }
 
     private fun single(c: GlosserConfig, http: OkHttpClient, options: GlossOptions): Glosser = when (c.provider) {
+        GlossProvider.ZAI_RESPONSES -> OpenAiResponsesGlosser(
+            baseUrl = c.effectiveBaseUrl, apiKey = c.apiKey.trim().ifEmpty { null }, model = c.effectiveModel,
+            httpClient = http, options = options,
+        )
         GlossProvider.ANTHROPIC -> AnthropicGlosser(
             apiKey = c.apiKey.trim(), model = c.effectiveModel, httpClient = http, options = options, baseUrl = c.effectiveBaseUrl,
         )
