@@ -121,6 +121,19 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         }
     }
 
+    /**
+     * Switches the glossing provider. Its base URL (and model, for providers with a default) is filled in from the
+     * provider's defaults only when still empty, so anything the user typed is kept.
+     */
+    suspend fun selectProvider(provider: GlossProvider) = update { s ->
+        val c = s.config(provider)
+        val filled = c.copy(
+            baseUrl = c.baseUrl.ifBlank { provider.defaultBaseUrl.orEmpty() },
+            model = c.model.ifBlank { provider.defaultModel.orEmpty() },
+        )
+        s.copy(provider = provider, providerConfigs = s.providerConfigs + (provider to filled))
+    }
+
     /** Replaces the stored config for [config]'s provider. */
     suspend fun updateProvider(config: GlosserConfig) =
         update { it.copy(providerConfigs = it.providerConfigs + (config.provider to config)) }

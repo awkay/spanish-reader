@@ -68,7 +68,7 @@ fun SettingsScreen(onBack: () -> Unit) {
         ) {
             Section("Word meanings (LLM)")
             Dropdown("Provider", s.provider.label, GlossProvider.entries.map { it.label }) { i ->
-                vm.update { it.copy(provider = GlossProvider.entries[i]) }
+                vm.selectProvider(GlossProvider.entries[i])
             }
             ProviderFields(s, s.provider, vm)
             OutlinedButton(onClick = { vm.test(s.primaryGlosser) }, enabled = !vm.testing) { Text(if (vm.testing) "Testing…" else "Test connection") }
@@ -140,11 +140,16 @@ fun SettingsScreen(onBack: () -> Unit) {
 private fun ProviderFields(s: AppSettings, provider: GlossProvider, vm: SettingsViewModel) {
     val c = s.config(provider)
     if (provider != s.provider) Text(provider.label, style = MaterialTheme.typography.labelLarge)
-    TextSetting("Base URL", c.baseUrl, placeholder = provider.defaultBaseUrl ?: "http://192.168.1.x:11434/v1", keyboard = KeyboardType.Uri) {
-        vm.updateProvider(c.copy(baseUrl = it))
+    // Keyed by provider so switching providers shows that provider's values, not the previous one's text.
+    TextSetting("Base URL", c.baseUrl, key = provider, placeholder = provider.defaultBaseUrl ?: "http://192.168.1.x:11434/v1", keyboard = KeyboardType.Uri) {
+        vm.updateProvider(s.config(provider).copy(baseUrl = it))
     }
-    TextSetting("Model", c.model, placeholder = provider.defaultModel ?: modelHint(provider)) { vm.updateProvider(c.copy(model = it)) }
-    TextSetting("API key${if (provider.requiresApiKey) "" else " (optional)"}", c.apiKey, secret = true) { vm.updateProvider(c.copy(apiKey = it)) }
+    TextSetting("Model", c.model, key = provider, placeholder = provider.defaultModel ?: modelHint(provider)) {
+        vm.updateProvider(s.config(provider).copy(model = it))
+    }
+    TextSetting("API key${if (provider.requiresApiKey) "" else " (optional)"}", c.apiKey, key = provider, secret = true) {
+        vm.updateProvider(s.config(provider).copy(apiKey = it))
+    }
 }
 
 private fun modelHint(p: GlossProvider) = when (p) {
@@ -160,13 +165,15 @@ private fun Section(title: String) = Text(title, style = MaterialTheme.typograph
 private fun TextSetting(
     label: String,
     value: String,
+    /** Resets the field's local text when it changes (e.g. the provider being edited). */
+    key: Any? = null,
     placeholder: String? = null,
     secret: Boolean = false,
     keyboard: KeyboardType = KeyboardType.Text,
     onChange: (String) -> Unit,
 ) {
     // Local state so typing isn't disturbed by the DataStore round-trip.
-    var text by remember(label) { mutableStateOf(value) }
+    var text by remember(label, key) { mutableStateOf(value) }
     OutlinedTextField(
         text,
         { text = it; onChange(it) },

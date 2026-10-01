@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.awkay.spanishreader.SpanishReaderApp
+import net.awkay.spanishreader.core.gloss.GlossProvider
 import net.awkay.spanishreader.core.gloss.GlossRequest
 import net.awkay.spanishreader.core.gloss.GlossResult
 import net.awkay.spanishreader.core.gloss.GlosserFactory
@@ -37,6 +38,8 @@ class SettingsViewModel(private val app: SpanishReaderApp) : ViewModel() {
     fun update(transform: (AppSettings) -> AppSettings) = viewModelScope.launch { app.settings.update(transform) }
 
     fun updateProvider(config: GlosserConfig) = viewModelScope.launch { app.settings.updateProvider(config) }
+
+    fun selectProvider(provider: GlossProvider) = viewModelScope.launch { app.settings.selectProvider(provider) }
 
     /** Glosses one word with [config] alone (no cache, no fallback) and reports the result. */
     fun test(config: GlosserConfig) {

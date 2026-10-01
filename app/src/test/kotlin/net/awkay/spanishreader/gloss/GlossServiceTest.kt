@@ -122,6 +122,26 @@ class GlossServiceTest {
     }
 
     @Test
+    fun selectingAProviderFillsDefaultsOnlyWhenEmpty() = runTest {
+        val s = settings()
+        s.selectProvider(GlossProvider.ZAI_RESPONSES)
+        assertEquals("https://api.z.ai/api/v1", s.current().primaryGlosser.baseUrl)
+        assertEquals("", s.current().primaryGlosser.model) // no default model for z.ai
+
+        s.updateProvider(GlosserConfig(GlossProvider.ZAI, baseUrl = "https://my.proxy/v4", model = "glm-4.6"))
+        s.selectProvider(GlossProvider.ZAI)
+        assertEquals(GlosserConfig(GlossProvider.ZAI, baseUrl = "https://my.proxy/v4", model = "glm-4.6"), s.current().primaryGlosser)
+
+        s.selectProvider(GlossProvider.ANTHROPIC)
+        assertEquals("https://api.anthropic.com", s.current().primaryGlosser.baseUrl)
+        assertEquals("claude-haiku-4-5", s.current().primaryGlosser.model)
+
+        s.selectProvider(GlossProvider.OLLAMA_LOCAL) // no default URL: stays empty for the user to fill in
+        assertEquals("", s.current().primaryGlosser.baseUrl)
+        assertEquals(GlossProvider.OLLAMA_LOCAL, s.current().provider)
+    }
+
+    @Test
     fun settingsPersistPerProvider() = runTest {
         val s = settings()
         s.updateProvider(configured)
