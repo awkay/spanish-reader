@@ -15,6 +15,8 @@ class LessonRepository(
 
     suspend fun get(id: Long): LessonEntity? = dao.get(id)
 
+    suspend fun all(): List<LessonEntity> = dao.getAll()
+
     /**
      * Cleans [rawText] and stores it as a new lesson; a blank [title] is derived from the text.
      * @throws IllegalArgumentException if the text is empty after cleaning.

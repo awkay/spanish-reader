@@ -12,6 +12,7 @@ import androidx.navigation.navArgument
 import net.awkay.spanishreader.ShareInbox
 import net.awkay.spanishreader.ui.importer.ImportScreen
 import net.awkay.spanishreader.ui.library.LibraryScreen
+import net.awkay.spanishreader.ui.library.SharedLibraryScreen
 import net.awkay.spanishreader.ui.listen.ListenScreen
 import net.awkay.spanishreader.ui.reader.ReaderScreen
 import net.awkay.spanishreader.ui.settings.SettingsScreen
@@ -22,6 +23,7 @@ object Routes {
     const val IMPORT = "import"
     const val VOCAB = "vocab"
     const val SETTINGS = "settings"
+    const val SHARED = "shared"
     fun reader(id: Long) = "reader/$id"
     fun listen(id: Long) = "listen/$id"
 }
@@ -41,6 +43,14 @@ fun AppNav() {
                 onListen = { nav.navigate(Routes.listen(it)) },
                 onImport = { nav.navigate(Routes.IMPORT) },
                 onVocabulary = { nav.navigate(Routes.VOCAB) },
+                onSettings = { nav.navigate(Routes.SETTINGS) },
+                onGetFromWeb = { nav.navigate(Routes.SHARED) },
+            )
+        }
+        composable(Routes.SHARED) {
+            SharedLibraryScreen(
+                onBack = { nav.popBackStack() },
+                onOpen = { id -> nav.navigate(Routes.reader(id)) { popUpTo(Routes.LIBRARY) } },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
             )
         }

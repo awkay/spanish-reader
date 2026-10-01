@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
@@ -55,6 +56,7 @@ fun LibraryScreen(
     onImport: () -> Unit,
     onVocabulary: () -> Unit,
     onSettings: () -> Unit,
+    onGetFromWeb: () -> Unit = {},
 ) {
     val vm = appViewModel { LibraryViewModel(it) }
     val rows by vm.rows.collectAsStateWithLifecycle()
@@ -71,6 +73,7 @@ fun LibraryScreen(
             TopAppBar(
                 title = { Text("Spanish Reader") },
                 actions = {
+                    IconButton(onClick = onGetFromWeb) { Icon(Icons.Default.CloudDownload, "Get from web") }
                     IconButton(onClick = onVocabulary) { Icon(Icons.Default.Translate, "Vocabulary") }
                     IconButton(onClick = onSettings) { Icon(Icons.Default.Settings, "Settings") }
                 },

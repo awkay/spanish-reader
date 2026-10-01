@@ -1,6 +1,6 @@
 # Status
 
-_Last updated: 2026-10-01_
+_Last updated: 2026-10-02_
 
 **Android app: all planned features built; Tony uses it daily.** New: a **web app (PWA) for iPhone** plus a small Go
 server, **deployed 2026-10-01 at https://portal.fulcrologic.com** (Linode, build-6, nginx site in
@@ -46,6 +46,9 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
   ~1 s for a 3-sentence page, ~15 MB RSS idle, ~200 MB peak while Piper runs.
 - **Android "Share to web"** (library menu; Settings → Web app): uploads a lesson with its cached glosses,
   translations and expressions, never statuses.
+- **Android "Get from web"** (cloud icon in the library bar): lists the shared library (refresh), Add imports a lesson
+  through the normal import path (no line joining; same title+text reuses the local copy), stores the server's cached
+  glosses/translations/idioms under the app's keys (local results win), then pre-glosses only what's missing.
 - **Voice**: Tony chose Piper `es_MX-claude-high` (no es-CO voice exists in Piper; Azure has es-CO neural voices if
   ever wanted). Changing it is one env setting, `SR_PIPER_MODEL`.
 

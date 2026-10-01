@@ -4,9 +4,11 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import net.awkay.spanishreader.core.gloss.FoundPhrase
@@ -15,6 +17,7 @@ import net.awkay.spanishreader.core.gloss.GlossCache
 import net.awkay.spanishreader.core.vocab.WordStatus
 import net.awkay.spanishreader.data.DbTestBase
 import net.awkay.spanishreader.data.LessonEntity
+import net.awkay.spanishreader.data.LessonRepository
 import net.awkay.spanishreader.data.PhraseStore
 import net.awkay.spanishreader.data.RoomGlossCache
 import net.awkay.spanishreader.data.SettingsRepository
@@ -96,5 +99,94 @@ class WebShareServiceTest : DbTestBase() {
             s.update { it.copy(webAccessCode = "") }
             service.share(LessonEntity(title = "T", text = "Hola.", createdAtMillis = 1))
         }
+    }
+
+    @Test
+    fun listsSharedLessonsWithTheSavedToken() = runTest {
+        val s = settings()
+        s.update { it.copy(webUrl = server.url("/").toString(), webAccessCode = "1", webToken = "tok") }
+        server.enqueue(
+            MockResponse.Builder().code(200).body(
+                """[{"id":"a1","title":"Cuento","createdAt":5,"words":120,"sharedBy":"Ana"},{"id":"b2","title":"Otro","createdAt":4,"words":7}]""",
+            ).build(),
+        )
+        val service = WebShareService(s, RoomGlossCache(db.glosses()), PhraseStore(db.phrases()), OkHttpClient())
+        val list = service.listShared()
+        assertEquals(listOf(SharedLessonSummary("a1", "Cuento", 120, "Ana", 5), SharedLessonSummary("b2", "Otro", 7, null, 4)), list)
+        val req = server.takeRequest()
+        assertEquals("GET", req.method)
+        assertEquals("/api/lessons", req.url.encodedPath)
+        assertEquals("Bearer tok", req.headers["Authorization"])
+    }
+
+    @Test
+    fun downloadsLessonAndStoresSharedAiResultsUnderTheAppsKeysWithoutTouchingVocabulary() = runTest {
+        val s = settings()
+        s.update { it.copy(webUrl = server.url("/").toString(), webAccessCode = "1", webToken = "tok") }
+        val phrases = PhraseStore(db.phrases())
+        val cache = RoomGlossCache(db.glosses(), phrases)
+        val lessons = LessonRepository(db) { now }
+        val vocab = VocabRepository(db)
+        val s1 = "Voy a echar de menos a mi familia."
+        val s2 = "Hola, amigo."
+        val mine = Gloss("familia", "familia", "noun", "my own answer")
+        cache.put("familia", s1, mine)
+        val serverGloss = Json.encodeToString(Gloss.serializer(), Gloss("echar", "echar", "verb", "to throw", isIdiomOrPhrase = true, phrase = "echar de menos", phraseMeaning = "to miss"))
+        val h1 = GlossCache.sentenceHash(s1)
+        val h2 = GlossCache.sentenceHash(s2)
+
+        server.enqueue(MockResponse.Builder().code(200).body(Json.encodeToString(JsonObject.serializer(), buildJsonObject {
+            put("id", "a1"); put("title", "Cuento"); put("text", "$s1 $s2"); put("createdAt", 5)
+        })).build())
+        server.enqueue(MockResponse.Builder().code(200).body(
+            """{"$h1":{"hash":"$h1","translation":"I'm going to miss my family.","phrases":[{"phrase":"echar de menos","meaning":"to miss"}],"scanned":true,
+               "glosses":{"echar":$serverGloss,"familia":{"form":"familia","lemma":"familia","partOfSpeech":"noun","meaningInContext":"server answer"},"mi":{"bogus":1}}},
+               "$h2":{"hash":"$h2","scanned":true}}""",
+        ).build())
+        val service = WebShareService(s, cache, phrases, OkHttpClient())
+        val result = service.download("a1", lessons)
+
+        assertFalse(result.alreadyHad)
+        assertEquals(2, result.aiResults) // echar's gloss + the translation; local familia kept, malformed mi skipped
+        val lesson = lessons.get(result.lessonId)!!
+        assertEquals("Cuento", lesson.title)
+        assertEquals("$s1 $s2", lesson.text)
+        assertEquals("/api/lessons/a1", server.takeRequest().url.encodedPath)
+        val cacheReq = server.takeRequest()
+        assertEquals("/api/cache/get", cacheReq.url.encodedPath)
+        val asked = Json.parseToJsonElement(cacheReq.body!!.utf8()).jsonObject["hashes"]!!.jsonArray.map { it.jsonPrimitive.content }
+        assertEquals(listOf(h1, h2), asked)
+
+        assertEquals("to throw", cache.get("echar", s1)!!.meaningInContext)
+        assertEquals("my own answer", cache.get("familia", s1)!!.meaningInContext)
+        assertEquals(null, cache.get("mi", s1))
+        assertEquals("I'm going to miss my family.", phrases.translation(s1))
+        assertEquals(listOf(FoundPhrase("echar de menos", "to miss")), phrases.forSentence(s1))
+        assertEquals(emptyList<String>(), phrases.unscanned(listOf(s1, s2)))
+        assertEquals(null, vocab.get("echar"))
+        assertEquals(null, vocab.get("familia"))
+
+        // Adding it again reuses the local copy and only fills in what's still missing.
+        server.enqueue(MockResponse.Builder().code(200).body("""{"id":"a1","title":"Cuento","text":"$s1 $s2","createdAt":5}""").build())
+        server.enqueue(MockResponse.Builder().code(500).body("""{"error":"disk full"}""").build())
+        val again = service.download("a1", lessons)
+        assertTrue(again.alreadyHad)
+        assertEquals(result.lessonId, again.lessonId)
+        assertEquals(null, again.aiResults) // cache fetch failed, the lesson is still there
+        assertEquals(1, lessons.all().size)
+    }
+
+    @Test
+    fun downloadReportsMissingSettingsAndServerErrors() = runTest {
+        val s = settings()
+        val lessons = LessonRepository(db) { now }
+        val service = WebShareService(s, RoomGlossCache(db.glosses()), PhraseStore(db.phrases()), OkHttpClient())
+        s.update { it.copy(webUrl = server.url("/").toString(), webAccessCode = "") }
+        assertFailsWith<IllegalArgumentException> { service.download("a1", lessons) }
+        s.update { it.copy(webAccessCode = "1", webToken = "tok") }
+        server.enqueue(MockResponse.Builder().code(404).body("""{"error":"no such lesson"}""").build())
+        val e = assertFailsWith<java.io.IOException> { service.download("gone", lessons) }
+        assertEquals("no such lesson", e.message)
+        assertTrue(lessons.all().isEmpty())
     }
 }
