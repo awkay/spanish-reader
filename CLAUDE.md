@@ -30,7 +30,7 @@ Rules:
 ## Architecture decisions (settled — don't relitigate)
 - **Two clients**: the native Android app (primary; don't disturb it beyond additive changes) and a **web app (PWA) for
   iPhone** (`web/`, TypeScript + Preact) backed by a small Go server (`server/`, stdlib only) at
-  spanish-reader.fulcrologic.com. The server holds the AI key, runs Piper TTS, and stores shared lessons plus the
+  portal.fulcrologic.com. The server holds the AI key, runs Piper TTS, and stores shared lessons plus the
   shared sentence cache. Vocabulary/statuses stay on each device and are never shared. Deploy: `deploy/`, `web-port.md`.
 - `web/src/core/` ports `:core` logic. **Kotlin stays the source of truth**: `GoldenFixtureTest` writes `fixtures/`, and
   the web tests check the port against them. After changing tokenizer/sentence/pagination/cleaning/prompt logic in

@@ -40,7 +40,7 @@ data class AppSettings(
     val googleTtsVoice: String = "es-US-Chirp3-HD-Aoede",
     val playbackSpeed: Float = 1.0f,
     /** Household web app, for "Share to web". */
-    val webUrl: String = "https://spanish-reader.fulcrologic.com",
+    val webUrl: String = "https://portal.fulcrologic.com",
     val webAccessCode: String = "",
     val webName: String = "",
     /** Session token from the web app's login, reused until it stops working. */
@@ -98,7 +98,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             googleTtsApiKey = p[GOOGLE_KEY] ?: d.googleTtsApiKey,
             googleTtsVoice = p[GOOGLE_VOICE] ?: d.googleTtsVoice,
             playbackSpeed = p[SPEED] ?: d.playbackSpeed,
-            webUrl = p[WEB_URL] ?: d.webUrl,
+            // Any settings save stored the old default; it never served the app, so move it to the new one.
+            webUrl = p[WEB_URL]?.takeUnless { it.trim().trimEnd('/') == OLD_WEB_URL } ?: d.webUrl,
             webAccessCode = p[WEB_CODE] ?: d.webAccessCode,
             webName = p[WEB_NAME] ?: d.webName,
             webToken = p[WEB_TOKEN] ?: d.webToken,
@@ -168,6 +169,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val GOOGLE_KEY = stringPreferencesKey("tts.google.apiKey")
         val GOOGLE_VOICE = stringPreferencesKey("tts.google.voice")
         val SPEED = floatPreferencesKey("tts.speed")
+        const val OLD_WEB_URL = "https://spanish-reader.fulcrologic.com"
         val WEB_URL = stringPreferencesKey("web.url")
         val WEB_CODE = stringPreferencesKey("web.accessCode")
         val WEB_NAME = stringPreferencesKey("web.name")

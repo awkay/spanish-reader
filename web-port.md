@@ -29,16 +29,16 @@ Files referenced below live in `deploy/` of https://github.com/awkay/spanish-rea
 
 ## 1. DNS
 
-Add an **A** record `spanish-reader.fulcrologic.com` → the Linode's IPv4 address. Add an AAAA record too if the other
-sites have one. Check: `dig +short spanish-reader.fulcrologic.com` returns the Linode's address.
+Add an **A** record `portal.fulcrologic.com` → the Linode's IPv4 address. Add an AAAA record too if the other
+sites have one. Check: `dig +short portal.fulcrologic.com` returns the Linode's address.
 
 ## 2. Look at the box first
 
 ```sh
 uname -m                 # x86_64 → amd64 assets, aarch64 → arm64
-free -m                  # expect ~2 GB total; need ~300 MB free headroom for Piper
+free -m                  # the Linode has ~1 GB total; need ~300 MB free headroom for Piper
 df -h /opt /var/lib      # need ~250 MB (Piper 25 MB + voice 63 MB + binary + audio cache)
-nginx -v; ls /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null
+nginx -v; ls /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null   # the Linode keeps www/book in nginx.conf itself; use conf.d
 ls /etc/letsencrypt/live 2>/dev/null; which certbot
 ss -ltnp | grep 8090     # must be empty; otherwise pick another port and change SR_LISTEN + the nginx proxy_pass
 ```
@@ -137,7 +137,7 @@ sudo ln -s /etc/nginx/sites-available/spanish-reader.conf /etc/nginx/sites-enabl
 #  (on a conf.d-style install, copy it to /etc/nginx/conf.d/spanish-reader.conf instead)
 #  If the box has no IPv6, delete the `listen [::]:80;` line.
 sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d spanish-reader.fulcrologic.com     # or the method the other sites use
+sudo certbot --nginx -d portal.fulcrologic.com     # or the method the other sites use
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
@@ -148,23 +148,23 @@ block.
 Check (all of these were verified against this exact nginx config in a test container):
 
 ```sh
-curl -sI https://spanish-reader.fulcrologic.com/ | grep -i -E 'HTTP/|cache-control'            # 200, no-cache
-curl -sI https://spanish-reader.fulcrologic.com/manifest.webmanifest | grep -i content-type    # application/manifest+json
-curl -s -o /dev/null -w '%{http_code}\n' https://spanish-reader.fulcrologic.com/api/session   # 401
+curl -sI https://portal.fulcrologic.com/ | grep -i -E 'HTTP/|cache-control'            # 200, no-cache
+curl -sI https://portal.fulcrologic.com/manifest.webmanifest | grep -i content-type    # application/manifest+json
+curl -s -o /dev/null -w '%{http_code}\n' https://portal.fulcrologic.com/api/session   # 401
 # A wrong code takes ~2 s and is refused (don't loop this: 20 failures/hour lock logins for an hour):
-time curl -s -X POST -H 'Content-Type: application/json' -d '{"code":"000000"}' https://spanish-reader.fulcrologic.com/api/login
+time curl -s -X POST -H 'Content-Type: application/json' -d '{"code":"000000"}' https://portal.fulcrologic.com/api/login
 ```
 
 End-to-end with the real code. Read the code from the env file so it never appears in the transcript:
 
 ```sh
 CODE=$(sudo sed -n 's/^SR_ACCESS_CODE=//p' /etc/spanish-reader.env)
-J=$(mktemp); curl -s -c $J -H 'Content-Type: application/json' -d "{\"code\":\"$CODE\"}" https://spanish-reader.fulcrologic.com/api/login >/dev/null
-curl -s -b $J https://spanish-reader.fulcrologic.com/api/session; echo                     # {"ok":true,"tts":true,...}
+J=$(mktemp); curl -s -c $J -H 'Content-Type: application/json' -d "{\"code\":\"$CODE\"}" https://portal.fulcrologic.com/api/login >/dev/null
+curl -s -b $J https://portal.fulcrologic.com/api/session; echo                     # {"ok":true,"tts":true,...}
 curl -s -b $J -H 'Content-Type: application/json' -d '{"sentences":["Hola, ¿cómo estás?","Muy bien."]}' \
-  https://spanish-reader.fulcrologic.com/api/tts; echo                                     # {"audio":"/api/audio/….mp3","timings":[[0,…],[…]]}
+  https://portal.fulcrologic.com/api/tts; echo                                     # {"audio":"/api/audio/….mp3","timings":[[0,…],[…]]}
 curl -s -b $J -H 'Content-Type: application/json' -d '{"system":"Reply with the single word ok.","user":"ping","items":1}' \
-  https://spanish-reader.fulcrologic.com/api/ai; echo                                      # {"text":"ok"} (or similar)
+  https://portal.fulcrologic.com/api/ai; echo                                      # {"text":"ok"} (or similar)
 rm -f $J
 ```
 
@@ -172,7 +172,7 @@ rm -f $J
 
 ## 9. On the phones (Tony does this)
 
-1. Open https://spanish-reader.fulcrologic.com in **Safari** and enter the access code.
+1. Open https://portal.fulcrologic.com in **Safari** and enter the access code.
 2. Share → **Add to Home Screen**, then open it from the home-screen icon. From then on it runs full screen and works
    offline for lessons that are already loaded.
 3. In the app's Settings: set **Your name** (shown on shared lessons) and tap **Keep data on this device**, which

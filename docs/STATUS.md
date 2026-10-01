@@ -3,8 +3,9 @@
 _Last updated: 2026-10-01_
 
 **Android app: all planned features built; Tony uses it daily.** New: a **web app (PWA) for iPhone** plus a small Go
-server for spanish-reader.fulcrologic.com, written and tested end to end in a container. Not deployed yet; the setup
-steps are in `web-port.md`.
+server, **deployed 2026-10-01 at https://portal.fulcrologic.com** (Linode, build-6, nginx site in
+`/etc/nginx/conf.d/portal.fulcrologic.com.conf`, cert renewed by the existing certbot timer). Setup steps: `web-port.md`.
+The Android app's "Share to web" default URL moved there too (an old saved `spanish-reader.` URL is mapped on read).
 
 ## Build / verify
 ```

@@ -24,7 +24,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 
 /**
- * "Share to web": uploads a lesson to the household web app's shared library (spanish-reader.fulcrologic.com),
+ * "Share to web": uploads a lesson to the household web app's shared library (portal.fulcrologic.com),
  * together with the AI work already done for its sentences (glosses, translations, idioms), so the other reader
  * gets it without paying for it again. Never sends vocabulary or word statuses.
  */
