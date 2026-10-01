@@ -86,8 +86,10 @@ Live LLM check (not run by default):
 - Ollama Cloud, Anthropic and Google Cloud TTS have not been tried with real keys.
 
 ## Releases
-- GitHub Actions (`.github/workflows/release.yml`) builds and tests on every push to `main` and publishes the APK
-  as Release `build-<run number>`; versionCode = run number. Signed with the committed `app/debug.keystore`
+- GitHub Actions (`.github/workflows/release.yml`) builds and tests on every push to `main` and publishes the
+  R8-shrunk release APK (~2.8 MB vs ~25 MB debug; only en/es resources) as Release `build-<run number>`, plus the
+  debug APK as `-debug-fallback`; versionCode = run number. The shrunk build has never run on a device; reflection
+  targets (Room `_Impl`, worker, service, `$$serializer` classes) were checked present with apkanalyzer. Signed with the committed `app/debug.keystore`
   (same key as the APKs built in the first sessions), so releases install as updates.
 - `ReaderScreenshotTest` renders the reader to `$SCREENSHOT_DIR/reader.png` (Robolectric native graphics) when
   that env var is set; skipped otherwise.

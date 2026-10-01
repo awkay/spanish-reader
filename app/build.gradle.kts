@@ -28,6 +28,22 @@ android {
         }
     }
 
+    buildTypes {
+        // The build that gets installed: shrunk with R8 (unused code, icons, resources and translations removed).
+        // Signed with the same committed debug key, so it updates over earlier builds without losing data.
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
+    androidResources {
+        // Only English UI strings (plus Spanish); libraries otherwise ship ~80 languages of strings we never show.
+        localeFilters += listOf("en", "es")
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

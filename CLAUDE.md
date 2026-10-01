@@ -52,9 +52,10 @@ Rules:
   `dl.google.com` and `maven.google.com`.
 
 ## Releases
-- `.github/workflows/release.yml`: every push to `main` runs the tests, builds the debug APK (versionCode = run
-  number) and publishes it as a GitHub Release `build-<n>`. Signed with the committed `app/debug.keystore` so
-  releases install as updates over each other and over local builds.
+- `.github/workflows/release.yml`: every push to `main` runs the tests, builds the **release** APK (R8-shrunk,
+  ~3 MB; the debug APK is ~25 MB) plus a debug fallback (versionCode = run number), and publishes both as GitHub
+  Release `build-<n>`. Both are signed with the committed `app/debug.keystore`, so they install as updates over each
+  other and over local builds. Keep R8 rules for reflection-reached code in `app/proguard-rules.pro`.
 
 ## Conventions
 - No colors in shell scripts.

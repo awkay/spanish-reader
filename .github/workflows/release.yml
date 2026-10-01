@@ -33,10 +33,11 @@ jobs:
       - name: Test
         run: ./gradlew --no-daemon :core:test :app:testDebugUnitTest
 
-      - name: Build APK
+      - name: Build APKs
         run: |
-          ./gradlew --no-daemon :app:assembleDebug
-          cp app/build/outputs/apk/debug/app-debug.apk "spanish-reader-${VERSION_CODE}.apk"
+          ./gradlew --no-daemon :app:assembleRelease :app:assembleDebug
+          cp app/build/outputs/apk/release/app-release.apk "spanish-reader-${VERSION_CODE}.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "spanish-reader-${VERSION_CODE}-debug-fallback.apk"
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
@@ -46,7 +47,11 @@ jobs:
           target_commitish: ${{ github.sha }}
           make_latest: true
           body: |
-            Debug APK built from ${{ github.sha }}.
+            Install `spanish-reader-${{ github.run_number }}.apk` (small, R8-shrunk release build).
+            The `-debug-fallback.apk` is the unshrunk build, only for if the small one misbehaves.
+            Built from ${{ github.sha }}.
 
             ${{ github.event.head_commit.message }}
-          files: spanish-reader-${{ github.run_number }}.apk
+          files: |
+            spanish-reader-${{ github.run_number }}.apk
+            spanish-reader-${{ github.run_number }}-debug-fallback.apk
