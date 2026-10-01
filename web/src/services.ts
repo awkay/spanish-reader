@@ -1,6 +1,6 @@
 // App services: vocabulary, glossing (local cache → shared server cache → AI), sentence analysis, pre-gloss,
 // sharing, backup. Mirrors the Android app's repositories and GlossService.
-import { api, type SentenceData } from './api.ts';
+import { ApiError, api, type SentenceData, type SharedLessonSummary } from './api.ts';
 import {
   GLOSS_SYSTEM, MalformedResponse, SENTENCE_SYSTEM, type FoundPhrase, type Gloss, type GlossRequest, type SentenceAnalysis,
   glossUserPrompt, pageWindow, parseGlosses, parseSentences, planPreGloss, sentenceUserPrompt,
@@ -195,6 +195,43 @@ export async function shareLesson(l: Lesson): Promise<void> {
   }
   const summary = await api.shareLesson({ title: l.title, text: l.text, sharedBy: settings.get().name || undefined, sentences });
   await saveLesson({ ...l, sharedId: summary.id });
+  const cur = shared.get();
+  shared.set({ ...cur, list: [summary, ...(cur.list ?? []).filter((s) => s.id !== summary.id)] });
+  void refreshShared();
+}
+
+// ---------- shared library ----------
+
+export interface SharedState { list: SharedLessonSummary[] | null; error: string | null; loading: boolean }
+export const shared = new Observable<SharedState>({ list: null, error: null, loading: false });
+
+let sharedSeq = 0;
+
+/** Reloads the shared library. Only the latest request's answer is applied, so a slow old one can't undo a delete. */
+export async function refreshShared(): Promise<void> {
+  const seq = ++sharedSeq;
+  shared.set({ ...shared.get(), loading: true });
+  try {
+    const list = await api.lessons();
+    if (seq === sharedSeq) shared.set({ list, error: null, loading: false });
+  } catch (e) {
+    if (seq === sharedSeq) shared.set({ ...shared.get(), error: (e as Error).message, loading: false });
+  }
+}
+
+/** Removes a lesson from the shared library for everyone. Copies on devices stay and can be shared again. */
+export async function deleteShared(id: string): Promise<void> {
+  try {
+    await api.deleteShared(id);
+  } catch (e) {
+    if (!(e instanceof ApiError && e.status === 404)) throw e; // already gone
+  }
+  sharedSeq++; // drop any in-flight refresh that started before the delete
+  const cur = shared.get();
+  shared.set({ ...cur, list: cur.list?.filter((s) => s.id !== id) ?? null, loading: false });
+  for (const l of lessons.get()) if (l.sharedId === id) await db.put('lessons', { ...l, sharedId: null });
+  await loadLessons();
+  void refreshShared();
 }
 
 // ---------- AI ----------

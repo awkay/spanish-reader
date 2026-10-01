@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { api, type SharedLessonSummary } from '../api.ts';
+import type { SharedLessonSummary } from '../api.ts';
 import { paginate, pageWordForms, tokenize } from '../core/text.ts';
 import { lessonStats } from '../core/vocab.ts';
 import type { Lesson } from '../db.ts';
-import { addSharedLesson, deleteLesson, lessons as lessonsObs, preGlossStatus, settings as settingsObs, shareLesson, vocab as vocabObs } from '../services.ts';
+import {
+  addSharedLesson, deleteLesson, deleteShared, lessons as lessonsObs, preGlossStatus, refreshShared, settings as settingsObs, shared as sharedObs,
+  shareLesson, vocab as vocabObs,
+} from '../services.ts';
 import { navigate, useObservable } from './hooks.ts';
 
 export function Library() {
@@ -11,13 +14,11 @@ export function Library() {
   const vocab = useObservable(vocabObs);
   const settings = useObservable(settingsObs);
   const pregloss = useObservable(preGlossStatus);
-  const [shared, setShared] = useState<SharedLessonSummary[] | null>(null);
-  const [sharedError, setSharedError] = useState<string | null>(null);
+  const { list: shared, error: sharedError, loading: sharedLoading } = useObservable(sharedObs);
   const [message, setMessage] = useState<string | null>(null);
 
-  const loadShared = () => api.lessons().then(setShared, (e) => setSharedError((e as Error).message));
   useEffect(() => {
-    loadShared();
+    refreshShared();
   }, []);
 
   const statuses = useMemo(() => new Map([...vocab].map(([k, v]) => [k, v.status])), [vocab]);
@@ -27,7 +28,6 @@ export function Library() {
     try {
       await shareLesson(l);
       setMessage(`Shared “${l.title}”.`);
-      loadShared();
     } catch (e) {
       setMessage('Sharing failed: ' + (e as Error).message);
     }
@@ -36,16 +36,22 @@ export function Library() {
     if (confirm(`Delete “${l.title}” from this device? Your vocabulary is kept.`)) await deleteLesson(l.id);
   };
   const add = async (s: SharedLessonSummary) => {
-    const l = await addSharedLesson(s.id);
-    navigate(`#/read/${l.id}`);
+    try {
+      const l = await addSharedLesson(s.id);
+      navigate(`#/read/${l.id}`);
+    } catch (e) {
+      setMessage((e as Error).message);
+      refreshShared();
+    }
   };
   const removeShared = async (s: SharedLessonSummary) => {
     if (!confirm(`Remove “${s.title}” from the shared library for everyone? Copies on devices stay.`)) return;
-    await api.deleteShared(s.id).catch((e) => setMessage((e as Error).message));
-    loadShared();
+    await deleteShared(s.id).catch((e) => setMessage((e as Error).message));
   };
 
   const added = new Set(lessons.map((l) => l.sharedId).filter(Boolean));
+  // A lesson whose shared copy is gone (removed from the library) can be shared again.
+  const onServer = shared && new Set(shared.map((s) => s.id));
 
   return (
     <div class="screen">
@@ -60,8 +66,14 @@ export function Library() {
         <a class="primary block" href="#/import">＋ New lesson</a>
         <h2>My lessons</h2>
         {lessons.length === 0 && <p class="muted">No lessons yet. Add one from the shared library below, or paste some Spanish text.</p>}
-        {lessons.map((l) => <LessonCard key={l.id} lesson={l} statuses={statuses} wordsPerPage={settings.wordsPerPage} onShare={share} onDelete={remove} />)}
-        <h2>Shared library</h2>
+        {lessons.map((l) => (
+          <LessonCard key={l.id} lesson={l} statuses={statuses} wordsPerPage={settings.wordsPerPage}
+            canShare={!l.sharedId || (onServer !== null && !onServer.has(l.sharedId))} onShare={share} onDelete={remove} />
+        ))}
+        <div class="section-head">
+          <h2>Shared library</h2>
+          <button class="icon-btn" title="Refresh" disabled={sharedLoading} onClick={() => refreshShared()}>{sharedLoading ? '…' : '↻'}</button>
+        </div>
         {sharedError && <p class="error">{sharedError}</p>}
         {shared === null && !sharedError && <p class="muted">Loading…</p>}
         {shared?.length === 0 && <p class="muted">Nothing shared yet.</p>}
@@ -80,8 +92,9 @@ export function Library() {
   );
 }
 
-function LessonCard({ lesson, statuses, wordsPerPage, onShare, onDelete }: {
-  lesson: Lesson; statuses: Map<string, number>; wordsPerPage: number; onShare: (l: Lesson) => void; onDelete: (l: Lesson) => void;
+function LessonCard({ lesson, statuses, wordsPerPage, canShare, onShare, onDelete }: {
+  lesson: Lesson; statuses: Map<string, number>; wordsPerPage: number; canShare: boolean;
+  onShare: (l: Lesson) => void; onDelete: (l: Lesson) => void;
 }) {
   const analysis = useMemo(() => {
     const pages = paginate(tokenize(lesson.text), wordsPerPage);
@@ -97,7 +110,7 @@ function LessonCard({ lesson, statuses, wordsPerPage, onShare, onDelete }: {
         </div>
         <div class="small muted">Page {Math.min(lesson.currentPage + 1, analysis.pageCount)} of {analysis.pageCount}</div>
       </a>
-      {!lesson.sharedId && <button class="icon-btn" title="Share with the household" onClick={() => onShare(lesson)}>⇪</button>}
+      {canShare && <button class="icon-btn" title="Share with the household" onClick={() => onShare(lesson)}>⇪</button>}
       <button class="icon-btn" title="Delete" onClick={() => onDelete(lesson)}>🗑</button>
     </div>
   );
