@@ -27,6 +27,8 @@ import net.awkay.spanishreader.core.text.PhraseLocator
 import net.awkay.spanishreader.core.text.Token
 import net.awkay.spanishreader.core.text.TokenizedText
 import net.awkay.spanishreader.core.text.Tokenizer
+import net.awkay.spanishreader.core.vocab.NavDirection
+import net.awkay.spanishreader.core.vocab.WordNavigation
 import net.awkay.spanishreader.core.vocab.WordStatus
 import net.awkay.spanishreader.gloss.LookupResult
 import net.awkay.spanishreader.gloss.PreGlossWorker
@@ -237,6 +239,24 @@ class ReaderViewModel(private val app: SpanishReaderApp, private val lessonId: L
             app.vocab.tap(form, sentence)
             lookup()
         }
+    }
+
+    /**
+     * The highlighted word (NEW or learning) after/before [token] on [token]'s own page, or null at the page edge.
+     * Never crosses pages: turning a page has side effects.
+     */
+    fun neighbor(token: Token, statuses: Map<String, WordStatus>, direction: NavDirection): Token? {
+        val c = _content.value ?: return null
+        val page = c.pages.firstOrNull { p -> p.tokens.isNotEmpty() && token.index in p.tokens.first().index..p.tokens.last().index }
+            ?: return null
+        val target = WordNavigation.step(page.tokens, statuses, token.index, direction) ?: return null
+        return page.tokens.firstOrNull { it.index == target }
+    }
+
+    /** The sheet's Next/Prev buttons. Landing on a word counts as tapping it (NEW → LEVEL_1 + vocabulary). */
+    fun stepWord(direction: NavDirection) {
+        val sel = _selection.value ?: return
+        neighbor(sel.token, statuses.value, direction)?.let(::onWordTapped)
     }
 
     fun retryLookup() {

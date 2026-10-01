@@ -97,3 +97,19 @@ export function lessonStats(forms: string[], statuses: Map<string, number>): Les
   }
   return { totalWords: forms.length, uniqueWords: unique.size, newCount, learningCount: learning, knownPercent: unique.size ? (known * 100) / unique.size : 0 };
 }
+
+/**
+ * Reader Next/Prev: position in `tokens` of the nearest word after (`dir` 1) or before (-1) position `from` that is
+ * still highlighted (NEW or LEVEL_1..LEARNED). KNOWN, IGNORED and non-word tokens are skipped. Null at the page edge.
+ */
+export function nextHighlighted(
+  tokens: ReadonlyArray<{ normalized: string | null }>, statusOf: (form: string) => number, from: number, dir: 1 | -1,
+): number | null {
+  for (let i = from + dir; i >= 0 && i < tokens.length; i += dir) {
+    const form = tokens[i].normalized;
+    if (form === null) continue;
+    const s = statusOf(form);
+    if (s === Status.NEW || isLearning(s)) return i;
+  }
+  return null;
+}

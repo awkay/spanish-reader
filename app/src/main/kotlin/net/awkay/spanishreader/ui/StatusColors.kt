@@ -7,6 +7,9 @@ object StatusColors {
     private val NEW_BLUE = Color(0xFF64B5F6)
     private val LEARNING_YELLOW = Color(0xFFFFC107)
 
+    /** Outline of the reader's current word; a hue no status uses. */
+    val CURSOR = Color(0xFFD81B60)
+
     /** Word background: blue for NEW, fading yellows for LEVEL_1..LEARNED, nothing for KNOWN/IGNORED. */
     fun background(status: WordStatus): Color = when {
         status == WordStatus.NEW -> NEW_BLUE.copy(alpha = 0.40f)

@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -57,6 +58,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -77,6 +80,7 @@ import kotlinx.coroutines.launch
 import net.awkay.spanishreader.audio.AudioState
 import net.awkay.spanishreader.core.text.Page
 import net.awkay.spanishreader.core.text.Token
+import net.awkay.spanishreader.core.vocab.NavDirection
 import net.awkay.spanishreader.core.vocab.WordStatus
 import net.awkay.spanishreader.ui.BackButton
 import net.awkay.spanishreader.ui.StatusColors
@@ -105,6 +109,10 @@ fun ReaderScreen(lessonId: Long, onBack: () -> Unit, onListen: () -> Unit) {
         return
     }
     val pager = rememberPagerState(initialPage = c.initialPage) { c.pages.size }
+    // Height of the open word sheet, so the page can keep the current word visible above it.
+    var sheetPx by remember { mutableStateOf(0) }
+    val obscuredPx = if (selection != null) sheetPx else 0
+    val density = LocalDensity.current
     val spoken = if (audio.started) audio.currentSentence else null
 
     // Page turns we make ourselves while following the audio; any other turn during playback means the user
@@ -157,71 +165,86 @@ fun ReaderScreen(lessonId: Long, onBack: () -> Unit, onListen: () -> Unit) {
             )
         },
     ) { padding ->
-        HorizontalPager(pager, Modifier.fillMaxSize().padding(padding), beyondViewportPageCount = 1) { index ->
-            val page = c.pages[index]
-            val isLast = index == c.pages.lastIndex
-            val scroll = rememberScrollState()
-            Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = 20.dp, vertical = 12.dp)) {
-                PageText(
-                    page, statuses, selection?.token, fontSize, phraseSpans,
-                    highlightSentence = spoken?.takeIf { it.pageIndex == index }?.sentenceIndex,
-                    scroll = scroll.takeIf { following },
-                    onTap = vm::onWordTapped,
-                )
-                Spacer(Modifier.height(24.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { scope.launch { pager.animateScrollToPage(index - 1) } }, enabled = index > 0) {
-                        Icon(Icons.AutoMirrored.Filled.NavigateBefore, "Previous page")
-                    }
-                    if (isLast) {
-                        Button(onClick = {
-                            scope.launch {
-                                val n = vm.finishLesson()
-                                Toast.makeText(context, "Lesson finished: $n words added at level 1", Toast.LENGTH_SHORT).show()
-                                onBack()
+        BoxWithConstraints(Modifier.fillMaxSize().padding(padding)) {
+            val sheetMaxHeight = maxHeight
+            HorizontalPager(pager, Modifier.fillMaxSize(), beyondViewportPageCount = 1) { index ->
+                val page = c.pages[index]
+                val isLast = index == c.pages.lastIndex
+                val scroll = rememberScrollState()
+                Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = 20.dp, vertical = 12.dp)) {
+                    PageText(
+                        page, statuses, selection?.token, fontSize, phraseSpans,
+                        highlightSentence = spoken?.takeIf { it.pageIndex == index }?.sentenceIndex,
+                        scroll = scroll.takeIf { following },
+                        pageScroll = scroll,
+                        obscuredBottom = obscuredPx,
+                        onTap = vm::onWordTapped,
+                    )
+                    Spacer(Modifier.height(24.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = { scope.launch { pager.animateScrollToPage(index - 1) } }, enabled = index > 0) {
+                            Icon(Icons.AutoMirrored.Filled.NavigateBefore, "Previous page")
+                        }
+                        if (isLast) {
+                            Button(onClick = {
+                                scope.launch {
+                                    val n = vm.finishLesson()
+                                    Toast.makeText(context, "Lesson finished: $n words added at level 1", Toast.LENGTH_SHORT).show()
+                                    onBack()
+                                }
+                            }) { Text("Finish lesson") }
+                        } else {
+                            Button(onClick = { scope.launch { pager.animateScrollToPage(index + 1) } }) {
+                                Text("Next page")
+                                Icon(Icons.AutoMirrored.Filled.NavigateNext, null)
                             }
-                        }) { Text("Finish lesson") }
-                    } else {
-                        Button(onClick = { scope.launch { pager.animateScrollToPage(index + 1) } }) {
-                            Text("Next page")
-                            Icon(Icons.AutoMirrored.Filled.NavigateNext, null)
                         }
                     }
+                    val blueOnPage = page.wordForms.distinct().count { (statuses[it] ?: WordStatus.NEW) == WordStatus.NEW }
+                    if (blueOnPage > 0) {
+                        TextButton(
+                            onClick = {
+                                scope.launch {
+                                    val n = vm.markPageKnown(index)
+                                    Toast.makeText(context, "$n words marked Known", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp),
+                        ) { Text("Mark all $blueOnPage blue words Known") }
+                    }
+                    Text(
+                        "Turning the page adds the remaining blue words to your vocabulary at level 1.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 32.dp),
+                    )
+                    // Room to scroll the last lines up above the word sheet.
+                    if (obscuredPx > 0) Spacer(Modifier.height(with(density) { obscuredPx.toDp() }))
                 }
-                val blueOnPage = page.wordForms.distinct().count { (statuses[it] ?: WordStatus.NEW) == WordStatus.NEW }
-                if (blueOnPage > 0) {
-                    TextButton(
-                        onClick = {
-                            scope.launch {
-                                val n = vm.markPageKnown(index)
-                                Toast.makeText(context, "$n words marked Known", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp),
-                    ) { Text("Mark all $blueOnPage blue words Known") }
-                }
-                Text(
-                    "Turning the page adds the remaining blue words to your vocabulary at level 1.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 32.dp),
+            }
+
+            selection?.let { sel ->
+                val canPrevious = remember(sel.token, statuses, c) { vm.neighbor(sel.token, statuses, NavDirection.PREVIOUS) != null }
+                val canNext = remember(sel.token, statuses, c) { vm.neighbor(sel.token, statuses, NavDirection.NEXT) != null }
+                WordSheet(
+                    selection = sel,
+                    status = statuses[sel.form] ?: WordStatus.NEW,
+                    phrases = phraseSpans[sel.token.index].orEmpty(),
+                    canPrevious = canPrevious,
+                    canNext = canNext,
+                    onPrevious = { vm.stepWord(NavDirection.PREVIOUS) },
+                    onNext = { vm.stepWord(NavDirection.NEXT) },
+                    onStatus = vm::setStatus,
+                    onRetry = vm::retryLookup,
+                    onImprove = vm::improve,
+                    onTranslate = vm::showTranslation,
+                    onSpeak = { vm.speak(sel.token.text) },
+                    onDismiss = vm::dismissSelection,
+                    maxHeight = sheetMaxHeight,
+                    modifier = Modifier.align(Alignment.BottomCenter).onSizeChanged { sheetPx = it.height },
                 )
             }
         }
-    }
-
-    selection?.let { sel ->
-        WordSheet(
-            selection = sel,
-            status = statuses[sel.form] ?: WordStatus.NEW,
-            phrases = phraseSpans[sel.token.index].orEmpty(),
-            onStatus = vm::setStatus,
-            onRetry = vm::retryLookup,
-            onImprove = vm::improve,
-            onTranslate = vm::showTranslation,
-            onSpeak = { vm.speak(sel.token.text) },
-            onDismiss = vm::dismissSelection,
-        )
     }
 }
 
@@ -265,6 +288,8 @@ private class PageAnnotation(
     val text: AnnotatedString,
     val sentenceRanges: Map<Int, IntRange>,
     val coloredWords: List<Pair<IntRange, Color>>,
+    /** Character range of the selected word (the reading cursor), when it is on this page. */
+    val selectedRange: IntRange?,
 )
 
 @Composable
@@ -277,6 +302,10 @@ private fun PageText(
     highlightSentence: Int?,
     /** When set, the page scrolls to keep the highlighted sentence in view. */
     scroll: ScrollState?,
+    /** The page's scroll, used to keep the selected word visible above the word sheet. */
+    pageScroll: ScrollState,
+    /** Pixels at the bottom of the viewport covered by the word sheet. */
+    obscuredBottom: Int,
     onTap: (Token) -> Unit,
 ) {
     val onSurface = MaterialTheme.colorScheme.onSurface
@@ -285,6 +314,7 @@ private fun PageText(
         val tokens = page.tokens.dropWhile { !it.isWord && it.text.isBlank() }.dropLastWhile { it.text.isBlank() }
         val ranges = HashMap<Int, IntRange>()
         val colored = ArrayList<Pair<IntRange, Color>>()
+        var selectedRange: IntRange? = null
         // Expressions are underlined, including the spaces between their adjacent words.
         val underlined = HashSet<Int>()
         for (t in tokens) phraseSpans[t.index]?.forEach { span ->
@@ -302,6 +332,7 @@ private fun PageText(
                     val status = statuses[form] ?: WordStatus.NEW
                     val color = StatusColors.background(status)
                     if (color.alpha > 0f) colored += (start until start + t.text.length) to color
+                    if (t == selected) selectedRange = start until start + t.text.length
                     val style = SpanStyle(
                         color = onSurface,
                         fontWeight = if (t == selected) FontWeight.Bold else null,
@@ -317,7 +348,7 @@ private fun PageText(
                 }
             }
         }
-        PageAnnotation(text, ranges, colored)
+        PageAnnotation(text, ranges, colored, selectedRange)
     }
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
     val density = LocalDensity.current
@@ -340,7 +371,37 @@ private fun PageText(
             ) to color
         }
     }
+    val cursorColor = StatusColors.CURSOR
+    val cursorStroke = with(density) { 2.dp.toPx() }
+    // The reading cursor: an outline around the selected word, apart from the status fills.
+    val cursorRect: Rect? = remember(layout, built) {
+        val l = layout ?: return@remember null
+        val r = built.selectedRange ?: return@remember null
+        if (r.last >= l.layoutInput.text.length) return@remember null
+        val line = l.getLineForOffset(r.first)
+        if (l.getLineForOffset(r.last) != line) return@remember null
+        val baseline = l.getLineBaseline(line)
+        Rect(
+            left = l.getBoundingBox(r.first).left - padX * 3,
+            top = baseline - fontPx * 0.92f - padX * 2,
+            right = l.getBoundingBox(r.last).right + padX * 3,
+            bottom = baseline + fontPx * 0.30f + padX * 2,
+        )
+    }
     val range = highlightSentence?.let { built.sentenceRanges[it] }
+
+    // Keep the selected word visible above the word sheet (e.g. after Next/Prev).
+    val cursorMargin = with(density) { 24.dp.toPx() }.toInt()
+    LaunchedEffect(cursorRect, obscuredBottom) {
+        val rect = cursorRect ?: return@LaunchedEffect
+        val visible = pageScroll.viewportSize - obscuredBottom
+        if (visible <= 0) return@LaunchedEffect
+        val top = rect.top.toInt()
+        val bottom = rect.bottom.toInt() + cursorMargin
+        if (top < pageScroll.value || bottom > pageScroll.value + visible) {
+            pageScroll.animateScrollTo((top - visible / 3).coerceAtLeast(0))
+        }
+    }
 
     LaunchedEffect(range, layout, scroll != null) {
         val l = layout ?: return@LaunchedEffect
@@ -363,6 +424,7 @@ private fun PageText(
             val l = layout
             if (l != null && range != null) drawPath(l.getPathForRange(range.first, range.last + 1), highlightColor)
             for ((rect, color) in boxes) drawRoundRect(color, rect.topLeft, rect.size, corner)
+            cursorRect?.let { drawRoundRect(cursorColor, it.topLeft, it.size, corner, style = Stroke(width = cursorStroke)) }
         },
     )
 }

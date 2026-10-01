@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { Gloss } from '../core/gloss.ts';
 import { type Page, type Token, locatePhrase, paginate, pageWordForms, tokenize } from '../core/text.ts';
-import { Status } from '../core/vocab.ts';
+import { Status, nextHighlighted } from '../core/vocab.ts';
 import * as db from '../db.ts';
 import type { Lesson } from '../db.ts';
 import { Player } from '../player.ts';
@@ -36,6 +36,7 @@ export function Reader({ id }: { id: string }) {
   const [selection, setSelection] = useState<Selection | null>(null);
   const [spans, setSpans] = useState<Map<number, PhraseSpan[]>>(new Map());
   const [toast, setToast] = useState<string | null>(null);
+  const [sheetHeight, setSheetHeight] = useState(0);
   const lastPage = useRef(0);
   const preGlossedUpTo = useRef(-1);
 
@@ -140,6 +141,18 @@ export function Reader({ id }: { id: string }) {
     document.querySelector(`[data-s="${audio.sentenceIndex}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }, [audio.sentenceIndex]);
 
+  // Keep the current word visible between the header and the word sheet.
+  useEffect(() => {
+    if (!selection) return;
+    const el = document.querySelector(`.page-text [data-i="${selection.token.index}"]`);
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const top = (document.querySelector('.reader .bar')?.getBoundingClientRect().bottom ?? 0) + 12;
+    const bottom = window.innerHeight - sheetHeight - 12;
+    if (r.bottom > bottom) window.scrollBy({ top: r.bottom - bottom, behavior: 'smooth' });
+    else if (r.top < top) window.scrollBy({ top: r.top - top, behavior: 'smooth' });
+  }, [selection?.token.index, sheetHeight]);
+
   if (lesson === undefined) return <div class="screen"><p class="content muted">Loading…</p></div>;
   if (lesson === null || !text || !page) {
     return <div class="screen"><header class="bar"><a class="icon-btn" href="#/">←</a><h1>Not found</h1></header></div>;
@@ -163,6 +176,15 @@ export function Reader({ id }: { id: string }) {
     const result = await lookup(token.text, sentence);
     if ('gloss' in result && !result.fromOtherSentence) annotate(token.normalized, result.gloss);
     setSelection((cur) => (cur?.token === token ? { ...cur, result } : cur));
+  };
+
+  // Next/Prev in the sheet: the nearest still-highlighted word on this page; never turns the page.
+  const statusFor = (f: string) => vocab.get(f)?.status ?? Status.NEW;
+  const selIndex = selection?.token.index;
+  const selPos = selIndex === undefined ? -1 : page.tokens.findIndex((t) => t.index === selIndex);
+  const stepTo = (dir: 1 | -1) => {
+    const i = selPos < 0 ? null : nextHighlighted(page.tokens, statusFor, selPos, dir);
+    return i === null ? null : () => onTap(page.tokens[i]);
   };
 
   const onImprove = async () => {
@@ -198,7 +220,7 @@ export function Reader({ id }: { id: string }) {
         <button class="icon-btn" title="Smaller text" onClick={() => updateSettings({ fontSize: Math.max(14, settings.fontSize - 2) })}>A−</button>
         <button class="icon-btn" title="Larger text" onClick={() => updateSettings({ fontSize: Math.min(36, settings.fontSize + 2) })}>A+</button>
       </header>
-      <main class="content" onTouchStart={swipeStart} onTouchEnd={(e) => swipeEnd(e, () => goTo(page.index + 1), () => goTo(page.index - 1))}>
+      <main class="content" style={selection ? { paddingBottom: `${sheetHeight + 24}px` } : undefined} onTouchStart={swipeStart} onTouchEnd={(e) => swipeEnd(e, () => goTo(page.index + 1), () => goTo(page.index - 1))}>
         <PageText page={page} vocab={vocab} spans={spans} selected={selection?.token ?? null}
           spoken={audio.pageIndex === page.index ? audio.sentenceIndex : null} fontSize={settings.fontSize} onTap={onTap} />
         <div class="page-nav">
@@ -234,7 +256,8 @@ export function Reader({ id }: { id: string }) {
       {toast && <div class="toast">{toast}</div>}
       {selection && (
         <WordSheet selection={selection} status={vocab.get(selection.token.normalized!)?.status ?? Status.NEW}
-          phrases={spans.get(selection.token.index) ?? []} onImprove={onImprove} onClose={() => setSelection(null)} />
+          phrases={spans.get(selection.token.index) ?? []} onImprove={onImprove} onClose={() => setSelection(null)}
+          onPrev={stepTo(-1)} onNext={stepTo(1)} onHeight={setSheetHeight} />
       )}
     </div>
   );

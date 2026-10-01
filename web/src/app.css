@@ -51,7 +51,8 @@ h2 { font-size: 15px; color: var(--accent); margin: 20px 0 8px; }
 .page-text .w { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 /* Status colors hug the letters with rounded corners; the 1.75 line height and the spaces between words keep them apart. */
 .page-text .hl { border-radius: 5px; padding: 0.04em 0.06em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
-.page-text .sel { font-weight: 700; }
+/* Word-sheet cursor: an outline (not a color or bold) so status colors stay readable and the text doesn't reflow while stepping. */
+.page-text .sel { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 5px; }
 .page-text .phrase { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; text-decoration-color: var(--accent); }
 /* The sentence being spoken: words only (tinting the spaces would make boxes between them). */
 .page-text .w.spoken { background-image: linear-gradient(var(--spoken), var(--spoken)); border-radius: 5px; }
@@ -61,10 +62,19 @@ h2 { font-size: 15px; color: var(--accent); margin: 20px 0 8px; }
 .player select { width: auto; padding: 6px 8px; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 110px; z-index: 20; background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; }
 
-/* Word sheet */
-.sheet-backdrop { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, 0.35); display: flex; align-items: flex-end; }
-.sheet { width: 100%; max-height: 85vh; overflow-y: auto; background: var(--bg); border-radius: 20px 20px 0 0; padding: 16px 20px calc(env(safe-area-inset-bottom) + 20px); display: flex; flex-direction: column; gap: 10px; }
-.sheet .word { font-size: 28px; margin: 0; font-weight: 500; }
+/* Word sheet: no backdrop, so the text above stays tappable. Compact by default (the grabber toggles a taller sheet);
+   the head (word, Prev/Next, status) stays put and only the body scrolls. */
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; height: 42vh; height: 42dvh; background: var(--bg); border-radius: 20px 20px 0 0; box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column; }
+.sheet.expanded { height: 85vh; height: 85dvh; }
+.sheet-head { padding: 0 12px 8px 16px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
+.sheet-body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px 20px calc(env(safe-area-inset-bottom) + 20px); display: flex; flex-direction: column; gap: 10px; }
+.sheet .grabber { display: block; width: 100%; background: none; border: none; border-radius: 0; padding: 8px 0 2px; }
+.sheet .grabber span { display: block; width: 40px; height: 5px; margin: 0 auto; border-radius: 3px; background: var(--border); }
+.sheet .row { gap: 4px; }
+.sheet .word { font-size: 24px; margin: 0; font-weight: 500; }
+.sheet .step { padding: 6px 10px; white-space: nowrap; font-size: 15px; }
+.sheet .chips.scroll { padding: 0; gap: 6px; }
+.sheet .chip { padding: 6px 12px; }
 .sheet .meaning { font-size: 21px; font-weight: 600; }
 .section { background: var(--card); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
 .label { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; }

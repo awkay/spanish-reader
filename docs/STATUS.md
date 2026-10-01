@@ -10,7 +10,7 @@ The Android app's "Share to web" default URL moved there too (an old saved `span
 ## Build / verify
 ```
 scripts/install-android-sdk.sh          # each fresh cloud container
-./gradlew :core:test                     # 99 tests (2 live tests skipped without env vars)
+./gradlew :core:test                     # 104 tests (2 live tests skipped without env vars)
 ./gradlew :app:testDebugUnitTest         # 35 Robolectric tests incl. UI smoke test and v1→v3 migration
 ./gradlew :app:assembleDebug             # app/build/outputs/apk/debug/app-debug.apk
 ```
@@ -68,6 +68,13 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
   (auto-turns apply the page rule like manual ones). Swiping away while playing stops following; a
   "Follow" button jumps back. Tapping a word pauses playback. Tapping a NEW word → LEVEL_1 + vocab entry with context sentence. Turning
   forward finishes the pages passed (NEW → KNOWN); "Finish lesson" on the last page. Position is saved. Text size ±.
+- **Word-by-word flow (2026-10-02, not yet compiled locally; CI is the first build)**: the word sheet is now a
+  non-modal panel over the page (drag handle: peek/expand, drag down or Back/✕ closes), so tapping another word
+  switches the sheet to it. Fixed header: word, pronounce, **‹ Prev / Next ›**, status chips; below it the meaning
+  (first), lemma/POS, expressions, grammar cards, Improve, sentence + translation. Next/Prev = nearest NEW or
+  learning (0..4) word on the *same page* (`core/vocab/WordNavigation`, mirrored in `web/src/core`); landing on a
+  word counts as a tap; disabled at the page edge (never turns the page). Status chips don't advance. The current
+  word gets a pink outline (`StatusColors.CURSOR`) and the page scrolls to keep it above the sheet.
 - **Rich word sheet**: each gloss now carries structured `verb` (infinitive, tense, mood, person, number,
   how the form is built, why this form here), `clitics` (pronoun, role normalized to `CliticRole`, what it refers
   to, note), `roots` (Latin root / compound pattern), and `phraseMeaning`. The sheet shows Expression, Verb,

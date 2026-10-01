@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { CLITIC_LABEL, type Gloss, cliticRole, lacksDetail, splitClitics, verbSummary } from '../core/gloss.ts';
 import { STATUS_LABEL, Status } from '../core/vocab.ts';
 import { setWordStatus } from '../services.ts';
@@ -19,45 +20,73 @@ function speak(text: string) {
   speechSynthesis.speak(u);
 }
 
-export function WordSheet({ selection, status, phrases, onImprove, onClose }: {
+export function WordSheet({ selection, status, phrases, onImprove, onClose, onPrev, onNext, onHeight }: {
   selection: Selection; status: number; phrases: PhraseSpan[]; onImprove: () => void; onClose: () => void;
+  /** Null at the page edge (no highlighted word that way). */
+  onPrev: (() => void) | null; onNext: (() => void) | null;
+  /** Reports the sheet's height so the reader can keep the current word above it. */
+  onHeight: (px: number) => void;
 }) {
   const { token, sentence, result } = selection;
+  const [expanded, setExpanded] = useState(false);
+  const ref = useRef<HTMLElement>(null);
+  const body = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => onHeight(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  // A new word starts at the top of its explanation.
+  useEffect(() => body.current?.scrollTo(0, 0), [token.index]);
   const gloss = result && 'gloss' in result ? result.gloss : null;
   const expressions = [...phrases.map((p) => [p.phrase, p.meaning] as [string, string])];
   if (gloss?.isIdiomOrPhrase && gloss.phrase && !expressions.some(([p]) => p.toLowerCase() === gloss.phrase!.toLowerCase())) {
     expressions.push([gloss.phrase, gloss.phraseMeaning ?? '']);
   }
   const seen = new Set<string>();
+  // No backdrop: the text above stays tappable, so tapping another word switches the sheet to it.
   return (
-    <div class="sheet-backdrop" onClick={onClose}>
-      <section class="sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={token.text}>
+    <section ref={ref} class={'sheet' + (expanded ? ' expanded' : '')} role="dialog" aria-label={token.text}>
+      <div class="sheet-head">
+        <button class="grabber" title={expanded ? 'Smaller' : 'Larger'} aria-label={expanded ? 'Smaller' : 'Larger'}
+          onClick={() => setExpanded(!expanded)}><span /></button>
         <div class="row">
-          <h2 class="grow word">{token.text}</h2>
+          <h2 class="grow word ellipsis">{token.text}</h2>
           <button class="icon-btn" title="Pronounce" onClick={() => speak(token.text)}>🔊</button>
-          {result && (selection.improving ? <span class="muted small">Improving…</span>
-            : <button class="link" onClick={onImprove}>✨ Improve</button>)}
+          <button class="step" disabled={!onPrev} title={onPrev ? 'Previous highlighted word' : 'Start of page'}
+            onClick={() => onPrev?.()}>‹ Prev</button>
+          <button class="step" disabled={!onNext} title={onNext ? 'Next highlighted word' : 'End of page'}
+            onClick={() => onNext?.()}>Next ›</button>
+          <button class="icon-btn" title="Close" onClick={onClose}>✕</button>
         </div>
-        {selection.improveError && <p class="error small">Improve failed: {selection.improveError}</p>}
-        {expressions.filter(([p]) => !seen.has(p.toLowerCase()) && seen.add(p.toLowerCase())).map(([p, m]) => (
-          <div class="section" key={p}><div class="label">Expression</div><div><b>{p}</b>{m && ` — ${m}`}</div></div>
-        ))}
-        {!result && <p class="muted">Looking up…</p>}
-        {result && 'error' in result && <p class="error">{result.error}</p>}
-        {gloss && <GlossDetails gloss={gloss} written={token.text} fromOther={result !== null && 'gloss' in result && result.fromOtherSentence} />}
-        <p class="sentence">“{sentence}”</p>
-        {selection.translation === null && <p class="muted small">Translating…</p>}
-        {typeof selection.translation === 'string' && <p class="translation">{selection.translation}</p>}
-        {selection.translation && typeof selection.translation === 'object' && <p class="error small">{selection.translation.error}</p>}
-        <div class="label">Status</div>
-        <div class="chips">
+        <div class="chips scroll">
           {CHOICES.map(([s, label]) => (
             <button key={s} class={'chip' + (status === s ? ' on' : '')} style={status === s ? { background: statusSwatch(s) } : undefined}
               onClick={() => setWordStatus(token.normalized!, s, sentence)} title={STATUS_LABEL[s]}>{label}</button>
           ))}
         </div>
-      </section>
-    </div>
+      </div>
+      <div class="sheet-body" ref={body}>
+        {!result && <p class="muted">Looking up…</p>}
+        {result && 'error' in result && <p class="error">{result.error}</p>}
+        {gloss && <GlossDetails gloss={gloss} written={token.text} fromOther={result !== null && 'gloss' in result && result.fromOtherSentence} />}
+        {result && (
+          <div class="row">
+            {selection.improving ? <span class="muted small">Improving…</span> : <button class="link" onClick={onImprove}>✨ Improve</button>}
+            {selection.improveError && <span class="error small">Improve failed: {selection.improveError}</span>}
+          </div>
+        )}
+        {expressions.filter(([p]) => !seen.has(p.toLowerCase()) && seen.add(p.toLowerCase())).map(([p, m]) => (
+          <div class="section" key={p}><div class="label">Expression</div><div><b>{p}</b>{m && ` — ${m}`}</div></div>
+        ))}
+        <p class="sentence">“{sentence}”</p>
+        {selection.translation === null && <p class="muted small">Translating…</p>}
+        {typeof selection.translation === 'string' && <p class="translation">{selection.translation}</p>}
+        {selection.translation && typeof selection.translation === 'object' && <p class="error small">{selection.translation.error}</p>}
+      </div>
+    </section>
   );
 }
 

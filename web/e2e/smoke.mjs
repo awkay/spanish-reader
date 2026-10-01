@@ -74,7 +74,7 @@ await check('tap a word: meaning in context, verb details, sentence translation'
   const sheet = await page.locator('.sheet').innerText();
   if (!/levantar/i.test(sheet)) throw new Error('expected the lemma levantar in: ' + sheet.slice(0, 300));
   await shot('03-word-sheet');
-  await page.locator('.sheet-backdrop').click({ position: { x: 10, y: 10 } });
+  await page.locator('.sheet').getByTitle('Close').click();
 });
 
 await check('the tapped word is now level 1 (yellow)', async () => {
