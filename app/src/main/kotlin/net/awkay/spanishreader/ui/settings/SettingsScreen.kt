@@ -115,6 +115,13 @@ fun SettingsScreen(onBack: () -> Unit) {
             }
 
             HorizontalDivider()
+            Section("Web app (Share to web)")
+            TextSetting("Web app address", s.webUrl, keyboard = KeyboardType.Uri) { v -> vm.update { it.copy(webUrl = v, webToken = "") } }
+            TextSetting("Access code", s.webAccessCode, secret = true) { v -> vm.update { it.copy(webAccessCode = v, webToken = "") } }
+            TextSetting("Your name (shown on shared lessons)", s.webName) { v -> vm.update { it.copy(webName = v) } }
+            Text("A lesson's ⋮ menu → Share to web uploads the text and its AI results. Your vocabulary is never shared.", style = MaterialTheme.typography.bodySmall)
+
+            HorizontalDivider()
             Section("Backup")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = {

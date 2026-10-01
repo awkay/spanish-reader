@@ -1,0 +1,27 @@
+# systemd unit for the Spanish Reader web app backend. Install as /etc/systemd/system/spanish-reader.service.
+[Unit]
+Description=Spanish Reader web app backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=spanish-reader
+Group=spanish-reader
+EnvironmentFile=/etc/spanish-reader.env
+ExecStart=/opt/spanish-reader/bin/spanish-reader-server
+Restart=on-failure
+RestartSec=3
+
+# Piper needs ~200 MB while it renders a page; the server itself ~15 MB.
+MemoryMax=600M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/spanish-reader
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

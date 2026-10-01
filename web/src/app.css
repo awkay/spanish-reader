@@ -1,0 +1,82 @@
+:root {
+  --bg: #fdfcff; --fg: #1c1b1f; --muted: #6b6870; --card: #f3eff7; --border: #d9d4de;
+  --accent: #6750a4; --accent-fg: #fff; --error: #b3261e; --spoken: rgba(103, 80, 164, 0.16);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #141218; --fg: #e6e0e9; --muted: #a8a2ad; --card: #211f26; --border: #3b3842; --accent: #cfbcff; --accent-fg: #381e72; --error: #f2b8b5; --spoken: rgba(207, 188, 255, 0.18); }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
+a { color: inherit; text-decoration: none; }
+button, .button, select, input, textarea { font: inherit; color: inherit; }
+button, .button { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 8px 16px; cursor: pointer; }
+button:disabled { opacity: 0.45; }
+button.primary, a.primary { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
+a.primary.block { display: block; text-align: center; padding: 12px; border-radius: 24px; margin: 8px 0 16px; }
+button.link { background: none; border: none; color: var(--accent); padding: 6px; }
+.icon-btn { background: none; border: none; font-size: 20px; padding: 8px; min-width: 40px; text-align: center; border-radius: 50%; }
+.icon-btn.on { background: var(--spoken); }
+input, textarea, select { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; width: 100%; }
+input[type=checkbox], input[type=range] { width: auto; }
+input[type=range] { width: 100%; }
+.screen { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+.bar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 4px; padding: calc(env(safe-area-inset-top) + 6px) 8px 6px; background: var(--bg); border-bottom: 1px solid var(--border); }
+.bar h1 { font-size: 19px; margin: 0 8px; font-weight: 600; }
+.content { padding: 12px 16px calc(env(safe-area-inset-bottom) + 24px); flex: 1; }
+.column { display: flex; flex-direction: column; gap: 12px; }
+.row { display: flex; align-items: center; gap: 8px; }
+.row.wrap { flex-wrap: wrap; }
+.row.spread { justify-content: space-around; }
+.grow { flex: 1; min-width: 0; }
+.right { text-align: right; }
+.center { text-align: center; display: block; margin-left: auto; margin-right: auto; }
+.ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.small { font-size: 13px; }
+.muted { color: var(--muted); }
+.error { color: var(--error); }
+.note { background: var(--card); padding: 10px 12px; border-radius: 12px; }
+h2 { font-size: 15px; color: var(--accent); margin: 20px 0 8px; }
+.card { display: flex; align-items: center; gap: 4px; background: var(--card); border-radius: 16px; padding: 12px 8px 12px 16px; margin: 8px 0; }
+.card .title { font-weight: 600; }
+.login { max-width: 360px; margin: 0 auto; padding: 15vh 24px 0; text-align: center; }
+.login form { display: flex; flex-direction: column; gap: 12px; text-align: left; }
+.login input { font-size: 22px; letter-spacing: 4px; text-align: center; }
+
+/* Reader */
+.reader .content { padding-bottom: 120px; }
+.page-text { line-height: 1.75; white-space: pre-wrap; overflow-wrap: break-word; padding: 4px 4px 0; }
+.page-text .w { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+/* Status colors hug the letters with rounded corners; the 1.75 line height and the spaces between words keep them apart. */
+.page-text .hl { border-radius: 5px; padding: 0.04em 0.06em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.page-text .sel { font-weight: 700; }
+.page-text .phrase { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; text-decoration-color: var(--accent); }
+/* The sentence being spoken: words only (tinting the spaces would make boxes between them). */
+.page-text .w.spoken { background-image: linear-gradient(var(--spoken), var(--spoken)); border-radius: 5px; }
+.page-nav { display: flex; justify-content: space-between; margin: 28px 0 8px; }
+.player { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--card); border-top: 1px solid var(--border); padding: 6px 12px calc(env(safe-area-inset-bottom) + 6px); }
+.player .play { width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: var(--accent-fg); border: none; font-size: 20px; padding: 0; }
+.player select { width: auto; padding: 6px 8px; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 110px; z-index: 20; background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; }
+
+/* Word sheet */
+.sheet-backdrop { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, 0.35); display: flex; align-items: flex-end; }
+.sheet { width: 100%; max-height: 85vh; overflow-y: auto; background: var(--bg); border-radius: 20px 20px 0 0; padding: 16px 20px calc(env(safe-area-inset-bottom) + 20px); display: flex; flex-direction: column; gap: 10px; }
+.sheet .word { font-size: 28px; margin: 0; font-weight: 500; }
+.sheet .meaning { font-size: 21px; font-weight: 600; }
+.section { background: var(--card); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.label { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; }
+.sentence { font-style: italic; margin: 4px 0 0; }
+.translation { color: var(--accent); margin: 0; }
+.tag { border-radius: 6px; padding: 0 6px; font-weight: 600; }
+.clitic-split { font-size: 19px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips.scroll { flex-wrap: nowrap; overflow-x: auto; padding: 8px 0; }
+.chip { padding: 6px 14px; white-space: nowrap; }
+.chip.on { background: var(--accent); color: var(--accent-fg); }
+
+/* Vocabulary / settings */
+.vocab-row { border-bottom: 1px solid var(--border); padding: 10px 4px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.indent { padding-left: 20px; }
+.setting { display: flex; flex-direction: column; gap: 6px; }

@@ -28,6 +28,13 @@ Rules:
 - Vocabulary is keyed by **lowercased written form** (`hablo` ≠ `hablas`, `sí` ≠ `si`). Lemma is stored for grouping.
 
 ## Architecture decisions (settled — don't relitigate)
+- **Two clients**: the native Android app (primary; don't disturb it beyond additive changes) and a **web app (PWA) for
+  iPhone** (`web/`, TypeScript + Preact) backed by a small Go server (`server/`, stdlib only) at
+  spanish-reader.fulcrologic.com. The server holds the AI key, runs Piper TTS, and stores shared lessons plus the
+  shared sentence cache. Vocabulary/statuses stay on each device and are never shared. Deploy: `deploy/`, `web-port.md`.
+- `web/src/core/` ports `:core` logic. **Kotlin stays the source of truth**: `GoldenFixtureTest` writes `fixtures/`, and
+  the web tests check the port against them. After changing tokenizer/sentence/pagination/cleaning/prompt logic in
+  `:core`, regenerate with `UPDATE_GOLDEN=1 ./gradlew :core:test --tests '*GoldenFixtureTest*'` and update the port.
 - **Kotlin + Jetpack Compose**, native. Not a PWA/ClojureScript: listen mode needs reliable background audio.
 - **Local-first**: Room/SQLite on device, no server. JSON backup/export later.
 - **`:core`** = pure Kotlin/JVM module (no Android deps): tokenizer, sentences, pagination, status rules, glossing
@@ -48,13 +55,15 @@ Rules:
 - Gradle wrapper, Kotlin DSL, version catalog `gradle/libs.versions.toml`.
 - `./gradlew :core:test` — JUnit 5; HTTP clients tested with OkHttp MockWebServer.
 - `./gradlew :app:testDebugUnitTest` — Room/DAO tests under Robolectric. `./gradlew :app:assembleDebug` builds the APK.
+- Server: `cd server && go vet ./... && go test ./...`. Web: `cd web && npm ci && npm run typecheck && npm test && npm run build`;
+  e2e: `web/e2e/smoke.mjs` (Playwright) against a running server.
 - Android module needs the Android SDK: run `scripts/install-android-sdk.sh` in each fresh container. The environment must allow
   `dl.google.com` and `maven.google.com`.
 
 ## Releases
 - `.github/workflows/release.yml`: every push to `main` runs the tests, builds the **release** APK (R8-shrunk,
   ~3 MB; the debug APK is ~25 MB) plus a debug fallback (versionCode = run number), and publishes both as GitHub
-  Release `build-<n>`. Both are signed with the committed `app/debug.keystore`, so they install as updates over each
+  Release `build-<n>`, together with the Go server binaries (linux amd64/arm64) and the web tarball. The APKs are signed with the committed `app/debug.keystore`, so they install as updates over each
   other and over local builds. Keep R8 rules for reflection-reached code in `app/proguard-rules.pro`.
 
 ## Conventions

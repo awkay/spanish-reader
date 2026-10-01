@@ -58,6 +58,11 @@ fun LibraryScreen(
 ) {
     val vm = appViewModel { LibraryViewModel(it) }
     val rows by vm.rows.collectAsStateWithLifecycle()
+    val shareMessage by vm.shareMessage.collectAsStateWithLifecycle()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    androidx.compose.runtime.LaunchedEffect(shareMessage) {
+        shareMessage?.let { android.widget.Toast.makeText(context, it, android.widget.Toast.LENGTH_LONG).show() }
+    }
     var deleting by remember { mutableStateOf<LessonRow?>(null) }
     var renaming by remember { mutableStateOf<LessonRow?>(null) }
 
@@ -95,6 +100,7 @@ fun LibraryScreen(
                         onOpen = { onOpen(row.lesson.id) },
                         onListen = { onListen(row.lesson.id) },
                         onPreGloss = { vm.preGloss(row.lesson.id) },
+                        onShareToWeb = { vm.shareToWeb(row.lesson) },
                         onRename = { renaming = row },
                         onDelete = { deleting = row },
                     )
@@ -130,6 +136,7 @@ private fun LessonCard(
     onOpen: () -> Unit,
     onListen: () -> Unit,
     onPreGloss: () -> Unit,
+    onShareToWeb: () -> Unit,
     onRename: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -162,6 +169,7 @@ private fun LessonCard(
                 IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, "More") }
                 DropdownMenu(menu, onDismissRequest = { menu = false }) {
                     DropdownMenuItem(text = { Text("Pre-gloss whole lesson") }, onClick = { menu = false; onPreGloss() })
+                    DropdownMenuItem(text = { Text("Share to web") }, onClick = { menu = false; onShareToWeb() })
                     DropdownMenuItem(text = { Text("Rename") }, onClick = { menu = false; onRename() })
                     DropdownMenuItem(text = { Text("Delete") }, onClick = { menu = false; onDelete() })
                 }

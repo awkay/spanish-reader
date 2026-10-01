@@ -1,0 +1,2524 @@
+{
+    "texts": [
+        {
+            "source": "El perro come pan. La casa es grande.",
+            "tokens": [
+                [
+                    "El",
+                    "WORD",
+                    "el",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "perro",
+                    "WORD",
+                    "perro",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "come",
+                    "WORD",
+                    "come",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "pan",
+                    "WORD",
+                    "pan",
+                    0
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "La",
+                    "WORD",
+                    "la",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "casa",
+                    "WORD",
+                    "casa",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "es",
+                    "WORD",
+                    "es",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "grande",
+                    "WORD",
+                    "grande",
+                    1
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    1
+                ]
+            ],
+            "sentences": [
+                [
+                    "El perro come pan.",
+                    "bae93edff2a91b24a692f5589bd379b5f332307da635763beaa0e7117b55c977"
+                ],
+                [
+                    "La casa es grande.",
+                    "bccd854fcd593f9e756a7b8b0280b73bc67b86bacde1fa0f8492677caf17cf44"
+                ]
+            ],
+            "pages6": [
+                [
+                    0,
+                    8
+                ],
+                [
+                    9,
+                    16
+                ]
+            ],
+            "cleaned": "El perro come pan. La casa es grande.",
+            "cleanedNoJoin": "El perro come pan. La casa es grande.",
+            "title": "El perro come pan. La casa es grande.",
+            "plan": [
+                [
+                    "perro",
+                    "El perro come pan."
+                ],
+                [
+                    "come",
+                    "El perro come pan."
+                ],
+                [
+                    "pan",
+                    "El perro come pan."
+                ],
+                [
+                    "casa",
+                    "La casa es grande."
+                ],
+                [
+                    "es",
+                    "La casa es grande."
+                ],
+                [
+                    "grande",
+                    "La casa es grande."
+                ]
+            ]
+        },
+        {
+            "source": "—¿Vienes? —preguntó ella.\nNo sé… quizás mañana.",
+            "tokens": [
+                [
+                    "—",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    "¿",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    "Vienes",
+                    "WORD",
+                    "vienes",
+                    0
+                ],
+                [
+                    "?",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "—",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    "preguntó",
+                    "WORD",
+                    "preguntó",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "ella",
+                    "WORD",
+                    "ella",
+                    0
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    "\n",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "No",
+                    "WORD",
+                    "no",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "sé",
+                    "WORD",
+                    "sé",
+                    1
+                ],
+                [
+                    "…",
+                    "PUNCT",
+                    null,
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "quizás",
+                    "WORD",
+                    "quizás",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "mañana",
+                    "WORD",
+                    "mañana",
+                    1
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    1
+                ]
+            ],
+            "sentences": [
+                [
+                    "—¿Vienes? —preguntó ella.",
+                    "ff1326859cd3de1fda08274b9af023b0180706b292f9e4908f3f2b14f6a3f40b"
+                ],
+                [
+                    "No sé… quizás mañana.",
+                    "5194cf3f528c2bf0170a8a9e17a1e53050d3a31ef4a53beffa9fe3148412f78a"
+                ]
+            ],
+            "pages6": [
+                [
+                    0,
+                    10
+                ],
+                [
+                    11,
+                    19
+                ]
+            ],
+            "cleaned": "—¿Vienes? —preguntó ella.\nNo sé… quizás mañana.",
+            "cleanedNoJoin": "—¿Vienes? —preguntó ella.\nNo sé… quizás mañana.",
+            "title": "—¿Vienes? —preguntó ella.",
+            "plan": [
+                [
+                    "Vienes",
+                    "—¿Vienes? —preguntó ella."
+                ],
+                [
+                    "preguntó",
+                    "—¿Vienes? —preguntó ella."
+                ],
+                [
+                    "ella",
+                    "—¿Vienes? —preguntó ella."
+                ],
+                [
+                    "No",
+                    "No sé… quizás mañana."
+                ],
+                [
+                    "sé",
+                    "No sé… quizás mañana."
+                ],
+                [
+                    "quizás",
+                    "No sé… quizás mañana."
+                ],
+                [
+                    "mañana",
+                    "No sé… quizás mañana."
+                ]
+            ]
+        },
+        {
+            "source": "El Sr. Pérez y la Dra. López llegaron a las 3.30 p.m. con 1.500 pesos, etc. Luego se fueron.",
+            "tokens": [
+                [
+                    "El",
+                    "WORD",
+                    "el",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "Sr",
+                    "WORD",
+                    "sr",
+                    0
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "Pérez",
+                    "WORD",
+                    "pérez",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "y",
+                    "WORD",
+                    "y",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "la",
+                    "WORD",
+                    "la",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "Dra",
+                    "WORD",
+                    "dra",
+                    0
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "López",
+                    "WORD",
+                    "lópez",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "llegaron",
+                    "WORD",
+                    "llegaron",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "a",
+                    "WORD",
+                    "a",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "las",
+                    "WORD",
+                    "las",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "3.30",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "p",
+                    "WORD",
+                    "p",
+                    0
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    "m",
+                    "WORD",
+                    "m",
+                    0
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "con",
+                    "WORD",
+                    "con",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "1.500",
+                    "PUNCT",
+                    null,
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "pesos",
+                    "WORD",
+                    "pesos",
+                    1
+                ],
+                [
+                    ",",
+                    "PUNCT",
+                    null,
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "etc",
+                    "WORD",
+                    "etc",
+                    1
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "Luego",
+                    "WORD",
+                    "luego",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "se",
+                    "WORD",
+                    "se",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "fueron",
+                    "WORD",
+                    "fueron",
+                    2
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    2
+                ]
+            ],
+            "sentences": [
+                [
+                    "El Sr. Pérez y la Dra. López llegaron a las 3.30 p.m.",
+                    "594229e217ef295b89424f245c3279c2efe05712e8bc5f4a84a73e164eb807c1"
+                ],
+                [
+                    "con 1.500 pesos, etc.",
+                    "2b21a4fcec9db1ede134ec727b001bfef941a15eeef4694e9ccf696c62097a92"
+                ],
+                [
+                    "Luego se fueron.",
+                    "40fee49468d2edb5866fa64b29b49523c01dc13d92a0cb3829390ddc45bdb6a0"
+                ]
+            ],
+            "pages6": [
+                [
+                    0,
+                    28
+                ],
+                [
+                    29,
+                    44
+                ]
+            ],
+            "cleaned": "El Sr. Pérez y la Dra. López llegaron a las 3.30 p.m. con 1.500 pesos, etc. Luego se fueron.",
+            "cleanedNoJoin": "El Sr. Pérez y la Dra. López llegaron a las 3.30 p.m. con 1.500 pesos, etc. Luego se fueron.",
+            "title": "El Sr. Pérez y la Dra. López llegaron a las 3.30 p.m. con…",
+            "plan": [
+                [
+                    "Sr",
+                    "El Sr. Pérez y la Dra. López llegaron a las 3.30 p.m."
+                ],
+                [
+                    "Pérez",
+                    "El Sr. Pérez y la Dra. López llegaron a las 3.30 p.m."
+                ],
+                [
+                    "y",
+                    "El Sr. Pérez y la Dra. López llegaron a las 3.30 p.m."
+                ],
+                [
+                    "Dra",
+                    "El Sr. Pérez y la Dra. López llegaron a las 3.30 p.m."
+                ],
+                [
+                    "López",
+                    "El Sr. Pérez y la Dra. López llegaron a las 3.30 p.m."
+                ],
+                [
+                    "llegaron",
+                    "El Sr. Pérez y la Dra. López llegaron a las 3.30 p.m."
+                ],
+                [
+                    "a",
+                    "El Sr. Pérez y la Dra. López llegaron a las 3.30 p.m."
+                ],
+                [
+                    "las",
+                    "El Sr. Pérez y la Dra. López llegaron a las 3.30 p.m."
+                ],
+                [
+                    "p",
+                    "El Sr. Pérez y la Dra. López llegaron a las 3.30 p.m."
+                ],
+                [
+                    "m",
+                    "El Sr. Pérez y la Dra. López llegaron a las 3.30 p.m."
+                ],
+                [
+                    "con",
+                    "con 1.500 pesos, etc."
+                ],
+                [
+                    "pesos",
+                    "con 1.500 pesos, etc."
+                ],
+                [
+                    "etc",
+                    "con 1.500 pesos, etc."
+                ],
+                [
+                    "Luego",
+                    "Luego se fueron."
+                ],
+                [
+                    "se",
+                    "Luego se fueron."
+                ],
+                [
+                    "fueron",
+                    "Luego se fueron."
+                ]
+            ]
+        },
+        {
+            "source": "«¡Qué bonito!», dijo Ana. J. K. Rowling escribió libros...  Hoy  es lunes.",
+            "tokens": [
+                [
+                    "«",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    "¡",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    "Qué",
+                    "WORD",
+                    "qué",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "bonito",
+                    "WORD",
+                    "bonito",
+                    0
+                ],
+                [
+                    "!",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    "»",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    ",",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "dijo",
+                    "WORD",
+                    "dijo",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "Ana",
+                    "WORD",
+                    "ana",
+                    0
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "J",
+                    "WORD",
+                    "j",
+                    1
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "K",
+                    "WORD",
+                    "k",
+                    1
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "Rowling",
+                    "WORD",
+                    "rowling",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "escribió",
+                    "WORD",
+                    "escribió",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "libros",
+                    "WORD",
+                    "libros",
+                    1
+                ],
+                [
+                    "...",
+                    "PUNCT",
+                    null,
+                    1
+                ],
+                [
+                    "  ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "Hoy",
+                    "WORD",
+                    "hoy",
+                    2
+                ],
+                [
+                    "  ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "es",
+                    "WORD",
+                    "es",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "lunes",
+                    "WORD",
+                    "lunes",
+                    2
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    2
+                ]
+            ],
+            "sentences": [
+                [
+                    "«¡Qué bonito!», dijo Ana.",
+                    "3cfef4efe60da242ce79e74cf3acdb55a5b16fb4ced4b7ab6a5c657745d5f2c6"
+                ],
+                [
+                    "J. K. Rowling escribió libros...",
+                    "65e86f567681fc10e70af7efff53d4e6849abe54d7e66ca7da3016db0a8359d0"
+                ],
+                [
+                    "Hoy  es lunes.",
+                    "fe8094e67cf9ae6d9619c17c8460f2108a25b0af9e56226be87a31af75305795"
+                ]
+            ],
+            "pages6": [
+                [
+                    0,
+                    13
+                ],
+                [
+                    14,
+                    26
+                ],
+                [
+                    27,
+                    32
+                ]
+            ],
+            "cleaned": "«¡Qué bonito!», dijo Ana. J. K. Rowling escribió libros... Hoy es lunes.",
+            "cleanedNoJoin": "«¡Qué bonito!», dijo Ana. J. K. Rowling escribió libros... Hoy es lunes.",
+            "title": "«¡Qué bonito!», dijo Ana. J. K. Rowling escribió libros...…",
+            "plan": [
+                [
+                    "Qué",
+                    "«¡Qué bonito!», dijo Ana."
+                ],
+                [
+                    "bonito",
+                    "«¡Qué bonito!», dijo Ana."
+                ],
+                [
+                    "dijo",
+                    "«¡Qué bonito!», dijo Ana."
+                ],
+                [
+                    "Ana",
+                    "«¡Qué bonito!», dijo Ana."
+                ],
+                [
+                    "J",
+                    "J. K. Rowling escribió libros..."
+                ],
+                [
+                    "K",
+                    "J. K. Rowling escribió libros..."
+                ],
+                [
+                    "Rowling",
+                    "J. K. Rowling escribió libros..."
+                ],
+                [
+                    "escribió",
+                    "J. K. Rowling escribió libros..."
+                ],
+                [
+                    "libros",
+                    "J. K. Rowling escribió libros..."
+                ],
+                [
+                    "Hoy",
+                    "Hoy  es lunes."
+                ],
+                [
+                    "es",
+                    "Hoy  es lunes."
+                ],
+                [
+                    "lunes",
+                    "Hoy  es lunes."
+                ]
+            ]
+        },
+        {
+            "source": "Dámelo ahora. Ella estaba observándome desde la puerta; no se dio cuenta de nada.",
+            "tokens": [
+                [
+                    "Dámelo",
+                    "WORD",
+                    "dámelo",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "ahora",
+                    "WORD",
+                    "ahora",
+                    0
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "Ella",
+                    "WORD",
+                    "ella",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "estaba",
+                    "WORD",
+                    "estaba",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "observándome",
+                    "WORD",
+                    "observándome",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "desde",
+                    "WORD",
+                    "desde",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "la",
+                    "WORD",
+                    "la",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "puerta",
+                    "WORD",
+                    "puerta",
+                    1
+                ],
+                [
+                    ";",
+                    "PUNCT",
+                    null,
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "no",
+                    "WORD",
+                    "no",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "se",
+                    "WORD",
+                    "se",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "dio",
+                    "WORD",
+                    "dio",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "cuenta",
+                    "WORD",
+                    "cuenta",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "de",
+                    "WORD",
+                    "de",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "nada",
+                    "WORD",
+                    "nada",
+                    1
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    1
+                ]
+            ],
+            "sentences": [
+                [
+                    "Dámelo ahora.",
+                    "753f210db30b84f154fcc6dd46457efd0852aaea4f71bb8ca1eafeece1dd9e92"
+                ],
+                [
+                    "Ella estaba observándome desde la puerta; no se dio cuenta de nada.",
+                    "9eaa4ff551d6343017ebb5ef8c15ca5ccace87710c9f1be2de7c37984351f772"
+                ]
+            ],
+            "pages6": [
+                [
+                    0,
+                    4
+                ],
+                [
+                    5,
+                    29
+                ]
+            ],
+            "cleaned": "Dámelo ahora. Ella estaba observándome desde la puerta; no se dio cuenta de nada.",
+            "cleanedNoJoin": "Dámelo ahora. Ella estaba observándome desde la puerta; no se dio cuenta de nada.",
+            "title": "Dámelo ahora. Ella estaba observándome desde la puerta; no…",
+            "plan": [
+                [
+                    "Dámelo",
+                    "Dámelo ahora."
+                ],
+                [
+                    "ahora",
+                    "Dámelo ahora."
+                ],
+                [
+                    "Ella",
+                    "Ella estaba observándome desde la puerta; no se dio cuenta de nada."
+                ],
+                [
+                    "estaba",
+                    "Ella estaba observándome desde la puerta; no se dio cuenta de nada."
+                ],
+                [
+                    "observándome",
+                    "Ella estaba observándome desde la puerta; no se dio cuenta de nada."
+                ],
+                [
+                    "desde",
+                    "Ella estaba observándome desde la puerta; no se dio cuenta de nada."
+                ],
+                [
+                    "puerta",
+                    "Ella estaba observándome desde la puerta; no se dio cuenta de nada."
+                ],
+                [
+                    "no",
+                    "Ella estaba observándome desde la puerta; no se dio cuenta de nada."
+                ],
+                [
+                    "se",
+                    "Ella estaba observándome desde la puerta; no se dio cuenta de nada."
+                ],
+                [
+                    "dio",
+                    "Ella estaba observándome desde la puerta; no se dio cuenta de nada."
+                ],
+                [
+                    "cuenta",
+                    "Ella estaba observándome desde la puerta; no se dio cuenta de nada."
+                ],
+                [
+                    "de",
+                    "Ella estaba observándome desde la puerta; no se dio cuenta de nada."
+                ],
+                [
+                    "nada",
+                    "Ella estaba observándome desde la puerta; no se dio cuenta de nada."
+                ]
+            ]
+        },
+        {
+            "source": "Sí, si quieres. ¿Por qué? Porque Ñandú y ÁRBOL están en mayúsculas.",
+            "tokens": [
+                [
+                    "Sí",
+                    "WORD",
+                    "sí",
+                    0
+                ],
+                [
+                    ",",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "si",
+                    "WORD",
+                    "si",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "quieres",
+                    "WORD",
+                    "quieres",
+                    0
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "¿",
+                    "PUNCT",
+                    null,
+                    1
+                ],
+                [
+                    "Por",
+                    "WORD",
+                    "por",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "qué",
+                    "WORD",
+                    "qué",
+                    1
+                ],
+                [
+                    "?",
+                    "PUNCT",
+                    null,
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "Porque",
+                    "WORD",
+                    "porque",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "Ñandú",
+                    "WORD",
+                    "ñandú",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "y",
+                    "WORD",
+                    "y",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "ÁRBOL",
+                    "WORD",
+                    "árbol",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "están",
+                    "WORD",
+                    "están",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "en",
+                    "WORD",
+                    "en",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "mayúsculas",
+                    "WORD",
+                    "mayúsculas",
+                    2
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    2
+                ]
+            ],
+            "sentences": [
+                [
+                    "Sí, si quieres.",
+                    "2580911de423148042be5f0d81f1e6f4b9541283b673f5df8b16f5533c66cbf0"
+                ],
+                [
+                    "¿Por qué?",
+                    "fe5516eff608f82dcecdc9db660d762df51f8e0a7e27ea0aa16327e53f4e0393"
+                ],
+                [
+                    "Porque Ñandú y ÁRBOL están en mayúsculas.",
+                    "9590c501346ce11e54a60701dacc9e258e55b30a0078334f649942c1123bf743"
+                ]
+            ],
+            "pages6": [
+                [
+                    0,
+                    13
+                ],
+                [
+                    14,
+                    27
+                ]
+            ],
+            "cleaned": "Sí, si quieres. ¿Por qué? Porque Ñandú y ÁRBOL están en mayúsculas.",
+            "cleanedNoJoin": "Sí, si quieres. ¿Por qué? Porque Ñandú y ÁRBOL están en mayúsculas.",
+            "title": "Sí, si quieres. ¿Por qué? Porque Ñandú y ÁRBOL están en…",
+            "plan": [
+                [
+                    "Sí",
+                    "Sí, si quieres."
+                ],
+                [
+                    "si",
+                    "Sí, si quieres."
+                ],
+                [
+                    "quieres",
+                    "Sí, si quieres."
+                ],
+                [
+                    "Por",
+                    "¿Por qué?"
+                ],
+                [
+                    "qué",
+                    "¿Por qué?"
+                ],
+                [
+                    "Porque",
+                    "Porque Ñandú y ÁRBOL están en mayúsculas."
+                ],
+                [
+                    "Ñandú",
+                    "Porque Ñandú y ÁRBOL están en mayúsculas."
+                ],
+                [
+                    "y",
+                    "Porque Ñandú y ÁRBOL están en mayúsculas."
+                ],
+                [
+                    "ÁRBOL",
+                    "Porque Ñandú y ÁRBOL están en mayúsculas."
+                ],
+                [
+                    "están",
+                    "Porque Ñandú y ÁRBOL están en mayúsculas."
+                ],
+                [
+                    "en",
+                    "Porque Ñandú y ÁRBOL están en mayúsculas."
+                ],
+                [
+                    "mayúsculas",
+                    "Porque Ñandú y ÁRBOL están en mayúsculas."
+                ]
+            ]
+        },
+        {
+            "source": "Línea uno\nLínea dos\n\nPárrafo nuevo con rock'n'roll y bien-estar.",
+            "tokens": [
+                [
+                    "Línea",
+                    "WORD",
+                    "línea",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "uno",
+                    "WORD",
+                    "uno",
+                    0
+                ],
+                [
+                    "\n",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "Línea",
+                    "WORD",
+                    "línea",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "dos",
+                    "WORD",
+                    "dos",
+                    1
+                ],
+                [
+                    "\n\n",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "Párrafo",
+                    "WORD",
+                    "párrafo",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "nuevo",
+                    "WORD",
+                    "nuevo",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "con",
+                    "WORD",
+                    "con",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "rock'n'roll",
+                    "WORD",
+                    "rock'n'roll",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "y",
+                    "WORD",
+                    "y",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "bien-estar",
+                    "WORD",
+                    "bien-estar",
+                    2
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    2
+                ]
+            ],
+            "sentences": [
+                [
+                    "Línea uno",
+                    "a4826f6f7aed199f2fc3d6da673e264b6f8ffebd6d1a29d53389c6533e2fe97d"
+                ],
+                [
+                    "Línea dos",
+                    "12f8f4c2188bf52c6c0006382175954e497b20045ff60b4da4313ffc4efb8a00"
+                ],
+                [
+                    "Párrafo nuevo con rock'n'roll y bien-estar.",
+                    "71d664882e2f477d304f29280d6a204d2bda0c8b58cdc1b7d222a5c6e83e37fe"
+                ]
+            ],
+            "pages6": [
+                [
+                    0,
+                    7
+                ],
+                [
+                    8,
+                    19
+                ]
+            ],
+            "cleaned": "Línea uno Línea dos\n\nPárrafo nuevo con rock'n'roll y bien-estar.",
+            "cleanedNoJoin": "Línea uno\nLínea dos\n\nPárrafo nuevo con rock'n'roll y bien-estar.",
+            "title": "Línea uno",
+            "plan": [
+                [
+                    "Línea",
+                    "Línea uno"
+                ],
+                [
+                    "uno",
+                    "Línea uno"
+                ],
+                [
+                    "Línea",
+                    "Línea dos"
+                ],
+                [
+                    "dos",
+                    "Línea dos"
+                ],
+                [
+                    "Párrafo",
+                    "Párrafo nuevo con rock'n'roll y bien-estar."
+                ],
+                [
+                    "nuevo",
+                    "Párrafo nuevo con rock'n'roll y bien-estar."
+                ],
+                [
+                    "con",
+                    "Párrafo nuevo con rock'n'roll y bien-estar."
+                ],
+                [
+                    "rock'n'roll",
+                    "Párrafo nuevo con rock'n'roll y bien-estar."
+                ],
+                [
+                    "y",
+                    "Párrafo nuevo con rock'n'roll y bien-estar."
+                ],
+                [
+                    "bien-estar",
+                    "Párrafo nuevo con rock'n'roll y bien-estar."
+                ]
+            ]
+        },
+        {
+            "source": "Usa la compu-\ntadora hoy.\r\nEl niño que\nvivía en el campo.",
+            "tokens": [
+                [
+                    "Usa",
+                    "WORD",
+                    "usa",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "la",
+                    "WORD",
+                    "la",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "compu",
+                    "WORD",
+                    "compu",
+                    0
+                ],
+                [
+                    "-",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    "\n",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "tadora",
+                    "WORD",
+                    "tadora",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "hoy",
+                    "WORD",
+                    "hoy",
+                    1
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    1
+                ],
+                [
+                    "\r\n",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "El",
+                    "WORD",
+                    "el",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "niño",
+                    "WORD",
+                    "niño",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "que",
+                    "WORD",
+                    "que",
+                    2
+                ],
+                [
+                    "\n",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "vivía",
+                    "WORD",
+                    "vivía",
+                    3
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    3
+                ],
+                [
+                    "en",
+                    "WORD",
+                    "en",
+                    3
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    3
+                ],
+                [
+                    "el",
+                    "WORD",
+                    "el",
+                    3
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    3
+                ],
+                [
+                    "campo",
+                    "WORD",
+                    "campo",
+                    3
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    3
+                ]
+            ],
+            "sentences": [
+                [
+                    "Usa la compu-",
+                    "c98c341d38cc691fa81ac568881f55049230337f65af137ec1b5f14348700be4"
+                ],
+                [
+                    "tadora hoy.",
+                    "9ac3d26113e5fc9a241627e75ed98cce9a6b4ede33faae6e7ab08e4e14a62ff9"
+                ],
+                [
+                    "El niño que",
+                    "3a5aaaa7735804084bdd6c80809e6ece005096361aff72fdd6dff0acca10f010"
+                ],
+                [
+                    "vivía en el campo.",
+                    "83ed8df474b0eb023e85ee7eb019edc42883b52bda5ce8a1ae227c310e835f67"
+                ]
+            ],
+            "pages6": [
+                [
+                    0,
+                    11
+                ],
+                [
+                    12,
+                    17
+                ],
+                [
+                    18,
+                    25
+                ]
+            ],
+            "cleaned": "Usa la computadora hoy.\nEl niño que vivía en el campo.",
+            "cleanedNoJoin": "Usa la compu-\ntadora hoy.\nEl niño que\nvivía en el campo.",
+            "title": "Usa la compu-",
+            "plan": [
+                [
+                    "Usa",
+                    "Usa la compu-"
+                ],
+                [
+                    "compu",
+                    "Usa la compu-"
+                ],
+                [
+                    "tadora",
+                    "tadora hoy."
+                ],
+                [
+                    "hoy",
+                    "tadora hoy."
+                ],
+                [
+                    "niño",
+                    "El niño que"
+                ],
+                [
+                    "que",
+                    "El niño que"
+                ],
+                [
+                    "vivía",
+                    "vivía en el campo."
+                ],
+                [
+                    "en",
+                    "vivía en el campo."
+                ],
+                [
+                    "campo",
+                    "vivía en el campo."
+                ]
+            ]
+        },
+        {
+            "source": "Sin embargo, no se dio cuenta. A lo mejor llueve. Voy a echar de menos a mi familia; me echa mucho de menos.",
+            "tokens": [
+                [
+                    "Sin",
+                    "WORD",
+                    "sin",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "embargo",
+                    "WORD",
+                    "embargo",
+                    0
+                ],
+                [
+                    ",",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "no",
+                    "WORD",
+                    "no",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "se",
+                    "WORD",
+                    "se",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "dio",
+                    "WORD",
+                    "dio",
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "cuenta",
+                    "WORD",
+                    "cuenta",
+                    0
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "A",
+                    "WORD",
+                    "a",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "lo",
+                    "WORD",
+                    "lo",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "mejor",
+                    "WORD",
+                    "mejor",
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "llueve",
+                    "WORD",
+                    "llueve",
+                    1
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    1
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "Voy",
+                    "WORD",
+                    "voy",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "a",
+                    "WORD",
+                    "a",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "echar",
+                    "WORD",
+                    "echar",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "de",
+                    "WORD",
+                    "de",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "menos",
+                    "WORD",
+                    "menos",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "a",
+                    "WORD",
+                    "a",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "mi",
+                    "WORD",
+                    "mi",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "familia",
+                    "WORD",
+                    "familia",
+                    2
+                ],
+                [
+                    ";",
+                    "PUNCT",
+                    null,
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "me",
+                    "WORD",
+                    "me",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "echa",
+                    "WORD",
+                    "echa",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "mucho",
+                    "WORD",
+                    "mucho",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "de",
+                    "WORD",
+                    "de",
+                    2
+                ],
+                [
+                    " ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ],
+                [
+                    "menos",
+                    "WORD",
+                    "menos",
+                    2
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    2
+                ]
+            ],
+            "sentences": [
+                [
+                    "Sin embargo, no se dio cuenta.",
+                    "37b2c1ba4c1cc5bac8f70a977e645bdefbc52259648feb178247bb3a18aa7500"
+                ],
+                [
+                    "A lo mejor llueve.",
+                    "a9b86231e72f4f2d8a5704dfbb78061714a83a7c1bb2aedd63725b962acb3b52"
+                ],
+                [
+                    "Voy a echar de menos a mi familia; me echa mucho de menos.",
+                    "d71f3a251b620df12c8834047a61e6386aa5bebe8de22b2a193a56dd17888fa9"
+                ]
+            ],
+            "pages6": [
+                [
+                    0,
+                    13
+                ],
+                [
+                    14,
+                    22
+                ],
+                [
+                    23,
+                    49
+                ]
+            ],
+            "cleaned": "Sin embargo, no se dio cuenta. A lo mejor llueve. Voy a echar de menos a mi familia; me echa mucho de menos.",
+            "cleanedNoJoin": "Sin embargo, no se dio cuenta. A lo mejor llueve. Voy a echar de menos a mi familia; me echa mucho de menos.",
+            "title": "Sin embargo, no se dio cuenta. A lo mejor llueve. Voy a…",
+            "plan": [
+                [
+                    "Sin",
+                    "Sin embargo, no se dio cuenta."
+                ],
+                [
+                    "embargo",
+                    "Sin embargo, no se dio cuenta."
+                ],
+                [
+                    "no",
+                    "Sin embargo, no se dio cuenta."
+                ],
+                [
+                    "se",
+                    "Sin embargo, no se dio cuenta."
+                ],
+                [
+                    "dio",
+                    "Sin embargo, no se dio cuenta."
+                ],
+                [
+                    "cuenta",
+                    "Sin embargo, no se dio cuenta."
+                ],
+                [
+                    "A",
+                    "A lo mejor llueve."
+                ],
+                [
+                    "lo",
+                    "A lo mejor llueve."
+                ],
+                [
+                    "mejor",
+                    "A lo mejor llueve."
+                ],
+                [
+                    "llueve",
+                    "A lo mejor llueve."
+                ],
+                [
+                    "Voy",
+                    "Voy a echar de menos a mi familia; me echa mucho de menos."
+                ],
+                [
+                    "a",
+                    "Voy a echar de menos a mi familia; me echa mucho de menos."
+                ],
+                [
+                    "echar",
+                    "Voy a echar de menos a mi familia; me echa mucho de menos."
+                ],
+                [
+                    "de",
+                    "Voy a echar de menos a mi familia; me echa mucho de menos."
+                ],
+                [
+                    "menos",
+                    "Voy a echar de menos a mi familia; me echa mucho de menos."
+                ],
+                [
+                    "mi",
+                    "Voy a echar de menos a mi familia; me echa mucho de menos."
+                ],
+                [
+                    "familia",
+                    "Voy a echar de menos a mi familia; me echa mucho de menos."
+                ],
+                [
+                    "me",
+                    "Voy a echar de menos a mi familia; me echa mucho de menos."
+                ],
+                [
+                    "echa",
+                    "Voy a echar de menos a mi familia; me echa mucho de menos."
+                ],
+                [
+                    "mucho",
+                    "Voy a echar de menos a mi familia; me echa mucho de menos."
+                ]
+            ]
+        },
+        {
+            "source": "   \n  Uno.   Dos!   ¿Tres?  ",
+            "tokens": [
+                [
+                    "   \n  ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "Uno",
+                    "WORD",
+                    "uno",
+                    0
+                ],
+                [
+                    ".",
+                    "PUNCT",
+                    null,
+                    0
+                ],
+                [
+                    "   ",
+                    "WHITESPACE",
+                    null,
+                    0
+                ],
+                [
+                    "Dos",
+                    "WORD",
+                    "dos",
+                    1
+                ],
+                [
+                    "!",
+                    "PUNCT",
+                    null,
+                    1
+                ],
+                [
+                    "   ",
+                    "WHITESPACE",
+                    null,
+                    1
+                ],
+                [
+                    "¿",
+                    "PUNCT",
+                    null,
+                    2
+                ],
+                [
+                    "Tres",
+                    "WORD",
+                    "tres",
+                    2
+                ],
+                [
+                    "?",
+                    "PUNCT",
+                    null,
+                    2
+                ],
+                [
+                    "  ",
+                    "WHITESPACE",
+                    null,
+                    2
+                ]
+            ],
+            "sentences": [
+                [
+                    "Uno.",
+                    "0673a9e3bcbed5088a603a0d942ec78617bacb99658f6323dd5f811466ed9ba1"
+                ],
+                [
+                    "Dos!",
+                    "1c5e0cf254504c509f5f2b8ac76015c3f440baea3fa3e8d243eec4b807c9500e"
+                ],
+                [
+                    "¿Tres?",
+                    "daf6d65a5a1ce16892e0e00b1e9693c3c33ed474d81c18d448b83df8c2d39a66"
+                ]
+            ],
+            "pages6": [
+                [
+                    0,
+                    10
+                ]
+            ],
+            "cleaned": "Uno. Dos! ¿Tres?",
+            "cleanedNoJoin": "Uno. Dos! ¿Tres?",
+            "title": "Uno.   Dos!   ¿Tres?",
+            "plan": [
+                [
+                    "Uno",
+                    "Uno."
+                ],
+                [
+                    "Dos",
+                    "Dos!"
+                ],
+                [
+                    "Tres",
+                    "¿Tres?"
+                ]
+            ]
+        }
+    ],
+    "formKeys": [
+        [
+            "Hablo",
+            "hablo"
+        ],
+        [
+            "SÍ",
+            "sí"
+        ],
+        [
+            "Ñandú",
+            "ñandú"
+        ],
+        [
+            "rock’n’roll",
+            "rock'n'roll"
+        ],
+        [
+            "ÁRBOL",
+            "árbol"
+        ],
+        [
+            "él",
+            "él"
+        ]
+    ],
+    "phraseLocate": [
+        {
+            "sentence": "Voy a echar de menos a mi familia.",
+            "phrase": "echar de menos",
+            "tokenIndices": [
+                4,
+                6,
+                8
+            ]
+        },
+        {
+            "sentence": "Me echa mucho de menos.",
+            "phrase": "echa de menos",
+            "tokenIndices": [
+                2,
+                6,
+                8
+            ]
+        },
+        {
+            "sentence": "Sin embargo, no se dio cuenta.",
+            "phrase": "se dio cuenta",
+            "tokenIndices": [
+                7,
+                9,
+                11
+            ]
+        },
+        {
+            "sentence": "Sin embargo, no se dio cuenta.",
+            "phrase": "a lo mejor",
+            "tokenIndices": null
+        },
+        {
+            "sentence": "De repente, de repente llegó.",
+            "phrase": "de répente",
+            "tokenIndices": [
+                0,
+                2
+            ]
+        }
+    ]
+}

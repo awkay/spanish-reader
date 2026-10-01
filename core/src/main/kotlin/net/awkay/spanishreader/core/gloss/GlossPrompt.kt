@@ -81,7 +81,7 @@ object GlossPrompt {
 
     private val previousJson = kotlinx.serialization.json.Json { explicitNulls = false }
 
-    private val IMPROVE_NOTE = "\n" + """
+    internal val IMPROVE_NOTE = "\n" + """
         The learner found the "previousAnswer" given for an item unhelpful or wrong. Re-read the sentence carefully and
         give a corrected, more careful and more complete answer: check the lemma, the exact conjugation and why it is used,
         every clitic and its role, and whether the word belongs to an expression. Do not simply repeat the previous answer.

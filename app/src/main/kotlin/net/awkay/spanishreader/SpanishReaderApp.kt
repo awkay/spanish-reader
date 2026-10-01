@@ -17,6 +17,7 @@ import net.awkay.spanishreader.data.SettingsRepository
 import net.awkay.spanishreader.data.TtsEngine
 import net.awkay.spanishreader.data.VocabRepository
 import net.awkay.spanishreader.gloss.GlossService
+import net.awkay.spanishreader.share.WebShareService
 import java.io.File
 
 /** Manual dependency container; every screen reaches its collaborators through here. */
@@ -32,6 +33,7 @@ class SpanishReaderApp : Application() {
     val deviceTts: DeviceTts by lazy { DeviceTts(this) }
     val audioCache: SentenceAudioCache by lazy { SentenceAudioCache(File(filesDir, "tts")) }
     val audio: LessonAudio by lazy { LessonAudio(this) }
+    val webShare: WebShareService by lazy { WebShareService(settings, glossCache, phrases, GlossService.sharedHttp) }
 
     /** The sentence synthesizer selected in settings; falls back to on-device TTS when cloud TTS lacks a key. */
     fun synthesizer(s: AppSettings): SentenceSynthesizer =

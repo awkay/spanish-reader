@@ -27,11 +27,39 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: server/go.mod
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
       - name: Install Android SDK packages
         run: scripts/install-android-sdk.sh
 
       - name: Test
         run: ./gradlew --no-daemon :core:test :app:testDebugUnitTest
+
+      - name: Test and build the web server (Go)
+        working-directory: server
+        run: |
+          go vet ./...
+          go test ./...
+          for arch in amd64 arm64; do
+            CGO_ENABLED=0 GOOS=linux GOARCH=$arch go build -trimpath -ldflags="-s -w" -o "../spanish-reader-server-linux-$arch" .
+          done
+
+      - name: Test and build the web app
+        working-directory: web
+        run: |
+          npm ci
+          npx tsc --noEmit
+          npm test
+          npm run build
+          tar -czf ../spanish-reader-web.tar.gz -C dist .
 
       - name: Build APKs
         run: |
@@ -47,11 +75,16 @@ jobs:
           target_commitish: ${{ github.sha }}
           make_latest: true
           body: |
-            Install `spanish-reader-${{ github.run_number }}.apk` (small, R8-shrunk release build).
+            Android: install `spanish-reader-${{ github.run_number }}.apk` (small, R8-shrunk release build).
             The `-debug-fallback.apk` is the unshrunk build, only for if the small one misbehaves.
+            Web app (iPhone): `spanish-reader-server-linux-*` and `spanish-reader-web.tar.gz`, installed on the
+            server by `deploy/update.sh` (see web-port.md).
             Built from ${{ github.sha }}.
 
             ${{ github.event.head_commit.message }}
           files: |
             spanish-reader-${{ github.run_number }}.apk
             spanish-reader-${{ github.run_number }}-debug-fallback.apk
+            spanish-reader-server-linux-amd64
+            spanish-reader-server-linux-arm64
+            spanish-reader-web.tar.gz

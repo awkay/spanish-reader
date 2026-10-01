@@ -39,6 +39,12 @@ data class AppSettings(
     val googleTtsApiKey: String = "",
     val googleTtsVoice: String = "es-US-Chirp3-HD-Aoede",
     val playbackSpeed: Float = 1.0f,
+    /** Household web app, for "Share to web". */
+    val webUrl: String = "https://spanish-reader.fulcrologic.com",
+    val webAccessCode: String = "",
+    val webName: String = "",
+    /** Session token from the web app's login, reused until it stops working. */
+    val webToken: String = "",
 ) {
     fun config(p: GlossProvider): GlosserConfig = providerConfigs[p] ?: GlosserConfig(p)
 
@@ -92,6 +98,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             googleTtsApiKey = p[GOOGLE_KEY] ?: d.googleTtsApiKey,
             googleTtsVoice = p[GOOGLE_VOICE] ?: d.googleTtsVoice,
             playbackSpeed = p[SPEED] ?: d.playbackSpeed,
+            webUrl = p[WEB_URL] ?: d.webUrl,
+            webAccessCode = p[WEB_CODE] ?: d.webAccessCode,
+            webName = p[WEB_NAME] ?: d.webName,
+            webToken = p[WEB_TOKEN] ?: d.webToken,
         )
     }
 
@@ -118,6 +128,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             p[GOOGLE_KEY] = s.googleTtsApiKey
             p[GOOGLE_VOICE] = s.googleTtsVoice
             p[SPEED] = s.playbackSpeed.coerceIn(0.5f, 2.0f)
+            p[WEB_URL] = s.webUrl
+            p[WEB_CODE] = s.webAccessCode
+            p[WEB_NAME] = s.webName
+            p[WEB_TOKEN] = s.webToken
         }
     }
 
@@ -154,6 +168,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val GOOGLE_KEY = stringPreferencesKey("tts.google.apiKey")
         val GOOGLE_VOICE = stringPreferencesKey("tts.google.voice")
         val SPEED = floatPreferencesKey("tts.speed")
+        val WEB_URL = stringPreferencesKey("web.url")
+        val WEB_CODE = stringPreferencesKey("web.accessCode")
+        val WEB_NAME = stringPreferencesKey("web.name")
+        val WEB_TOKEN = stringPreferencesKey("web.token")
 
         fun providerKey(p: GlossProvider, field: String) = stringPreferencesKey("gloss.${p.name}.$field")
     }

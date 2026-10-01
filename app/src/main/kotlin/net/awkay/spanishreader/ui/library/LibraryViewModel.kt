@@ -80,4 +80,19 @@ class LibraryViewModel(private val app: SpanishReaderApp) : ViewModel() {
     fun rename(id: Long, title: String) = viewModelScope.launch { if (title.isNotBlank()) app.lessons.rename(id, title) }
 
     fun preGloss(id: Long) = PreGlossWorker.enqueue(app, id)
+
+    /** Message for the user after "Share to web". */
+    val shareMessage = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+
+    fun shareToWeb(lesson: LessonEntity) = viewModelScope.launch {
+        shareMessage.value = "Sharing “${lesson.title}”…"
+        shareMessage.value = try {
+            app.webShare.share(lesson)
+            "Shared “${lesson.title}” to the web app."
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            "Sharing failed: ${e.message}"
+        }
+    }
 }
