@@ -45,8 +45,8 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
   ~1 s for a 3-sentence page, ~15 MB RSS idle, ~200 MB peak while Piper runs.
 - **Android "Share to web"** (library menu; Settings → Web app): uploads a lesson with its cached glosses,
   translations and expressions, never statuses.
-- **Voice**: Tony is still choosing es_MX-claude-high (default) / ald-medium / ald-x_low. It is one env setting,
-  `SR_PIPER_MODEL`.
+- **Voice**: Tony chose Piper `es_MX-claude-high` (no es-CO voice exists in Piper; Azure has es-CO neural voices if
+  ever wanted). Changing it is one env setting, `SR_PIPER_MODEL`.
 
 ## Features (Android app)
 - **Import**: share sheet (`ACTION_SEND` text/plain, incl. shared .txt streams), "Open with" for .txt, paste button,
@@ -148,7 +148,7 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
 - Maven Central intermittently returns 429 through the cloud proxy; just rerun Gradle.
 
 ## Next
-1. Deploy the web app on the Linode (`web-port.md`), pick the voice, and try it on the iPhones.
+1. Deploy the web app on the Linode (`web-port.md`) and try it on the iPhones.
 2. Move synthesis into `PlaybackService`; save the listening position.
 3. Web article extraction for shared URLs; EPUB import.
 4. Offline dictionary fallback (kaikki.org Wiktionary extract).

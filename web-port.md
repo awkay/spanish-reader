@@ -66,19 +66,19 @@ sudo tar -xzf piper_linux_x86_64.tar.gz -C /opt/piper      # creates /opt/piper/
 /opt/piper/piper/piper --help | head -3
 ```
 
-The voice. Tony chooses between `es_MX-claude-high` (default), `es_MX-ald-medium` and `es_MX-ald-x_low` (smallest,
-21 MB). Ask Tony which one if he hasn't said. Both the `.onnx` and the `.onnx.json` files are needed:
+The voice: Tony chose **`es_MX-claude-high`** (63 MB). Both the `.onnx` and the `.onnx.json` files are needed:
 
 ```sh
 sudo install -d -m 0755 /opt/piper/voices
-V=es_MX-claude-high; P=es/es_MX/claude/high      # ald-medium: P=es/es_MX/ald/medium   ald-x_low: P=es/es_MX/ald/x_low
+V=es_MX-claude-high; P=es/es_MX/claude/high
 for f in $V.onnx $V.onnx.json; do
   sudo curl -fsSL -o /opt/piper/voices/$f https://huggingface.co/rhasspy/piper-voices/resolve/main/$P/$f
 done
 echo 'Hola, ¿cómo estás?' | /opt/piper/piper/piper --model /opt/piper/voices/$V.onnx --output_file /tmp/t.wav && ls -l /tmp/t.wav
 ```
 
-You can switch voices later: download another voice, change `SR_PIPER_MODEL` and restart. Audio is cached per voice,
+Alternatives Tony heard: `es_MX-ald-medium` (P=es/es_MX/ald/medium), `es_MX-ald-x_low` (P=es/es_MX/ald/x_low, 20 MB,
+lightest) and `es_AR-daniela-high` (P=es/es_AR/daniela/high, 114 MB, Argentine). You can switch voices later: download another voice, change `SR_PIPER_MODEL` and restart. Audio is cached per voice,
 so nothing else needs clearing.
 
 ## 5. Binary and web files
