@@ -13,6 +13,7 @@ type Server struct {
 	ai    *AIProxy
 	tts   *TTS
 	store *Store
+	yt    *YouTube
 }
 
 func newServer(cfg *Config) (*Server, error) {
@@ -20,12 +21,14 @@ func newServer(cfg *Config) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
+	tts := newTTS(cfg.PiperBin, cfg.PiperModel, cfg.LameBin, filepath.Join(cfg.DataDir, "tts"))
 	return &Server{
 		cfg:   cfg,
 		gate:  newGate(cfg.AccessCode, cfg.Secret),
 		ai:    newAIProxy(cfg),
-		tts:   newTTS(cfg.PiperBin, cfg.PiperModel, cfg.LameBin, filepath.Join(cfg.DataDir, "tts")),
+		tts:   tts,
 		store: store,
+		yt:    newYouTube(cfg, store, filepath.Join(tts.dir, "pages")),
 	}, nil
 }
 
@@ -37,7 +40,7 @@ func (s *Server) routes() http.Handler {
 		writeJSON(w, map[string]bool{"ok": true})
 	})
 	mux.HandleFunc("GET /api/session", s.requireAuth(func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, map[string]any{"ok": true, "tts": s.tts.Enabled(), "voice": s.tts.Voice()})
+		writeJSON(w, map[string]any{"ok": true, "tts": s.tts.Enabled(), "voice": s.tts.Voice(), "youtube": s.yt.Enabled()})
 	}))
 	mux.HandleFunc("POST /api/ai", s.requireAuth(s.handleAI))
 	mux.HandleFunc("POST /api/tts", s.requireAuth(s.handleTTS))
@@ -46,6 +49,9 @@ func (s *Server) routes() http.Handler {
 	mux.HandleFunc("POST /api/lessons", s.requireAuth(s.handlePutLesson))
 	mux.HandleFunc("GET /api/lessons/{id}", s.requireAuth(s.handleGetLesson))
 	mux.HandleFunc("DELETE /api/lessons/{id}", s.requireAuth(s.handleDeleteLesson))
+	mux.HandleFunc("POST /api/youtube", s.requireAuth(s.handleYouTubeStart))
+	mux.HandleFunc("GET /api/youtube/jobs/{id}", s.requireAuth(s.handleYouTubeJob))
+	mux.HandleFunc("POST /api/youtube/{video}/audio", s.requireAuth(s.handleVideoAudio))
 	mux.HandleFunc("POST /api/cache/get", s.requireAuth(s.handleCacheGet))
 	mux.HandleFunc("POST /api/cache/put", s.requireAuth(s.handleCachePut))
 	if s.cfg.WebDir != "" {

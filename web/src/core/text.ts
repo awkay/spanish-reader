@@ -278,6 +278,15 @@ export function isJustUrl(text: string): boolean {
   return t.length > 0 && !t.includes(' ') && !t.includes('\n') && (t.startsWith('http://') || t.startsWith('https://'));
 }
 
+/**
+ * True when the text is a single YouTube video link (watch, youtu.be, shorts, live). Only a hint for the import
+ * screen; the server validates the link itself. Mirrors ImportCleaner.isYouTubeUrl.
+ */
+export function isYouTubeUrl(text: string): boolean {
+  const t = text.trim();
+  return !/\s/.test(t) && /^(https?:\/\/)?((www|m|music)\.)?(youtube\.com\/(watch\?(.*&)?v=|shorts\/|live\/)|youtu\.be\/)[A-Za-z0-9_-]{11}([?&#/].*)?$/i.test(t);
+}
+
 // --- PhraseLocator.kt ---
 
 const fold = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '');

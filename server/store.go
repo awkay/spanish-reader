@@ -33,6 +33,11 @@ type Lesson struct {
 	Text      string `json:"text"`
 	CreatedAt int64  `json:"createdAt"`
 	SharedBy  string `json:"sharedBy,omitempty"`
+	// Set for lessons made from a YouTube video: the page audio is cut from the original recording.
+	Source      string `json:"source,omitempty"` // "youtube"
+	SourceURL   string `json:"sourceUrl,omitempty"`
+	VideoID     string `json:"videoId,omitempty"`
+	DurationSec int    `json:"durationSec,omitempty"`
 }
 
 type LessonSummary struct {
@@ -41,6 +46,8 @@ type LessonSummary struct {
 	CreatedAt int64  `json:"createdAt"`
 	Words     int    `json:"words"`
 	SharedBy  string `json:"sharedBy,omitempty"`
+	Source    string `json:"source,omitempty"`
+	VideoID   string `json:"videoId,omitempty"`
 }
 
 // countWords counts runs of letters (close to the reader's word count; good enough for the library list).
@@ -57,7 +64,18 @@ func countWords(text string) int {
 }
 
 func summarize(l Lesson) LessonSummary {
-	return LessonSummary{l.ID, l.Title, l.CreatedAt, countWords(l.Text), l.SharedBy}
+	return LessonSummary{l.ID, l.Title, l.CreatedAt, countWords(l.Text), l.SharedBy, l.Source, l.VideoID}
+}
+
+// FindVideo returns the shared lesson made from a YouTube video, if there is one.
+func (st *Store) FindVideo(videoID string) (Lesson, bool) {
+	entries, _ := os.ReadDir(filepath.Join(st.dir, "lessons"))
+	for _, e := range entries {
+		if l, ok := st.GetLesson(strings.TrimSuffix(e.Name(), ".json")); ok && l.VideoID == videoID {
+			return l, true
+		}
+	}
+	return Lesson{}, false
 }
 
 type Phrase struct {
@@ -245,6 +263,9 @@ func (s *Server) handlePutLesson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	body.Title = strings.TrimSpace(body.Title)
+	if !videoIDRe.MatchString(body.VideoID) {
+		body.Source, body.SourceURL, body.VideoID, body.DurationSec = "", "", "", 0
+	}
 	if body.Title == "" {
 		body.Title = "Untitled"
 	}

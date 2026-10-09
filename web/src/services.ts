@@ -237,7 +237,10 @@ export async function addSharedLesson(id: string): Promise<Lesson> {
   const existing = lessons.get().find((l) => l.sharedId === id);
   if (existing) return existing;
   const shared = await api.lesson(id);
-  const lesson: Lesson = { id: newId(), title: shared.title, text: shared.text, createdAt: Date.now(), currentPage: 0, sharedId: shared.id };
+  const lesson: Lesson = {
+    id: newId(), title: shared.title, text: shared.text, createdAt: Date.now(), currentPage: 0, sharedId: shared.id,
+    videoId: shared.videoId ?? null, sourceUrl: shared.sourceUrl ?? null,
+  };
   await db.put('lessons', lesson);
   await loadLessons();
   return lesson;
@@ -261,11 +264,30 @@ export async function shareLesson(l: Lesson): Promise<void> {
       sentences.push({ hash, translation: row?.translation ?? undefined, phrases: row?.phrases, scanned: row?.scanned, glosses });
     }
   }
-  const summary = await api.shareLesson({ title: l.title, text: l.text, sharedBy: settings.get().name || undefined, sentences });
+  const video = l.videoId ? { source: 'youtube', videoId: l.videoId, sourceUrl: l.sourceUrl ?? undefined } : {};
+  const summary = await api.shareLesson({ title: l.title, text: l.text, sharedBy: settings.get().name || undefined, ...video, sentences });
   await saveLesson({ ...l, sharedId: summary.id });
   const cur = shared.get();
   shared.set({ ...cur, list: [summary, ...(cur.list ?? []).filter((s) => s.id !== summary.id)] });
   void refreshShared();
+}
+
+/**
+ * Imports a YouTube video through the server (download + transcription can take minutes), reporting progress, then
+ * adds the resulting shared lesson to this device.
+ */
+export async function importYouTube(url: string, onProgress: (text: string) => void, pollMs = 3000): Promise<Lesson> {
+  let job = await api.youtubeImport(url);
+  for (;;) {
+    if (job.status === 'error') throw new Error(job.error || 'The import failed');
+    if (job.status === 'done' && job.lessonId) break;
+    onProgress([job.title, job.detail || (job.status === 'queued' ? 'Waiting for another import to finish' : '')].filter(Boolean).join(' — '));
+    await new Promise((r) => setTimeout(r, pollMs));
+    job = await api.youtubeJob(job.id);
+  }
+  const lesson = await addSharedLesson(job.lessonId);
+  void refreshShared();
+  return lesson;
 }
 
 // ---------- shared library ----------

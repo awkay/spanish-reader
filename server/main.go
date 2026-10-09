@@ -4,6 +4,7 @@
 //   - access-code login (one shared code for the household),
 //   - forwarding AI requests with the server's API key (the key never reaches the browser),
 //   - text-to-speech with Piper, returning one MP3 per page plus sentence timings,
+//   - YouTube lessons: yt-dlp + speech recognition with word timestamps; page audio is cut from the recording,
 //   - a shared store of lessons and of per-sentence AI results (glosses, translations, idioms).
 //
 // Everything personal (known words, statuses) lives in each browser. Standard library only; configure with
@@ -33,7 +34,7 @@ func main() {
 		WriteTimeout: 5 * time.Minute,
 		IdleTimeout:  2 * time.Minute,
 	}
-	log.Printf("spanish-reader-server listening on %s (data in %s, tts: %v, voice: %q)",
-		cfg.Listen, cfg.DataDir, srv.tts.Enabled(), srv.tts.Voice())
+	log.Printf("spanish-reader-server listening on %s (data in %s, tts: %v, voice: %q, youtube: %v)",
+		cfg.Listen, cfg.DataDir, srv.tts.Enabled(), srv.tts.Voice(), srv.yt.Enabled())
 	log.Fatal(httpSrv.ListenAndServe())
 }

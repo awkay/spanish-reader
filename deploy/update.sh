@@ -47,6 +47,9 @@ mv /opt/spanish-reader/web.new /opt/spanish-reader/web
 rm -rf /opt/spanish-reader/web.old
 echo "$TAG" > /opt/spanish-reader/VERSION
 
+# YouTube changes often; an old yt-dlp stops working. Only the standalone release binary can update itself.
+if [ -x /usr/local/bin/yt-dlp ]; then /usr/local/bin/yt-dlp -U || echo "yt-dlp update failed (continuing)"; fi
+
 systemctl restart spanish-reader
 sleep 1
 systemctl --no-pager --lines=3 status spanish-reader
