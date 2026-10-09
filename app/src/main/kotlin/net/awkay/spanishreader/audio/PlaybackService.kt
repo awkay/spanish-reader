@@ -5,6 +5,9 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.extractor.DefaultExtractorsFactory
+import androidx.media3.extractor.mp3.Mp3Extractor
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.google.common.util.concurrent.Futures
@@ -19,7 +22,10 @@ class PlaybackService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
+        // Index seeking makes clips of an MP3 (YouTube lessons: one recording per page) start at the exact time.
+        val extractors = DefaultExtractorsFactory().setMp3ExtractorFlags(Mp3Extractor.FLAG_ENABLE_INDEX_SEEKING)
         val player = ExoPlayer.Builder(this)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(this, extractors))
             .setAudioAttributes(
                 AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_SPEECH).build(),
                 /* handleAudioFocus = */ true,

@@ -31,6 +31,9 @@ interface LessonDao {
     @Query("UPDATE lessons SET current_page = :page WHERE id = :id")
     suspend fun setCurrentPage(id: Long, page: Int)
 
+    @Query("UPDATE lessons SET video_id = :videoId, source_url = :sourceUrl WHERE id = :id")
+    suspend fun setVideo(id: Long, videoId: String?, sourceUrl: String?)
+
     @Delete
     suspend fun delete(lesson: LessonEntity)
 }

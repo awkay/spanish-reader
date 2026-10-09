@@ -147,7 +147,7 @@ private fun LessonCard(
     Card(Modifier.fillMaxWidth().clickable(onClick = onOpen)) {
         Row(Modifier.padding(start = 16.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(row.lesson.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text((if (row.lesson.videoId != null) "▶ " else "") + row.lesson.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 val s = row.stats
                 Text(
                     "${s.totalWords} words · ${s.newCount} new · ${s.learningCount} learning · ${s.knownPercent.roundToInt()}% known",

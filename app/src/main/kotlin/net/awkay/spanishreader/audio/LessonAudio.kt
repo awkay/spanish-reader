@@ -3,6 +3,7 @@ package net.awkay.spanishreader.audio
 import android.content.ComponentName
 import android.net.Uri
 import androidx.core.content.ContextCompat
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -24,6 +25,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import net.awkay.spanishreader.SpanishReaderApp
 import net.awkay.spanishreader.core.text.ListenSentence
+import net.awkay.spanishreader.share.VideoPage
 import java.io.File
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -32,6 +34,8 @@ data class AudioState(
     val lessonId: Long? = null,
     val title: String = "",
     val sentences: List<ListenSentence> = emptyList(),
+    /** Set for YouTube lessons: sentences play from the original recording instead of being synthesized. */
+    val videoId: String? = null,
     /** Index into [sentences] of the sentence playing (or last played). */
     val current: Int = 0,
     /** True once something has been queued for [lessonId]. */
@@ -53,6 +57,8 @@ data class AudioState(
  * MediaController: the playlist holds one audio file per sentence starting at [playlistStart]; audio is synthesized
  * (and cached) sentence by sentence and appended as it becomes ready. Living in the application scope, synthesis
  * keeps going when the user leaves a screen. Jumping outside the queued range rebuilds the playlist from there.
+ * For a YouTube lesson each item is instead a clip of the page's original recording (fetched from the web server
+ * once per page and cached), so highlighting, loop and lock-screen controls work the same way.
  */
 class LessonAudio(private val app: SpanishReaderApp) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -91,9 +97,9 @@ class LessonAudio(private val app: SpanishReaderApp) {
      * Makes [lessonId] the current lesson. Switching lessons stops the previous one; reloading the same lesson keeps
      * whatever is playing. [startAt] is where playback will begin if nothing has been queued yet.
      */
-    fun load(lessonId: Long, title: String, sentences: List<ListenSentence>, startAt: Int = 0) {
+    fun load(lessonId: Long, title: String, sentences: List<ListenSentence>, startAt: Int = 0, videoId: String? = null) {
         val s = _state.value
-        if (s.lessonId == lessonId && s.sentences == sentences) {
+        if (s.lessonId == lessonId && s.sentences == sentences && s.videoId == videoId) {
             if (!s.started) _state.update { it.copy(current = startAt.coerceIn(0, (sentences.size - 1).coerceAtLeast(0))) }
             return
         }
@@ -108,7 +114,7 @@ class LessonAudio(private val app: SpanishReaderApp) {
             _state.update { it.copy(speed = speed) }
         }
         _state.value = AudioState(
-            lessonId = lessonId, title = title, sentences = sentences,
+            lessonId = lessonId, title = title, sentences = sentences, videoId = videoId,
             current = startAt.coerceIn(0, (sentences.size - 1).coerceAtLeast(0)),
             speed = s.speed, loop = s.loop,
         )
@@ -140,12 +146,22 @@ class LessonAudio(private val app: SpanishReaderApp) {
         }
     }
 
-    private fun item(index: Int, file: File): MediaItem {
+    private fun item(index: Int, file: File, clip: LongRange? = null): MediaItem {
         val s = _state.value
         val uri = Uri.fromFile(file)
         return MediaItem.Builder()
             .setMediaId("${s.lessonId}:$index")
             .setUri(uri)
+            .apply {
+                if (clip != null) {
+                    setClippingConfiguration(
+                        MediaItem.ClippingConfiguration.Builder()
+                            .setStartPositionMs(clip.first)
+                            .setEndPositionMs(if (clip.last == Long.MAX_VALUE) C.TIME_END_OF_SOURCE else clip.last)
+                            .build(),
+                    )
+                }
+            }
             .setRequestMetadata(MediaItem.RequestMetadata.Builder().setMediaUri(uri).build())
             .setMediaMetadata(
                 MediaMetadata.Builder()
@@ -181,17 +197,24 @@ class LessonAudio(private val app: SpanishReaderApp) {
             c.setPlaybackSpeed(_state.value.speed)
             c.repeatMode = if (_state.value.loop) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
             val sentences = _state.value.sentences
+            val videoId = _state.value.videoId
+            val videoPages = HashMap<Int, VideoPage>()
             for (j in from until sentences.size) {
-                val file = try {
-                    withContext(Dispatchers.IO) { app.audioCache.ensure(synth, sentences[j].text) }
+                val media = try {
+                    if (videoId != null) {
+                        videoClip(videoId, sentences, j, videoPages)
+                    } else {
+                        withContext(Dispatchers.IO) { app.audioCache.ensure(synth, sentences[j].text) } to null
+                    }
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    _state.update { it.copy(preparing = false, error = "Speech synthesis failed: ${e.message}") }
+                    val what = if (videoId != null) "Couldn't load the video's audio" else "Speech synthesis failed"
+                    _state.update { it.copy(preparing = false, error = "$what: ${e.message}") }
                     return@launch
                 }
                 if (_state.value.lessonId != lessonId) return@launch
-                c.addMediaItem(item(j, file))
+                c.addMediaItem(item(j, media.first, media.second))
                 if (j == from && (clear || c.mediaItemCount == 1)) {
                     c.prepare()
                     if (startPlayback) c.play()
@@ -203,6 +226,27 @@ class LessonAudio(private val app: SpanishReaderApp) {
                 }
             }
         }
+    }
+
+    /**
+     * The page recording holding sentence [j] and the clip to play: from its start to the next sentence's start on
+     * the same page (keeping the natural pause), or to the end of the page for the last one.
+     */
+    private suspend fun videoClip(
+        videoId: String,
+        sentences: List<ListenSentence>,
+        j: Int,
+        pages: MutableMap<Int, VideoPage>,
+    ): Pair<File, LongRange> {
+        val pageIndex = sentences[j].pageIndex
+        val onPage = sentences.indices.filter { sentences[it].pageIndex == pageIndex }
+        val page = pages[pageIndex] ?: app.webShare.videoPage(
+            videoId, onPage.map { sentences[it].text }, File(app.filesDir, "video"),
+        ).also { pages[pageIndex] = it }
+        val k = onPage.indexOf(j)
+        val start = page.timings.getOrNull(k)?.first ?: 0L
+        val end = page.timings.getOrNull(k + 1)?.first ?: Long.MAX_VALUE
+        return page.file to (start..maxOf(start, end))
     }
 
     private val queuedRange: IntRange get() = playlistStart until playlistStart + (controller?.mediaItemCount ?: 0)

@@ -30,6 +30,8 @@ class LessonRepository(
 
     suspend fun setCurrentPage(id: Long, page: Int) = dao.setCurrentPage(id, page)
 
+    suspend fun setVideo(id: Long, videoId: String?, sourceUrl: String?) = dao.setVideo(id, videoId, sourceUrl)
+
     suspend fun rename(id: Long, title: String) = dao.rename(id, title.trim())
 
     suspend fun delete(id: Long) {

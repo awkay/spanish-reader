@@ -70,7 +70,7 @@ class ListenViewModel(private val app: SpanishReaderApp, private val lessonId: L
                 ListenScript.build(text, Paginator.paginate(text, settings.wordsPerPage))
             }
             val startAt = script.indexOfFirst { it.pageIndex >= lesson.currentPage }.coerceAtLeast(0)
-            app.audio.load(lessonId, lesson.title, script, startAt)
+            app.audio.load(lessonId, lesson.title, script, startAt, lesson.videoId)
             this@ListenViewModel.script.value = script.map { it.text }
             status.value = ListenUi(loaded = true)
         }

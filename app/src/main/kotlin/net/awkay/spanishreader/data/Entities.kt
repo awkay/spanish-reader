@@ -16,6 +16,9 @@ data class LessonEntity(
     @ColumnInfo(name = "created_at") val createdAtMillis: Long,
     /** Zero-based page the reader was last on. */
     @ColumnInfo(name = "current_page") val currentPage: Int = 0,
+    /** YouTube video this lesson was transcribed from (by the web server); its audio is the original recording. */
+    @ColumnInfo(name = "video_id") val videoId: String? = null,
+    @ColumnInfo(name = "source_url") val sourceUrl: String? = null,
 )
 
 /** One row per lowercased written form (see Tokenizer.normalize); mirrors [VocabEntry]. */

@@ -20,7 +20,7 @@ Live LLM check (not run by default):
 Web app / server:
 ```
 cd server && go vet ./... && go test ./...    # gate delay/lockout, tokens, AI protocols, TTS (fake piper/lame), store
-cd web && npm ci && npm run typecheck && npm test && npm run build    # 28 tests incl. 13 golden-fixture tests
+cd web && npm ci && npm run typecheck && npm test && npm run build    # 30 tests incl. 13 golden-fixture tests
 UPDATE_GOLDEN=1 ./gradlew :core:test --tests '*GoldenFixtureTest*'    # regenerate fixtures/ after changing :core text/prompt logic
 # e2e (Playwright, iPhone 13 profile) against a running server serving web/dist:
 BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_modules/playwright/index.mjs node web/e2e/smoke.mjs
@@ -61,6 +61,33 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
 - Library counts (new / % known) still use each spelling's own status.
 - Web pre-gloss is one serial queue: a newly opened lesson waits for an earlier lesson's queued pages (the e2e test
   saw ~2.5 min), so family colors (and instant taps) arrive late there. Worth prioritizing the open lesson.
+
+## YouTube lessons (2026-10-09; server + web + Android; not yet tried with a real ASR key or on the Linode)
+- **Flow**: paste a YouTube link in the web app's New lesson screen, or share/paste one on Android → "Import from
+  YouTube". The server (`server/youtube.go`) checks the length (yt-dlp metadata), downloads the audio (yt-dlp → MP3,
+  kept forever in `youtube/media/`), splits it at pauses into ≤8-minute chunks (ffmpeg silencedetect), transcribes
+  each with word timestamps (`server/asr.go`, OpenAI-compatible `/audio/transcriptions`, default OpenRouter
+  `openai/whisper-large-v3`; settings `SR_ASR_*`), saves the transcript (`youtube/<id>.json`) and stores a shared
+  lesson (`source: youtube`, `videoId`, `sourceUrl`). Clients poll `GET /api/youtube/jobs/{id}` and then add the
+  lesson like "Get from web". Re-importing a video reuses its lesson or saved transcript (no new download/ASR).
+- **Audio**: `POST /api/youtube/{videoId}/audio {sentences}` answers like `/api/tts`. The server matches the page's
+  sentences to the recognized words (`server/align.go`: letter runs, case/accent-insensitive, small lookahead;
+  unmatched sentences interpolated), cuts that span (+150 ms) with ffmpeg and returns timings relative to the cut.
+  Web: `pageAudio(sentences, videoId)` (separate IndexedDB key). Android: Room v4 adds `lessons.video_id/source_url`
+  (auto-migration, tested); `LessonAudio` fetches each page once (`WebShareService.videoPage`, cached in
+  `filesDir/video`) and queues per-sentence `ClippingConfiguration` items of it (MP3 index seeking enabled in
+  `PlaybackService`), so highlight, loop, speed and lock-screen controls work as before.
+- **Safety**: only a validated 11-char video ID reaches yt-dlp, in a URL the server builds, after `--`, with
+  `--ignore-config --no-playlist --no-cache-dir`; no shell. Over-length videos are refused before downloading
+  (`SR_YT_MAX_MINUTES`, default 60); a daily transcription budget (`SR_ASR_DAILY_MINUTES`, default 180) is charged
+  after the download; one job at a time, at most 3 queued. All routes need the session/Bearer token.
+- **Why not z.ai / Ollama for ASR**: z.ai GLM-ASR returns no timestamps (≤30 s clips, pay-as-you-go only); Ollama
+  Cloud has no speech-to-text. OpenRouter/Groq/OpenAI Whisper all return word times.
+- **Verified here**: real yt-dlp (2026.08.19) + ffmpeg with a stand-in ASR endpoint end to end; Go/web/Android tests
+  with fakes. **Not verified**: a real ASR key, YouTube from the Linode's IP (may need `SR_YTDLP_COOKIES` or deno),
+  Android clip playback on a device. Setup: `web-port.md` step 4b.
+- Not done: Android backup JSON doesn't carry `videoId` (a restored video lesson plays TTS until re-added from the
+  shared library).
 
 ## Features (Android app)
 - **Import**: share sheet (`ACTION_SEND` text/plain, incl. shared .txt streams), "Open with" for .txt, paste button,

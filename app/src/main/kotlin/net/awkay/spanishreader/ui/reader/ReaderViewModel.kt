@@ -42,6 +42,8 @@ data class ReaderContent(
     val initialPage: Int,
     /** Spoken sentences, for follow-along audio. */
     val script: List<ListenSentence>,
+    /** YouTube lessons play the original recording. */
+    val videoId: String? = null,
 ) {
     /** Index into [script] of the first sentence on [page] (or the next page that has one). */
     fun firstSentenceOn(page: Int): Int = script.indexOfFirst { it.pageIndex >= page }.coerceAtLeast(0)
@@ -153,7 +155,7 @@ class ReaderViewModel(private val app: SpanishReaderApp, private val lessonId: L
                 val pages = Paginator.paginate(text, wpp)
                 ReaderContent(
                     lesson.title, text, pages, lesson.currentPage.coerceIn(0, (pages.size - 1).coerceAtLeast(0)),
-                    ListenScript.build(text, pages),
+                    ListenScript.build(text, pages), lesson.videoId,
                 )
             }
             lastPage = c.initialPage
@@ -190,7 +192,7 @@ class ReaderViewModel(private val app: SpanishReaderApp, private val lessonId: L
         PreGlossWorker.enqueue(app, lessonId, from, end - from)
     }
 
-    private fun loadAudio(c: ReaderContent, page: Int) = app.audio.load(lessonId, c.title, c.script, c.firstSentenceOn(page))
+    private fun loadAudio(c: ReaderContent, page: Int) = app.audio.load(lessonId, c.title, c.script, c.firstSentenceOn(page), c.videoId)
 
     /** Play/pause from the reader. Starts at the visible page unless paused somewhere on it already. */
     fun playPause(visiblePage: Int) {
