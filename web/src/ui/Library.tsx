@@ -65,7 +65,7 @@ export function Library() {
         {pregloss && <p class="note">{pregloss}</p>}
         <a class="primary block" href="#/import">＋ New lesson</a>
         <h2>My lessons</h2>
-        {lessons.length === 0 && <p class="muted">No lessons yet. Add one from the shared library below, or paste some Spanish text.</p>}
+        {lessons.length === 0 && <p class="muted">No lessons yet. Add one from the shared library below, or paste some Spanish text or a YouTube link.</p>}
         {lessons.map((l) => (
           <LessonCard key={l.id} lesson={l} statuses={statuses} wordsPerPage={settings.wordsPerPage}
             canShare={!l.sharedId || (onServer !== null && !onServer.has(l.sharedId))} onShare={share} onDelete={remove} />
@@ -80,8 +80,8 @@ export function Library() {
         {shared?.map((s) => (
           <div class="card" key={s.id}>
             <div class="grow">
-              <div class="title">{s.title}</div>
-              <div class="small muted">{s.words} words{s.sharedBy ? ` · shared by ${s.sharedBy}` : ''}</div>
+              <div class="title">{s.videoId ? '▶ ' : ''}{s.title}</div>
+              <div class="small muted">{s.words} words{s.videoId ? ' · YouTube' : ''}{s.sharedBy ? ` · shared by ${s.sharedBy}` : ''}</div>
             </div>
             {added.has(s.id) ? <span class="small muted">Added</span> : <button onClick={() => add(s)}>Add</button>}
             <button class="icon-btn" title="Remove from shared library" onClick={() => removeShared(s)}>🗑</button>
@@ -104,12 +104,13 @@ function LessonCard({ lesson, statuses, wordsPerPage, canShare, onShare, onDelet
   return (
     <div class="card">
       <a class="grow" href={`#/read/${lesson.id}`}>
-        <div class="title">{lesson.title}</div>
+        <div class="title">{lesson.videoId ? '▶ ' : ''}{lesson.title}</div>
         <div class="small muted">
           {s.totalWords} words · {s.newCount} new · {s.learningCount} learning · {Math.round(s.knownPercent)}% known
         </div>
         <div class="small muted">Page {Math.min(lesson.currentPage + 1, analysis.pageCount)} of {analysis.pageCount}</div>
       </a>
+      {lesson.sourceUrl && <a class="icon-btn" title="Open the video" href={lesson.sourceUrl} target="_blank" rel="noopener noreferrer">↗</a>}
       {canShare && <button class="icon-btn" title="Share with the household" onClick={() => onShare(lesson)}>⇪</button>}
       <button class="icon-btn" title="Delete" onClick={() => onDelete(lesson)}>🗑</button>
     </div>

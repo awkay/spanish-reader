@@ -62,4 +62,18 @@ object ImportCleaner {
         val t = text.trim()
         return t.isNotEmpty() && ' ' !in t && '\n' !in t && (t.startsWith("http://") || t.startsWith("https://"))
     }
+
+    private val youTubeLink = Regex(
+        """^(https?://)?((www|m|music)\.)?(youtube\.com/(watch\?(.*&)?v=|shorts/|live/)|youtu\.be/)[A-Za-z0-9_-]{11}([?&#/].*)?$""",
+        RegexOption.IGNORE_CASE,
+    )
+
+    /**
+     * True if [text] is a single YouTube video link (watch, youtu.be, shorts, live), which the web server can turn
+     * into a lesson. Only a hint for the import screen; the server validates the link itself.
+     */
+    fun isYouTubeUrl(text: String): Boolean {
+        val t = text.trim()
+        return t.none { it.isWhitespace() } && youTubeLink.matches(t)
+    }
 }

@@ -12,7 +12,7 @@ ExecStart=/opt/spanish-reader/bin/spanish-reader-server
 Restart=on-failure
 RestartSec=3
 
-# Piper needs ~200 MB while it renders a page; the server itself ~15 MB.
+# Piper needs ~200 MB while it renders a page; the server itself ~15 MB; yt-dlp + ffmpeg ~100 MB during a YouTube import.
 MemoryMax=600M
 NoNewPrivileges=true
 PrivateTmp=true

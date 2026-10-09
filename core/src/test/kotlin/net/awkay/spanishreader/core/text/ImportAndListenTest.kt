@@ -52,6 +52,18 @@ class ImportAndListenTest {
     }
 
     @Test
+    fun `youtube link detection`() {
+        listOf(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "https://youtu.be/dQw4w9WgXcQ?si=x", "youtube.com/shorts/dQw4w9WgXcQ",
+            "https://m.youtube.com/watch?feature=share&v=dQw4w9WgXcQ", "  https://www.youtube.com/live/dQw4w9WgXcQ  ",
+        ).forEach { assertTrue(ImportCleaner.isYouTubeUrl(it), it) }
+        listOf(
+            "https://example.com/watch?v=dQw4w9WgXcQ", "https://www.youtube.com/playlist?list=PL1", "Hola amigos",
+            "mira https://youtu.be/dQw4w9WgXcQ", "https://youtu.be/short",
+        ).forEach { assertFalse(ImportCleaner.isYouTubeUrl(it), it) }
+    }
+
+    @Test
     fun `listen script skips wordless sentences and maps pages`() {
         val text = Tokenizer.tokenize("Uno dos tres. 123. Cuatro cinco seis. Siete.")
         val pages = Paginator.paginate(text, wordsPerPage = 3)

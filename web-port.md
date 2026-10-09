@@ -81,6 +81,30 @@ Alternatives Tony heard: `es_MX-ald-medium` (P=es/es_MX/ald/medium), `es_MX-ald-
 lightest) and `es_AR-daniela-high` (P=es/es_AR/daniela/high, 114 MB, Argentine). You can switch voices later: download another voice, change `SR_PIPER_MODEL` and restart. Audio is cached per voice,
 so nothing else needs clearing.
 
+## 4b. YouTube lessons (optional): yt-dlp, ffmpeg, speech recognition
+
+Pasting a YouTube link (web app) or sharing one (Android) makes the server download the video's audio, transcribe it
+with word timestamps and store it as a shared lesson; the reader then plays the original speaker, page by page.
+
+```sh
+sudo apt-get install -y ffmpeg
+sudo curl -fsSL -o /usr/local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
+sudo chmod 0755 /usr/local/bin/yt-dlp      # use yt-dlp_linux_aarch64 on arm64
+yt-dlp --version
+# YouTube increasingly needs a JavaScript runtime for yt-dlp; if downloads fail with a "JS runtime" / "n challenge"
+# warning, install deno (https://deno.land) system-wide.
+yt-dlp --skip-download --print '%(duration)s %(title)s' https://youtu.be/dQw4w9WgXcQ   # works from this IP?
+```
+
+Speech recognition: an OpenAI-compatible `/audio/transcriptions` endpoint that returns word timestamps. Defaults:
+OpenRouter with `openai/whisper-large-v3` (Groq runs it; a few cents per audio hour). Groq
+(`https://api.groq.com/openai/v1`, `whisper-large-v3`) or OpenAI (`https://api.openai.com/v1`, `whisper-1`) work
+too. z.ai's GLM-ASR does not (no timestamps). Set `SR_ASR_API_KEY` (ask Tony) in step 6. `update.sh` runs
+`yt-dlp -U` each time, because YouTube breaks old versions.
+
+If YouTube blocks the server ("Sign in to confirm you're not a bot"), export a cookies.txt from a logged-in browser,
+put it at `/var/lib/spanish-reader/youtube-cookies.txt` (owner spanish-reader, mode 600) and set `SR_YTDLP_COOKIES`.
+
 ## 5. Binary and web files
 
 ```sh
@@ -208,10 +232,14 @@ Everything the server owns is under `/var/lib/spanish-reader`:
 | `store/sentences/` | shared gloss/translation cache | yes (AI money went into it) |
 | `secret` | token signing key | optional; losing it only signs everyone out |
 | `tts/` | regenerable MP3s and Piper WAVs | no |
+| `youtube/media/*.mp3` | downloaded YouTube audio (~30 MB per hour, kept) | optional; re-downloadable |
+| `youtube/*.json` | YouTube transcripts with word times | yes (transcription money went into it) |
 
 ```sh
-sudo tar -czf ~/spanish-reader-store-$(date +%F).tgz -C /var/lib/spanish-reader store
+sudo tar -czf ~/spanish-reader-store-$(date +%F).tgz -C /var/lib/spanish-reader --exclude=youtube/media --exclude='youtube/work-*' store youtube
 ```
+
+(Drop `youtube` from that command until the first YouTube import has created it.)
 
 ## Troubleshooting
 

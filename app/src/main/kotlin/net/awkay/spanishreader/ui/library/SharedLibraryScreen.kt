@@ -118,7 +118,7 @@ private fun SharedLessonCard(lesson: SharedLessonSummary, inLibrary: Boolean, ad
             Column(Modifier.weight(1f)) {
                 Text(lesson.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(
-                    "${lesson.words} words" + (lesson.sharedBy?.let { " · shared by $it" } ?: ""),
+                    "${lesson.words} words" + (if (lesson.videoId != null) " · YouTube" else "") + (lesson.sharedBy?.let { " · shared by $it" } ?: ""),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 // Same title only; Add reuses the local copy when the text matches too.

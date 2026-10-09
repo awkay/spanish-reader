@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
-import { isJustUrl } from '../core/text.ts';
-import { createLesson, preGloss, settings as settingsObs, updateSettings } from '../services.ts';
+import { isJustUrl, isYouTubeUrl } from '../core/text.ts';
+import { createLesson, importYouTube, preGloss, settings as settingsObs, updateSettings } from '../services.ts';
 import { navigate, useObservable } from './hooks.ts';
 
 export function Import() {
@@ -9,6 +9,8 @@ export function Import() {
   const [text, setText] = useState('');
   const [join, setJoin] = useState(settings.joinWrappedLines);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<string | null>(null);
+  const youtube = isYouTubeUrl(text);
 
   const paste = async () => {
     try {
@@ -27,6 +29,19 @@ export function Import() {
       setError((e as Error).message);
     }
   };
+  const fromYouTube = async () => {
+    setError(null);
+    setProgress('Starting…');
+    try {
+      const l = await importYouTube(text.trim(), setProgress);
+      preGloss(l, 0, settings.preGlossPagesAhead || 0);
+      navigate(`#/read/${l.id}`);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setProgress(null);
+    }
+  };
   return (
     <div class="screen">
       <header class="bar">
@@ -37,13 +52,22 @@ export function Import() {
         <input placeholder="Title (optional)" value={title} onInput={(e) => setTitle((e.target as HTMLInputElement).value)} />
         <button onClick={paste}>Paste from clipboard</button>
         <textarea placeholder="Spanish text" rows={12} value={text} onInput={(e) => setText((e.target as HTMLTextAreaElement).value)} />
-        {isJustUrl(text) && <p class="error small">That looks like a link. Open the article, select its text and paste that instead.</p>}
+        {youtube && (
+          <p class="small muted">
+            A YouTube video: the server downloads its audio and transcribes it (a few minutes for a long video). You'll
+            hear the real speaker in the reader.
+          </p>
+        )}
+        {isJustUrl(text) && !youtube && <p class="error small">That looks like a link. Open the article, select its text and paste that instead.</p>}
         <label class="row">
           <input type="checkbox" checked={join} onChange={(e) => setJoin((e.target as HTMLInputElement).checked)} />
           <span>Join wrapped lines <span class="small muted">(text copied from PDFs or emails)</span></span>
         </label>
         {error && <p class="error">{error}</p>}
-        <button class="primary" disabled={!text.trim()} onClick={create}>Create lesson</button>
+        {progress && <p class="muted">{progress}</p>}
+        {youtube
+          ? <button class="primary" disabled={progress !== null} onClick={fromYouTube}>Import from YouTube</button>
+          : <button class="primary" disabled={!text.trim()} onClick={create}>Create lesson</button>}
       </main>
     </div>
   );

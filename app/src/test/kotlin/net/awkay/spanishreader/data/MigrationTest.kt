@@ -33,5 +33,13 @@ class MigrationTest {
         db.execSQL("INSERT INTO phrase_scans (sentence_hash, scanned_at) VALUES ('h', 1)")
         db.execSQL("INSERT INTO sentence_translations (sentence_hash, translation, stored_at) VALUES ('h', 'Hello.', 1)")
         db.close()
+        val v4 = helper.runMigrationsAndValidate("m.db", 4, true)
+        v4.query("SELECT title, video_id, source_url FROM lessons").use {
+            it.moveToFirst()
+            assertEquals("T", it.getString(0))
+            assertEquals(true, it.isNull(1) && it.isNull(2))
+        }
+        v4.execSQL("UPDATE lessons SET video_id = 'dQw4w9WgXcQ', source_url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'")
+        v4.close()
     }
 }

@@ -67,13 +67,20 @@ fun ImportScreen(onBack: () -> Unit, onImported: (Long) -> Unit) {
                 vm.text, { vm.text = it }, Modifier.fillMaxWidth().weight(1f),
                 label = { Text("Spanish text") },
             )
-            if (vm.isJustUrl) {
+            if (vm.isYouTube) {
+                Text(
+                    "A YouTube video: the web app's server downloads and transcribes it (a few minutes for a long " +
+                        "video), and you'll hear the real speaker. Uses the web app address and code from Settings.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            } else if (vm.isJustUrl) {
                 Text(
                     "That looks like a link. Article extraction isn't supported yet: open the article, select its text and share that instead.",
                     color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall,
                 )
             }
             vm.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            vm.progress?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Join wrapped lines")
@@ -81,8 +88,14 @@ fun ImportScreen(onBack: () -> Unit, onImported: (Long) -> Unit) {
                 }
                 Switch(vm.joinWrappedLines, { vm.joinWrappedLines = it })
             }
-            Button(onClick = { vm.save(onImported) }, enabled = !vm.saving, modifier = Modifier.fillMaxWidth()) {
-                Text("Create lesson")
+            if (vm.isYouTube) {
+                Button(onClick = { vm.importYouTube(onImported) }, enabled = !vm.saving, modifier = Modifier.fillMaxWidth()) {
+                    Text("Import from YouTube")
+                }
+            } else {
+                Button(onClick = { vm.save(onImported) }, enabled = !vm.saving, modifier = Modifier.fillMaxWidth()) {
+                    Text("Create lesson")
+                }
             }
         }
     }

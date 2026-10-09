@@ -130,11 +130,11 @@ export function Reader({ id }: { id: string }) {
     player.onPageEnded = (ended) => {
       if (ended + 1 < pages.length) {
         setPageIndex(ended + 1);
-        player.play({ lessonTitle: lesson?.title ?? '', pageIndex: ended + 1, sentences: pageSentences(pages[ended + 1]) });
-        player.prefetch(pageSentences(pages[ended + 2]).map((s) => s.text));
+        player.play({ lessonTitle: lesson?.title ?? '', pageIndex: ended + 1, sentences: pageSentences(pages[ended + 1]), videoId: lesson?.videoId });
+        player.prefetch(pageSentences(pages[ended + 2]).map((s) => s.text), lesson?.videoId);
       }
     };
-  }, [pages, lesson?.title]);
+  }, [pages, lesson?.title, lesson?.videoId]);
 
   // Follow the audio if it moves to another page.
   useEffect(() => {
@@ -209,8 +209,8 @@ export function Reader({ id }: { id: string }) {
   const playPause = () => {
     if (audio.playing) return player.pause();
     if (player.loadedPage === page.index) return player.resume();
-    player.play({ lessonTitle: lesson.title, pageIndex: page.index, sentences: pageSentences(page) });
-    player.prefetch(pageSentences(pages[page.index + 1]).map((s) => s.text));
+    player.play({ lessonTitle: lesson.title, pageIndex: page.index, sentences: pageSentences(page), videoId: lesson.videoId });
+    player.prefetch(pageSentences(pages[page.index + 1]).map((s) => s.text), lesson.videoId);
   };
 
   const blueCount = new Set(pageWordForms(page).filter((f) => shownStatus(f) === Status.NEW)).size;

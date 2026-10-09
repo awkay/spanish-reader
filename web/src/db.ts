@@ -10,6 +10,9 @@ export interface Lesson {
   currentPage: number;
   /** Server id when this lesson came from (or was shared to) the shared library. */
   sharedId?: string | null;
+  /** YouTube video this lesson was transcribed from; its audio is cut from the original recording. */
+  videoId?: string | null;
+  sourceUrl?: string | null;
 }
 
 export interface GlossRow { key: string; formKey: string; hash: string; gloss: Gloss; storedAt: number }

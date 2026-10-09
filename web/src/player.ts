@@ -10,6 +10,8 @@ import { Observable, settings } from './services.ts';
 export interface PageAudioRequest {
   lessonTitle: string;
   pageIndex: number;
+  /** Set for YouTube lessons: the page audio is cut from the original recording instead of synthesized. */
+  videoId?: string | null;
   /** Speakable sentences of the page, in order, with their tokenizer sentence index. */
   sentences: Array<{ index: number; text: string }>;
 }
@@ -24,14 +26,15 @@ export interface PlayerState {
   error: string | null;
 }
 
-const audioKey = async (sentences: string[]) => sentenceHash('audio\u0000' + sentences.join('\u0000'));
+const audioKey = async (sentences: string[], videoId?: string | null) =>
+  sentenceHash((videoId ? `youtube:${videoId}\u0000` : 'audio\u0000') + sentences.join('\u0000'));
 
-/** Fetches (or reads from IndexedDB) the page's MP3 and timings. */
-export async function pageAudio(sentences: string[]): Promise<AudioRow> {
-  const key = await audioKey(sentences);
+/** Fetches (or reads from IndexedDB) the page's MP3 and timings: Piper, or the original recording of a video. */
+export async function pageAudio(sentences: string[], videoId?: string | null): Promise<AudioRow> {
+  const key = await audioKey(sentences, videoId);
   const cached = await db.get<AudioRow>('audio', key);
   if (cached) return cached;
-  const r = await api.tts(sentences);
+  const r = videoId ? await api.videoAudio(videoId, sentences) : await api.tts(sentences);
   const blob = await api.audio(r.audio);
   const row: AudioRow = { key, blob, timings: r.timings, storedAt: Date.now() };
   await db.put('audio', row);
@@ -77,7 +80,7 @@ export class Player {
     if (!same) {
       this.patch({ loading: true, error: null, pageIndex: req.pageIndex, sentenceIndex: req.sentences[from]?.index ?? null });
       try {
-        const row = await pageAudio(req.sentences.map((s) => s.text));
+        const row = await pageAudio(req.sentences.map((s) => s.text), req.videoId);
         if (this.req !== req) return; // superseded while loading
         if (this.url) URL.revokeObjectURL(this.url);
         this.url = URL.createObjectURL(row.blob);
@@ -100,8 +103,8 @@ export class Player {
   }
 
   /** Downloads a page's audio ahead of time (no playback). */
-  prefetch(sentences: string[]) {
-    if (sentences.length) pageAudio(sentences).catch(() => {});
+  prefetch(sentences: string[], videoId?: string | null) {
+    if (sentences.length) pageAudio(sentences, videoId).catch(() => {});
   }
 
   pause() {

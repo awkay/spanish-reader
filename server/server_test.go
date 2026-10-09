@@ -24,6 +24,12 @@ func TestMain(m *testing.M) {
 	case "lame":
 		fakeLame()
 		return
+	case "yt-dlp":
+		fakeYtDlp()
+		return
+	case "ffmpeg":
+		fakeFfmpeg()
+		return
 	}
 	os.Exit(m.Run())
 }

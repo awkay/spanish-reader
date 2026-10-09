@@ -189,4 +189,70 @@ class WebShareServiceTest : DbTestBase() {
         assertEquals("no such lesson", e.message)
         assertTrue(lessons.all().isEmpty())
     }
+
+    @Test
+    fun importsYouTubeThroughTheServerAndFetchesPageAudioOnce() = runTest {
+        val s = settings()
+        s.update { it.copy(webUrl = server.url("/").toString(), webAccessCode = "1", webToken = "tok") }
+        val phrases = PhraseStore(db.phrases())
+        val lessons = LessonRepository(db) { now }
+        val service = WebShareService(s, RoomGlossCache(db.glosses(), phrases), phrases, OkHttpClient())
+        val ok = { body: String -> MockResponse.Builder().code(200).body(body).build() }
+        server.enqueue(ok("""{"id":"j1","videoId":"dQw4w9WgXcQ","status":"queued"}"""))
+        server.enqueue(ok("""{"id":"j1","videoId":"dQw4w9WgXcQ","status":"transcribing","title":"Charla","detail":"Transcribing part 1 of 2"}"""))
+        server.enqueue(ok("""{"id":"j1","videoId":"dQw4w9WgXcQ","status":"done","title":"Charla","lessonId":"L1"}"""))
+        server.enqueue(ok("""{"id":"L1","title":"Charla","text":"Hola, amigos. ¿Cómo están?","createdAt":1,"source":"youtube",
+            "videoId":"dQw4w9WgXcQ","sourceUrl":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"}"""))
+        server.enqueue(ok("{}"))
+        val progress = mutableListOf<String>()
+        val result = service.importYouTube(" https://youtu.be/dQw4w9WgXcQ ", lessons, onProgress = { progress += it })
+
+        val lesson = lessons.get(result.lessonId)!!
+        assertEquals("dQw4w9WgXcQ", lesson.videoId)
+        assertEquals("https://www.youtube.com/watch?v=dQw4w9WgXcQ", lesson.sourceUrl)
+        assertEquals(listOf("Waiting for another import to finish", "Charla — Transcribing part 1 of 2"), progress)
+        val start = server.takeRequest()
+        assertEquals("/api/youtube", start.url.encodedPath)
+        assertEquals("https://youtu.be/dQw4w9WgXcQ", Json.parseToJsonElement(start.body!!.utf8()).jsonObject["url"]!!.jsonPrimitive.content)
+        assertEquals("/api/youtube/jobs/j1", server.takeRequest().url.encodedPath)
+        assertEquals("/api/youtube/jobs/j1", server.takeRequest().url.encodedPath)
+        assertEquals("/api/lessons/L1", server.takeRequest().url.encodedPath)
+        server.takeRequest() // cache
+
+        // Sharing it again keeps the video.
+        assertEquals("dQw4w9WgXcQ", service.payload(lesson, "")["videoId"]!!.jsonPrimitive.content)
+
+        // Page audio: fetched and saved once, then served from the device.
+        server.enqueue(ok("""{"audio":"/api/audio/0123456789abcdef0123456789abcdef.mp3","timings":[[150,1650],[2000,3100]],"voice":"original"}"""))
+        server.enqueue(MockResponse.Builder().code(200).body(okio.Buffer().write(byteArrayOf(1, 2, 3))).build())
+        val dir = tmp.newFolder("video")
+        val sentences = listOf("Hola, amigos.", "¿Cómo están?")
+        val page = service.videoPage("dQw4w9WgXcQ", sentences, dir)
+        assertEquals(listOf(150L..1650L, 2000L..3100L), page.timings)
+        assertEquals(listOf<Byte>(1, 2, 3), page.file.readBytes().toList())
+        val audioReq = server.takeRequest()
+        assertEquals("/api/youtube/dQw4w9WgXcQ/audio", audioReq.url.encodedPath)
+        assertEquals(sentences, Json.parseToJsonElement(audioReq.body!!.utf8()).jsonObject["sentences"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertEquals("Bearer tok", server.takeRequest().headers["Authorization"])
+        val requests = server.requestCount
+        assertEquals(page, service.videoPage("dQw4w9WgXcQ", sentences, dir))
+        assertEquals(requests, server.requestCount, "the second time comes from the device")
+        assertFailsWith<IllegalArgumentException> { service.videoPage("../../etc", sentences, dir) }
+    }
+
+    @Test
+    fun youTubeImportErrorsAreReported() = runTest {
+        val s = settings()
+        s.update { it.copy(webUrl = server.url("/").toString(), webAccessCode = "1", webToken = "tok") }
+        val phrases = PhraseStore(db.phrases())
+        val service = WebShareService(s, RoomGlossCache(db.glosses(), phrases), phrases, OkHttpClient())
+        server.enqueue(MockResponse.Builder().code(400).body("""{"error":"not a YouTube link"}""").build())
+        assertEquals("not a YouTube link", assertFailsWith<java.io.IOException> {
+            service.importYouTube("https://evil.com", LessonRepository(db) { now }, onProgress = {})
+        }.message)
+        server.enqueue(MockResponse.Builder().code(200).body("""{"id":"j2","videoId":"dQw4w9WgXcQ","status":"error","error":"the video is 90 minutes long; the limit is 60"}""").build())
+        assertEquals("the video is 90 minutes long; the limit is 60", assertFailsWith<java.io.IOException> {
+            service.importYouTube("https://youtu.be/dQw4w9WgXcQ", LessonRepository(db) { now }, onProgress = {})
+        }.message)
+    }
 }
