@@ -47,6 +47,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // NewPipe Extractor uses java.nio/java.time APIs that need desugaring below API 33.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     buildFeatures {
@@ -93,6 +95,8 @@ dependencies {
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.session)
     implementation(libs.work.runtime.ktx)
+    implementation(libs.newpipe.extractor)
+    coreLibraryDesugaring(libs.desugar.jdk.libs.nio)
 
     testImplementation(libs.junit4)
     testImplementation(libs.kotlin.test.junit)

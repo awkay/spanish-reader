@@ -27,6 +27,7 @@ import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -214,6 +215,7 @@ class WebShareServiceTest : DbTestBase() {
         val start = server.takeRequest()
         assertEquals("/api/youtube", start.url.encodedPath)
         assertEquals("https://youtu.be/dQw4w9WgXcQ", Json.parseToJsonElement(start.body!!.utf8()).jsonObject["url"]!!.jsonPrimitive.content)
+        assertEquals("true", Json.parseToJsonElement(start.body!!.utf8()).jsonObject["deviceDownload"]!!.jsonPrimitive.content)
         assertEquals("/api/youtube/jobs/j1", server.takeRequest().url.encodedPath)
         assertEquals("/api/youtube/jobs/j1", server.takeRequest().url.encodedPath)
         assertEquals("/api/lessons/L1", server.takeRequest().url.encodedPath)
@@ -254,5 +256,86 @@ class WebShareServiceTest : DbTestBase() {
         assertEquals("the video is 90 minutes long; the limit is 60", assertFailsWith<java.io.IOException> {
             service.importYouTube("https://youtu.be/dQw4w9WgXcQ", LessonRepository(db) { now }, onProgress = {})
         }.message)
+    }
+
+    private class FakeAudio(private val bytes: ByteArray?, private val fail: Exception? = null) : VideoAudioSource {
+        val calls = mutableListOf<Pair<String, Int>>()
+        var file: File? = null
+        override suspend fun fetch(videoId: String, dir: File, maxMinutes: Int, onProgress: (Int) -> Unit): VideoAudio {
+            calls += videoId to maxMinutes
+            fail?.let { throw it }
+            onProgress(50)
+            onProgress(100)
+            val f = File(dir, "yt-$videoId.webm").apply { writeBytes(bytes!!) }
+            file = f
+            return VideoAudio(f, "Charla en vivo", 620, "audio/webm", "$videoId.webm")
+        }
+    }
+
+    @Test
+    fun youTubeAudioIsDownloadedHereUploadedThenTranscribedOnTheServer() = runTest {
+        val s = settings()
+        s.update { it.copy(webUrl = server.url("/").toString(), webAccessCode = "1", webToken = "tok", webName = "Tony") }
+        val phrases = PhraseStore(db.phrases())
+        val lessons = LessonRepository(db) { now }
+        val audio = FakeAudio(ByteArray(300_000) { (it % 251).toByte() })
+        val service = WebShareService(s, RoomGlossCache(db.glosses(), phrases), phrases, OkHttpClient(), audio)
+        val ok = { body: String -> MockResponse.Builder().code(200).body(body).build() }
+        server.enqueue(ok("""{"id":"","videoId":"dQw4w9WgXcQ","status":"upload","maxMinutes":60}"""))
+        server.enqueue(ok("""{"id":"j3","videoId":"dQw4w9WgXcQ","status":"queued","title":"Charla en vivo"}"""))
+        server.enqueue(ok("""{"id":"j3","videoId":"dQw4w9WgXcQ","status":"done","title":"Charla en vivo","lessonId":"L3"}"""))
+        server.enqueue(ok("""{"id":"L3","title":"Charla en vivo","text":"Hola, amigos.","createdAt":1,"source":"youtube",
+            "videoId":"dQw4w9WgXcQ","sourceUrl":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"}"""))
+        server.enqueue(ok("{}"))
+        val progress = mutableListOf<String>()
+        val work = tmp.newFolder("work")
+        val result = service.importYouTube("https://youtu.be/dQw4w9WgXcQ", lessons, onProgress = { progress += it }, workDir = work, pollMillis = 1)
+
+        assertEquals(listOf("dQw4w9WgXcQ" to 60), audio.calls, "downloads the server's video ID with its length limit")
+        assertEquals("dQw4w9WgXcQ", lessons.get(result.lessonId)!!.videoId)
+        assertFalse(audio.file!!.exists(), "the downloaded audio is deleted after the upload")
+        assertTrue(work.listFiles()!!.isEmpty())
+        assertEquals(listOf("Reading the video…", "Downloading audio… 50%", "Downloading audio… 100%", "Uploading… 0%"), progress.take(4))
+        assertTrue("Uploading… 100%" in progress)
+        assertEquals("Charla en vivo — Waiting for another import to finish", progress.last())
+
+        assertEquals("/api/youtube", server.takeRequest().url.encodedPath)
+        val up = server.takeRequest()
+        assertEquals("/api/youtube/upload", up.url.encodedPath)
+        assertEquals("Bearer tok", up.headers["Authorization"])
+        assertTrue(up.headers["Content-Type"]!!.startsWith("multipart/form-data"))
+        val raw = up.body!!.toByteArray()
+        val text = String(raw, Charsets.ISO_8859_1)
+        val names = Regex("""name="([a-zA-Z]+)"""").findAll(text).map { it.groupValues[1] }.toList()
+        assertEquals(listOf("videoId", "title", "durationSec", "sharedBy", "audio"), names, "fields first, the file last")
+        for (v in listOf("dQw4w9WgXcQ", "620", "Tony", "filename=\"dQw4w9WgXcQ.webm\"", "Content-Type: audio/webm")) assertTrue(v in text, v)
+        assertTrue(raw.size > 300_000)
+        assertEquals("/api/youtube/jobs/j3", server.takeRequest().url.encodedPath)
+        assertEquals("/api/lessons/L3", server.takeRequest().url.encodedPath)
+    }
+
+    @Test
+    fun youTubeAlreadyOnTheServerIsNotDownloadedAgainAndDownloadErrorsUploadNothing() = runTest {
+        val s = settings()
+        s.update { it.copy(webUrl = server.url("/").toString(), webAccessCode = "1", webToken = "tok") }
+        val phrases = PhraseStore(db.phrases())
+        val ok = { body: String -> MockResponse.Builder().code(200).body(body).build() }
+        val audio = FakeAudio(byteArrayOf(1))
+        val service = WebShareService(s, RoomGlossCache(db.glosses(), phrases), phrases, OkHttpClient(), audio)
+        server.enqueue(ok("""{"id":"j4","videoId":"dQw4w9WgXcQ","status":"done","title":"Charla","lessonId":"L4"}"""))
+        server.enqueue(ok("""{"id":"L4","title":"Charla","text":"Hola.","createdAt":1,"videoId":"dQw4w9WgXcQ"}"""))
+        server.enqueue(ok("{}"))
+        service.importYouTube("https://youtu.be/dQw4w9WgXcQ", LessonRepository(db) { now }, onProgress = {}, workDir = tmp.newFolder())
+        assertTrue(audio.calls.isEmpty())
+        assertEquals(3, server.requestCount)
+
+        val failing = FakeAudio(null, VideoAudioException("This video is age-restricted; YouTube only plays it to signed-in users, so it can't be imported."))
+        val service2 = WebShareService(s, RoomGlossCache(db.glosses(), phrases), phrases, OkHttpClient(), failing)
+        server.enqueue(ok("""{"id":"","videoId":"aaaaaaaaaaa","status":"upload","maxMinutes":60}"""))
+        val e = assertFailsWith<VideoAudioException> {
+            service2.importYouTube("https://youtu.be/aaaaaaaaaaa", LessonRepository(db) { now }, onProgress = {}, workDir = tmp.newFolder())
+        }
+        assertTrue("age-restricted" in e.message!!)
+        assertEquals(4, server.requestCount, "nothing uploaded")
     }
 }

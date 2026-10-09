@@ -25,6 +25,10 @@ dependencyResolutionManagement {
                 includeGroupByRegex("com\\.google.*")
             }
         }
+        // NewPipe Extractor (YouTube audio download on the phone) and its nanojson fork.
+        maven("https://jitpack.io") {
+            content { includeGroupByRegex("com\\.github\\.(?i)teamnewpipe") }
+        }
     }
 }
 

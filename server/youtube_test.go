@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -44,6 +47,12 @@ func fakeFfmpeg() {
 		}
 	}
 	var ss, t string
+	if !strings.Contains(strings.Join(os.Args, " "), " -ss ") {
+		// Converting an upload: report its length the way ffmpeg does (unless SR_FAKE_DURATION is empty).
+		if d, err := strconv.Atoi(os.Getenv("SR_FAKE_DURATION")); err == nil {
+			fmt.Fprintf(os.Stderr, "  Duration: %02d:%02d:%02d.40, start: 0.000000, bitrate: 60 kb/s\n", d/3600, d/60%60, d%60)
+		}
+	}
 	for i, a := range os.Args {
 		switch a {
 		case "-ss":
@@ -312,5 +321,158 @@ func TestYouTubeRefusals(t *testing.T) {
 			map[string]any{"sentences": []string{"Hola."}}); resp.StatusCode != 404 {
 			t.Errorf("audio for %q: %d", v, resp.StatusCode)
 		}
+	}
+}
+
+// upload posts a device-downloaded recording the way the Android app does: fields first, then the file.
+func upload(t *testing.T, ts *httptest.Server, token string, fields map[string]string, audio []byte) (*http.Response, map[string]any) {
+	t.Helper()
+	var buf bytes.Buffer
+	mw := multipart.NewWriter(&buf)
+	for _, k := range []string{"videoId", "title", "durationSec", "sharedBy"} {
+		if v, ok := fields[k]; ok {
+			_ = mw.WriteField(k, v)
+		}
+	}
+	if audio != nil {
+		fw, _ := mw.CreateFormFile("audio", "audio.webm")
+		fw.Write(audio)
+	}
+	mw.Close()
+	req, _ := http.NewRequest("POST", ts.URL+"/api/youtube/upload", &buf)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	var out map[string]any
+	_ = json.NewDecoder(resp.Body).Decode(&out)
+	return resp, out
+}
+
+func TestYouTubeDeviceUploadMakesTheSameSharedLesson(t *testing.T) {
+	s, ts, log, calls := ytServer(t, "620")
+	s.cfg.YtDlpBin = "" // the device path must not need yt-dlp
+	s.yt = newYouTube(s.cfg, s.store, filepath.Join(s.tts.dir, "pages"))
+	token := login(t, ts)
+	_, sess := do(t, ts, "GET", "/api/session", token, nil)
+	if sess["youtube"] != false || sess["youtubeUpload"] != true {
+		t.Fatalf("session: %v", sess)
+	}
+	// Nothing on the server yet: the device is asked to upload, and told the length limit.
+	resp, prep := do(t, ts, "POST", "/api/youtube", token, map[string]any{"url": "https://youtu.be/dQw4w9WgXcQ", "deviceDownload": true})
+	if resp.StatusCode != 200 || prep["status"] != "upload" || prep["videoId"] != "dQw4w9WgXcQ" || prep["maxMinutes"] != 60.0 || prep["id"] != "" {
+		t.Fatalf("prepare: %d %v", resp.StatusCode, prep)
+	}
+	// The web path still needs yt-dlp.
+	if resp, _ := do(t, ts, "POST", "/api/youtube", token, map[string]any{"url": "https://youtu.be/dQw4w9WgXcQ"}); resp.StatusCode != 503 {
+		t.Fatalf("web start without yt-dlp: %d", resp.StatusCode)
+	}
+	// The device claims 100 s; ffmpeg reads 620 s from the file, which wins (two transcription chunks).
+	resp, job := upload(t, ts, token, map[string]string{"videoId": "dQw4w9WgXcQ", "title": "Charla subida", "durationSec": "100", "sharedBy": "Tony"}, []byte("webm-audio"))
+	if resp.StatusCode != 200 || job["status"] != "queued" {
+		t.Fatalf("upload: %d %v", resp.StatusCode, job)
+	}
+	job = waitJob(t, ts, token, job["id"].(string))
+	if job["status"] != "done" || job["title"] != "Charla subida" || *calls != 2 {
+		t.Fatalf("job: %v (calls %d)", job, *calls)
+	}
+	if _, err := os.Stat(log); err == nil {
+		t.Fatal("yt-dlp must not run for uploads")
+	}
+	if left, _ := os.ReadDir(filepath.Join(s.yt.dir, "uploads")); len(left) != 0 {
+		t.Fatalf("upload file not removed: %v", left)
+	}
+	if media, _ := os.ReadFile(s.yt.mediaPath("dQw4w9WgXcQ")); !strings.HasPrefix(string(media), "cut") {
+		t.Fatalf("converted media at mediaPath: %q", media)
+	}
+
+	// The web app sees it like a server import: listed with its video, full lesson, original page audio.
+	req, _ := http.NewRequest("GET", ts.URL+"/api/lessons", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	lr, _ := http.DefaultClient.Do(req)
+	var list []map[string]any
+	_ = json.NewDecoder(lr.Body).Decode(&list)
+	lr.Body.Close()
+	if len(list) != 1 || list[0]["videoId"] != "dQw4w9WgXcQ" || list[0]["id"] != job["lessonId"] {
+		t.Fatalf("shared library: %v", list)
+	}
+	_, l := do(t, ts, "GET", "/api/lessons/"+job["lessonId"].(string), token, nil)
+	if l["source"] != "youtube" || l["sharedBy"] != "Tony" || l["sourceUrl"] != "https://www.youtube.com/watch?v=dQw4w9WgXcQ" ||
+		l["durationSec"] != 620.0 || !strings.HasPrefix(l["text"].(string), "Hola, amigos.") {
+		t.Fatalf("lesson: %v", l)
+	}
+	resp, out := do(t, ts, "POST", "/api/youtube/dQw4w9WgXcQ/audio", token, map[string]any{"sentences": []string{"¿Cómo están ustedes?", "Hola, amigos."}})
+	if timings, _ := json.Marshal(out["timings"]); resp.StatusCode != 200 || string(timings) != "[[150,1650],[297250,298150]]" || out["voice"] != "original" {
+		t.Fatalf("page audio: %d %v", resp.StatusCode, out)
+	}
+
+	// Re-import: done at once, no upload asked for, no new transcription.
+	_, again := do(t, ts, "POST", "/api/youtube", token, map[string]any{"url": "youtu.be/dQw4w9WgXcQ", "deviceDownload": true})
+	if again["status"] != "done" || again["lessonId"] != job["lessonId"] || *calls != 2 {
+		t.Fatalf("re-import: %v", again)
+	}
+	// Shared lesson deleted: rebuilt from the saved transcript, still without an upload.
+	do(t, ts, "DELETE", "/api/lessons/"+job["lessonId"].(string), token, nil)
+	_, again = do(t, ts, "POST", "/api/youtube", token, map[string]any{"url": "youtu.be/dQw4w9WgXcQ", "deviceDownload": true})
+	if again["status"] != "queued" {
+		t.Fatalf("rebuild should queue a job, not ask for an upload: %v", again)
+	}
+	if again = waitJob(t, ts, token, again["id"].(string)); again["status"] != "done" || *calls != 2 {
+		t.Fatalf("rebuild: %v", again)
+	}
+	// An upload racing a finished import is answered with the lesson and discarded.
+	resp, dup := upload(t, ts, token, map[string]string{"videoId": "dQw4w9WgXcQ", "title": "x", "durationSec": "620"}, []byte("again"))
+	if resp.StatusCode != 200 || dup["status"] != "done" || *calls != 2 {
+		t.Fatalf("duplicate upload: %d %v", resp.StatusCode, dup)
+	}
+}
+
+func TestYouTubeUploadRefusals(t *testing.T) {
+	s, ts, _, calls := ytServer(t, "")
+	token := login(t, ts)
+	if resp, _ := upload(t, ts, "", map[string]string{"videoId": "dQw4w9WgXcQ", "durationSec": "60"}, []byte("a")); resp.StatusCode != 401 {
+		t.Fatalf("without a token: %d", resp.StatusCode)
+	}
+	cases := []struct {
+		fields map[string]string
+		audio  []byte
+		status int
+		msg    string
+	}{
+		{map[string]string{"videoId": "../../etc/x", "durationSec": "60"}, []byte("a"), 400, "video ID"},
+		{map[string]string{"videoId": "dQw4w9WgXcQ", "durationSec": "4000"}, []byte("a"), 400, "limit is 60"},
+		{map[string]string{"videoId": "dQw4w9WgXcQ", "durationSec": "0"}, []byte("a"), 400, "known length"},
+		{map[string]string{"videoId": "dQw4w9WgXcQ", "durationSec": "60"}, nil, 400, "no audio"},
+		{map[string]string{"videoId": "dQw4w9WgXcQ", "durationSec": "60"}, []byte{}, 400, "empty"},
+		{map[string]string{"videoId": "dQw4w9WgXcQ", "durationSec": "1900"}, []byte("a"), 400, "limit (30 minutes)"},
+	}
+	for _, c := range cases {
+		resp, out := upload(t, ts, token, c.fields, c.audio)
+		if resp.StatusCode != c.status || !strings.Contains(fmt.Sprint(out["error"]), c.msg) {
+			t.Errorf("%v: %d %v", c.fields, resp.StatusCode, out)
+		}
+	}
+	// Bigger than the cap for the length limit: 413, nothing kept.
+	s.yt.maxMinutes = 1
+	if resp, out := upload(t, ts, token, map[string]string{"videoId": "dQw4w9WgXcQ", "durationSec": "60"}, make([]byte, 4<<20)); resp.StatusCode != 413 {
+		t.Errorf("too big: %d %v", resp.StatusCode, out)
+	}
+	if left, _ := os.ReadDir(filepath.Join(s.yt.dir, "uploads")); len(left) != 0 || *calls != 0 {
+		t.Fatalf("refused uploads leave nothing: %v", left)
+	}
+	// The device's length is used when ffmpeg reports none, and is still checked against the limit.
+	s.yt.maxMinutes = 60
+	t.Setenv("SR_FAKE_DURATION", "")
+	_, job := upload(t, ts, token, map[string]string{"videoId": "aaaaaaaaaaa", "durationSec": "90"}, []byte("a"))
+	if job = waitJob(t, ts, token, job["id"].(string)); job["status"] != "done" || *calls != 1 {
+		t.Fatalf("device length: %v", job)
+	}
+	if rec, ok := s.yt.loadRecord("aaaaaaaaaaa"); !ok || rec.DurationMs != 90000 || rec.Title != "YouTube aaaaaaaaaaa" {
+		t.Fatalf("record: %+v", rec)
 	}
 }

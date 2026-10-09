@@ -25,13 +25,19 @@ import net.awkay.spanishreader.data.LessonEntity
 import net.awkay.spanishreader.data.LessonRepository
 import net.awkay.spanishreader.data.PhraseStore
 import net.awkay.spanishreader.data.SettingsRepository
+import okhttp3.MediaType
+import okio.buffer
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.io.IOException
 import java.security.MessageDigest
+import java.util.concurrent.TimeUnit
 
 /**
  * "Share to web": uploads a lesson to the household web app's shared library (portal.fulcrologic.com),
@@ -44,7 +50,10 @@ class WebShareService(
     private val glossCache: GlossCache,
     private val sentences: PhraseStore,
     private val http: OkHttpClient,
+    private val videoAudio: VideoAudioSource = NewPipeAudioSource(http),
 ) {
+    /** Uploads of a video's audio may take minutes on mobile data: no overall call deadline. */
+    private val uploadHttp by lazy { http.newBuilder().callTimeout(0, TimeUnit.SECONDS).writeTimeout(120, TimeUnit.SECONDS).build() }
     private val json = Json { encodeDefaults = false; explicitNulls = false }
     private val lenient = Json { ignoreUnknownKeys = true; coerceInputValues = true }
 
@@ -95,17 +104,21 @@ class WebShareService(
     }
 
     /**
-     * Turns a YouTube video into a lesson on the web server (it downloads and transcribes the audio, which can take
-     * minutes), reporting [onProgress] while waiting, then adds it here like [download].
+     * Turns a YouTube video into a lesson on the web server, reporting [onProgress] while waiting, then adds it here
+     * like [download]. YouTube blocks the server's IP, so this phone downloads the audio (into [workDir], deleted
+     * afterwards) and uploads it; the server transcribes it (minutes). A video the server already has is neither
+     * downloaded nor uploaded again.
      */
     suspend fun importYouTube(
         url: String,
         lessons: LessonRepository,
         onProgress: (String) -> Unit,
+        workDir: File = File(System.getProperty("java.io.tmpdir") ?: "."),
         pollMillis: Long = 3000,
     ): Downloaded {
-        val start = buildJsonObject { put("url", url.trim()) }.toString().toRequestBody(JSON)
+        val start = buildJsonObject { put("url", url.trim()); put("deviceDownload", true) }.toString().toRequestBody(JSON)
         var job = withContext(Dispatchers.IO) { Json.parseToJsonElement(call("/api/youtube", start, "Starting the import")).jsonObject }
+        if (job.str("status") == "upload") job = downloadAndUpload(job, workDir, onProgress)
         while (true) {
             when (job.str("status")) {
                 "error" -> throw IOException(job.str("error") ?: "The import failed")
@@ -118,6 +131,35 @@ class WebShareService(
             job = withContext(Dispatchers.IO) {
                 Json.parseToJsonElement(call("/api/youtube/jobs/${id.encodeForPath()}", null, "Checking the import")).jsonObject
             }
+        }
+    }
+
+    /** The server has nothing for this video: fetch the audio here and upload it; returns the server's job. */
+    private suspend fun downloadAndUpload(prep: JsonObject, workDir: File, onProgress: (String) -> Unit): JsonObject {
+        val videoId = prep.str("videoId")?.takeIf { VIDEO_ID.matches(it) } ?: throw IOException("The server sent no video ID")
+        val maxMinutes = (prep["maxMinutes"] as? JsonPrimitive)?.intOrNull ?: 0
+        onProgress("Reading the video…")
+        val audio = videoAudio.fetch(videoId, workDir, maxMinutes) { p ->
+            onProgress(if (p >= 0) "Downloading audio… $p%" else "Downloading audio…")
+        }
+        try {
+            onProgress("Uploading… 0%")
+            val webName = settings.current().webName.trim()
+            val form = MultipartBody.Builder().setType(MultipartBody.FORM)
+                .addFormDataPart("videoId", videoId)
+                .addFormDataPart("title", audio.title)
+                .addFormDataPart("durationSec", audio.durationSec.toString())
+                .apply { if (webName.isNotEmpty()) addFormDataPart("sharedBy", webName) }
+                // Last: the server checks the fields above before it reads the file.
+                .addFormDataPart("audio", audio.fileName, ProgressBody(audio.file.asRequestBody(audio.mimeType.toMediaType())) { p ->
+                    onProgress("Uploading… $p%")
+                })
+                .build()
+            return withContext(Dispatchers.IO) {
+                Json.parseToJsonElement(callBytes("/api/youtube/upload", "Uploading the audio", form, uploadHttp).toString(Charsets.UTF_8)).jsonObject
+            }
+        } finally {
+            audio.file.delete()
         }
     }
 
@@ -202,16 +244,16 @@ class WebShareService(
     private suspend fun call(path: String, body: okhttp3.RequestBody?, what: String): String =
         callBytes(path, what, body).toString(Charsets.UTF_8)
 
-    private suspend fun callBytes(path: String, what: String, body: okhttp3.RequestBody? = null): ByteArray {
+    private suspend fun callBytes(path: String, what: String, body: okhttp3.RequestBody? = null, client: OkHttpClient = http): ByteArray {
         val s = settings.current()
         val base = s.webUrl.trim().trimEnd('/')
         require(base.startsWith("https://") || base.startsWith("http://")) { "Set the web app address in Settings" }
         require(s.webAccessCode.isNotBlank()) { "Set the web app access code in Settings" }
         var token = s.webToken.ifBlank { login(base, s.webAccessCode) }
-        var resp = send(base + path, token, body)
+        var resp = send(base + path, token, body, client)
         if (resp.first == 401) {
             token = login(base, s.webAccessCode)
-            resp = send(base + path, token, body)
+            resp = send(base + path, token, body, client)
         }
         if (resp.first !in 200..299) {
             throw IOException(errorOf(resp.second.toString(Charsets.UTF_8)) ?: "$what failed (HTTP ${resp.first})")
@@ -229,10 +271,10 @@ class WebShareService(
         return token
     }
 
-    private fun send(url: String, token: String, body: okhttp3.RequestBody?): Pair<Int, ByteArray> {
+    private fun send(url: String, token: String, body: okhttp3.RequestBody?, client: OkHttpClient = http): Pair<Int, ByteArray> {
         val req = Request.Builder().url(url).header("Authorization", "Bearer $token")
             .apply { if (body != null) post(body) }.build()
-        return http.newCall(req).execute().use { it.code to it.body.bytes() }
+        return client.newCall(req).execute().use { it.code to it.body.bytes() }
     }
 
     private fun JsonObject.str(key: String): String? = (this[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
@@ -311,3 +353,28 @@ data class VideoPage(val file: File, val timings: List<LongRange>)
  * (glosses + translations) came along; null when they couldn't be fetched.
  */
 data class Downloaded(val lessonId: Long, val alreadyHad: Boolean, val aiResults: Int?)
+
+/** Reports whole percentages written of [inner] (each time it changes). */
+private class ProgressBody(private val inner: RequestBody, private val onPercent: (Int) -> Unit) : RequestBody() {
+    override fun contentType(): MediaType? = inner.contentType()
+    override fun contentLength(): Long = inner.contentLength()
+    override fun writeTo(sink: okio.BufferedSink) {
+        val total = contentLength()
+        var last = -1
+        val counting = object : okio.ForwardingSink(sink) {
+            var written = 0L
+            override fun write(source: okio.Buffer, byteCount: Long) {
+                super.write(source, byteCount)
+                written += byteCount
+                val p = if (total > 0) ((written * 100) / total).toInt() else -1
+                if (p != last) {
+                    last = p
+                    if (p >= 0) onPercent(p)
+                }
+            }
+        }
+        val buffered = counting.buffer()
+        inner.writeTo(buffered)
+        buffered.flush()
+    }
+}

@@ -83,8 +83,16 @@ so nothing else needs clearing.
 
 ## 4b. YouTube lessons (optional): yt-dlp, ffmpeg, speech recognition
 
-Pasting a YouTube link (web app) or sharing one (Android) makes the server download the video's audio, transcribe it
-with word timestamps and store it as a shared lesson; the reader then plays the original speaker, page by page.
+Pasting a YouTube link (web app) or sharing one (Android) turns the video into a shared lesson: its audio is
+transcribed with word timestamps, and the reader then plays the original speaker, page by page. Where the audio comes
+from differs:
+
+- **Android** downloads the audio on the phone (NewPipe Extractor, residential/mobile IP) and uploads it to
+  `POST /api/youtube/upload`; the server converts it with ffmpeg and transcribes it. Needs only ffmpeg and the ASR
+  settings here, plus the nginx upload location (step 8, `location = /api/youtube/upload`, 100 MB body limit).
+- **Web app** sends only the link; the server downloads with yt-dlp. YouTube blocks datacenter IPs ("Sign in to
+  confirm you're not a bot", 403s), so this may not work from the Linode. Import on Android instead: the lesson
+  lands in the shared library and plays in the web app exactly the same.
 
 ```sh
 sudo apt-get install -y ffmpeg
@@ -102,7 +110,7 @@ OpenRouter with `openai/whisper-large-v3` (Groq runs it; a few cents per audio h
 too. z.ai's GLM-ASR does not (no timestamps). Set `SR_ASR_API_KEY` (ask Tony) in step 6. `update.sh` runs
 `yt-dlp -U` each time, because YouTube breaks old versions.
 
-If YouTube blocks the server ("Sign in to confirm you're not a bot"), export a cookies.txt from a logged-in browser,
+yt-dlp is optional now (web app only). If YouTube blocks the server ("Sign in to confirm you're not a bot"), export a cookies.txt from a logged-in browser,
 put it at `/var/lib/spanish-reader/youtube-cookies.txt` (owner spanish-reader, mode 600) and set `SR_YTDLP_COOKIES`.
 
 ## 5. Binary and web files

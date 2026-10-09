@@ -26,7 +26,7 @@ class ImportViewModel(private val app: SpanishReaderApp) : ViewModel() {
         private set
     var saving by mutableStateOf(false)
         private set
-    /** Progress of a YouTube import (the web server downloads and transcribes the video). */
+    /** Progress of a YouTube import (this phone downloads the audio, the web server transcribes it). */
     var progress by mutableStateOf<String?>(null)
         private set
 
@@ -47,7 +47,7 @@ class ImportViewModel(private val app: SpanishReaderApp) : ViewModel() {
     val isJustUrl: Boolean get() = ImportCleaner.isJustUrl(text)
     val isYouTube: Boolean get() = ImportCleaner.isYouTubeUrl(text)
 
-    /** Has the web server turn the YouTube link in [text] into a lesson, then adds it here. */
+    /** Downloads the YouTube link's audio, has the web server transcribe it into a lesson, then adds it here. */
     fun importYouTube(onSaved: (Long) -> Unit) {
         if (saving) return
         saving = true
@@ -55,7 +55,7 @@ class ImportViewModel(private val app: SpanishReaderApp) : ViewModel() {
         progress = "Starting…"
         viewModelScope.launch {
             try {
-                val result = app.webShare.importYouTube(text, app.lessons, onProgress = { progress = it })
+                val result = app.webShare.importYouTube(text, app.lessons, onProgress = { progress = it }, workDir = app.cacheDir)
                 val settings = app.settings.current()
                 if (!result.alreadyHad && settings.preGlossOnImport) {
                     PreGlossWorker.enqueue(app, result.lessonId, 0, settings.preGlossPagesAhead)

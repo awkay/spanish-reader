@@ -1,6 +1,6 @@
 # Status
 
-_Last updated: 2026-10-09_
+_Last updated: 2026-10-09 (Android YouTube download)_
 
 **Android app: all planned features built; Tony uses it daily.** New: a **web app (PWA) for iPhone** plus a small Go
 server, **deployed 2026-10-01 at https://portal.fulcrologic.com** (Linode, build-6, nginx site in
@@ -11,7 +11,7 @@ The Android app's "Share to web" default URL moved there too (an old saved `span
 ```
 scripts/install-android-sdk.sh          # each fresh cloud container
 ./gradlew :core:test                     # 110 tests (2 live tests skipped without env vars)
-./gradlew :app:testDebugUnitTest         # 41 Robolectric tests incl. UI smoke test and v1→v3 migration
+./gradlew :app:testDebugUnitTest         # 48 Robolectric/JVM tests incl. UI smoke test and v1→v3 migration
 ./gradlew :app:assembleDebug             # app/build/outputs/apk/debug/app-debug.apk
 ```
 Live LLM check (not run by default):
@@ -86,6 +86,29 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
 - **Verified here**: real yt-dlp (2026.08.19) + ffmpeg with a stand-in ASR endpoint end to end; Go/web/Android tests
   with fakes. **Not verified**: a real ASR key, YouTube from the Linode's IP (may need `SR_YTDLP_COOKIES` or deno),
   Android clip playback on a device. Setup: `web-port.md` step 4b.
+- **Android downloads the audio itself (2026-10-09)**: YouTube blocks the Linode's IP ("Sign in to confirm you're
+  not a bot", 403 on downloads), so Android no longer asks the server to run yt-dlp. `ImportViewModel.importYouTube`
+  → `WebShareService.importYouTube` sends `POST /api/youtube {url, deviceDownload: true}`. If the server already has
+  the video (lesson, saved transcript or a running job) it answers with that job, so a re-import never downloads or
+  uploads. Otherwise it answers `status: "upload"` with `maxMinutes`; the phone extracts the streams with **NewPipe
+  Extractor v0.26.5** (jitpack; `share/YouTubeAudio.kt`, OkHttp `Downloader`), refuses over-long/live videos, picks
+  the smallest original-language progressive audio stream ≥ 48 kbps (`pickAudioStream`; usually m4a 48 kbps, ~0.36
+  MB/min), downloads it in 2 MB ranges to `cacheDir` ("Downloading audio… 42%"), uploads it as multipart to
+  `POST /api/youtube/upload` ("Uploading… 42%"; fields videoId/title/durationSec/sharedBy, file last), deletes the
+  temp file, then polls as before. The server checks ID, length and today's ASR budget before reading the file,
+  caps the body (`http.MaxBytesReader`, 1.25 MB per allowed minute + 2 MB), converts it with ffmpeg to the same
+  `youtube/media/<id>.mp3` (the length ffmpeg reads wins over the phone's) and runs the same job (transcribe, record,
+  `PutLesson` with source/videoId/sourceUrl/sharedBy), so the lesson is in the shared library and plays its original
+  audio in the web app exactly like a server import (Go test covers it). Upload path needs only ASR + ffmpeg
+  (`youtubeUpload` in `/api/session`); yt-dlp now only serves the web app. nginx: new `location =
+  /api/youtube/upload` (100 MB, 600 s) in `deploy/nginx-spanish-reader.conf` — **must be applied on the Linode**.
+  Release build: core library desugaring (`desugar_jdk_libs_nio`, NewPipe needs it below API 33) and NewPipe's own
+  R8 rules (Rhino kept whole, timeago patterns, protobuf fields); release APK 3.0 → 3.6 MB.
+  **Verified**: real extraction + download from a residential IP on the JVM (35-min Spanish video: 12.7 MB in 7 s;
+  ffmpeg converts it, reads `Duration`), and the same code shrunk by R8 with `app/proguard-rules.pro` (classfile
+  output, JVM) still downloads, while without the rules it gets 403 (Rhino stripped). **Not verified**: on a phone
+  (dex + desugaring), with the real ASR key, against the Linode. If YouTube changes, the fix is usually bumping
+  `newpipe-extractor` in `gradle/libs.versions.toml`.
 - Not done: Android backup JSON doesn't carry `videoId` (a restored video lesson plays TTS until re-added from the
   shared library).
 

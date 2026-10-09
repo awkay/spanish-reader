@@ -69,8 +69,9 @@ fun ImportScreen(onBack: () -> Unit, onImported: (Long) -> Unit) {
             )
             if (vm.isYouTube) {
                 Text(
-                    "A YouTube video: the web app's server downloads and transcribes it (a few minutes for a long " +
-                        "video), and you'll hear the real speaker. Uses the web app address and code from Settings.",
+                    "A YouTube video: this phone downloads its audio (~0.4 MB per minute), the web app's server " +
+                        "transcribes it (a few minutes for a long video), and you'll hear the real speaker. Uses the " +
+                        "web app address and code from Settings.",
                     style = MaterialTheme.typography.bodySmall,
                 )
             } else if (vm.isJustUrl) {
