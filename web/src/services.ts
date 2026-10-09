@@ -8,7 +8,8 @@ import {
 import { formKey, sentenceHash } from './core/hash.ts';
 import { type Page, type TokenizedText, cleanImport, paginate, pageWordForms, suggestTitle, tokenize } from './core/text.ts';
 import {
-  type VocabEntry, type WordDetail, Status, applyPageFinished, markNewAsKnown, onTap, setStatus,
+  type VocabEntry, type WordDetail, Status, applyPageFinished, effectiveStatus, familyStatuses, inheritedStatus, markNewAsKnown,
+  onTap, setStatus,
 } from './core/vocab.ts';
 import * as db from './db.ts';
 import type { GlossRow, Lesson, SentenceRow } from './db.ts';
@@ -75,6 +76,60 @@ export async function loadVocab() {
 
 export const statusOf = (form: string) => vocab.get().get(form)?.status ?? Status.NEW;
 
+// ---------- word families ----------
+// A spelling still NEW is shown with the status of its word family (same AI lemma), so `hablaban` isn't blue when
+// `hablo` is known. See WordFamilies.kt.
+
+/** AI lemma of each word in the open lesson, from cached glosses; fills in as glosses arrive. */
+export const lessonLemmas = new Observable<Map<string, string>>(new Map());
+/** Open lesson: form → hash of the sentence whose gloss is preferred for its lemma. */
+let lemmaSentence = new Map<string, string>();
+let familyCache: { vocab: Map<string, VocabEntry>; families: Map<string, number> } | null = null;
+
+function families(): Map<string, number> {
+  const v = vocab.get();
+  if (familyCache?.vocab !== v) familyCache = { vocab: v, families: familyStatuses(v.values()) };
+  return familyCache.families;
+}
+
+/** What a word is shown as: its own status, or for a NEW spelling, its family's. */
+export const shownStatus = (form: string) => effectiveStatus(vocab.get().get(form)?.status, lessonLemmas.get().get(form), families());
+
+/** The status a word's family lends it while the word itself is still NEW; null otherwise. */
+export const inheritedFor = (form: string) => inheritedStatus(vocab.get().get(form)?.status, lessonLemmas.get().get(form), families());
+
+/** Loads the lemmas of [text]'s words for word families (call when a lesson opens). */
+export async function loadLessonLemmas(text: TokenizedText) {
+  const pref = new Map<string, string>();
+  for (const t of text.tokens) {
+    if (t.normalized && !pref.has(t.normalized)) pref.set(t.normalized, await sentenceHash(text.sentenceFor(t)));
+  }
+  lemmaSentence = pref;
+  const rows = await db.glossesForForms([...pref.keys()]);
+  const out = new Map<string, string>();
+  for (const [form, glosses] of rows) {
+    const best = glosses.find((g) => g.hash === pref.get(form)) ?? glosses.sort((a, b) => b.storedAt - a.storedAt)[0];
+    const lemma = best?.gloss.lemma?.trim();
+    if (lemma) out.set(form, lemma);
+  }
+  if (lemmaSentence === pref) lessonLemmas.set(out);
+}
+
+/** New glosses: lemmas for the open lesson's words (the word's own sentence wins). */
+function noteGlossRows(rows: GlossRow[]) {
+  let next: Map<string, string> | null = null;
+  for (const r of rows) {
+    const pref = lemmaSentence.get(r.formKey);
+    const lemma = r.gloss.lemma?.trim();
+    if (pref === undefined || !lemma) continue;
+    const cur = (next ?? lessonLemmas.get()).get(r.formKey);
+    if (cur !== undefined && (r.hash !== pref || cur === lemma)) continue;
+    next ??= new Map(lessonLemmas.get());
+    next.set(r.formKey, lemma);
+  }
+  if (next) lessonLemmas.set(next);
+}
+
 async function saveEntries(entries: VocabEntry[]) {
   if (entries.length === 0) return;
   await db.putAll('vocab', entries);
@@ -85,7 +140,7 @@ async function saveEntries(entries: VocabEntry[]) {
 
 export async function tapWord(form: string, sentence: string) {
   const cur = vocab.get().get(form);
-  const next = onTap(cur, form, Date.now(), sentence);
+  const next = onTap(cur, form, Date.now(), sentence, inheritedFor(form));
   if (next !== cur) await saveEntries([next]);
 }
 
@@ -112,7 +167,10 @@ export async function annotate(form: string, g: Gloss) {
   if (next.lemma !== cur.lemma || next.translation !== cur.translation) await saveEntries([next]);
 }
 
-/** Turning past a page: still-blue words go in at LEVEL_1 with their sentence and any cached AI meaning. */
+/**
+ * Turning past a page: still-blue words go in at LEVEL_1 (or their word family's status) with their sentence and
+ * any cached AI meaning.
+ */
 export async function finishPage(text: TokenizedText, page: Page): Promise<number> {
   const forms = pageWordForms(page);
   const firstSentence = new Map<string, string>();
@@ -123,13 +181,23 @@ export async function finishPage(text: TokenizedText, page: Page): Promise<numbe
     const row = (await db.get<GlossRow>('glosses', db.glossKey(await sentenceHash(sentence), form))) ?? (await db.latestGlossForForm(form));
     details.set(form, { contextSentence: sentence, lemma: row?.gloss.lemma ?? null, translation: row?.gloss.meaningInContext ?? null });
   }
-  const added = applyPageFinished(forms, vocab.get(), Date.now(), details);
+  const inherited = new Map<string, number>();
+  for (const form of firstSentence.keys()) {
+    const s = inheritedFor(form);
+    if (s !== null) inherited.set(form, s);
+  }
+  const added = applyPageFinished(forms, vocab.get(), Date.now(), details, inherited);
   await saveEntries(added);
   return added.length;
 }
 
+/** "Mark all blue words Known": only words shown blue; their cached lemma is kept so their family forms. */
 export async function markPageKnown(page: Page): Promise<number> {
-  const marked = markNewAsKnown(pageWordForms(page), vocab.get(), Date.now());
+  const blue = pageWordForms(page).filter((f) => shownStatus(f) === Status.NEW);
+  const marked = markNewAsKnown(blue, vocab.get(), Date.now());
+  for (let i = 0; i < marked.length; i++) {
+    if (marked[i].lemma === null) marked[i] = { ...marked[i], lemma: (await db.latestGlossForForm(marked[i].form))?.gloss.lemma ?? null };
+  }
   await saveEntries(marked);
   return marked.length;
 }
@@ -287,6 +355,7 @@ async function storeGlosses(items: Array<{ form: string; sentence: string; gloss
     bySentence.set(hash, g);
   }
   await db.putAll('glosses', rows);
+  noteGlossRows(rows);
   for (const it of items) {
     if (it.gloss.isIdiomOrPhrase && it.gloss.phrase && it.gloss.phrase.includes(' ')) {
       await addPhrases(it.sentence, [{ phrase: it.gloss.phrase, meaning: it.gloss.phraseMeaning ?? '' }]);
@@ -322,6 +391,7 @@ export async function pullServerCache(sentences: string[]): Promise<void> {
       }
     }
     await db.putAll('glosses', glossRows);
+    noteGlossRows(glossRows);
     await db.putAll('sentences', sentenceRows);
     if (sentenceRows.length) phraseVersion.set(phraseVersion.get() + 1);
   }

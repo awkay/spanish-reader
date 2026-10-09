@@ -35,6 +35,15 @@ class SpanishReaderApp : Application() {
     val audio: LessonAudio by lazy { LessonAudio(this) }
     val webShare: WebShareService by lazy { WebShareService(settings, glossCache, phrases, GlossService.sharedHttp) }
 
+    private var lemmasBackfilled = false
+
+    /** Once per process: older vocabulary entries get their lemma from cached glosses, so word families form. */
+    suspend fun backfillLemmasOnce() {
+        if (lemmasBackfilled) return
+        lemmasBackfilled = true
+        vocab.backfillLemmas()
+    }
+
     /** The sentence synthesizer selected in settings; falls back to on-device TTS when cloud TTS lacks a key. */
     fun synthesizer(s: AppSettings): SentenceSynthesizer =
         if (s.ttsEngine == TtsEngine.GOOGLE_CLOUD && s.googleTtsApiKey.isNotBlank() && s.googleTtsVoice.isNotBlank()) {

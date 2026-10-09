@@ -16,12 +16,15 @@ data class VocabEntry(
 object VocabularyRules {
 
     /**
-     * The learner tapped [form]. An absent or NEW word is auto-added at LEVEL_1; anything else is returned unchanged.
+     * The learner tapped [form]. An absent or NEW word is auto-added at LEVEL_1, or at [inherited] (the status of
+     * its word family, see [WordFamilies]) when it has one; anything else is returned unchanged.
      */
-    fun onTap(entry: VocabEntry?, form: String, now: Long, contextSentence: String? = null): VocabEntry = when {
+    fun onTap(
+        entry: VocabEntry?, form: String, now: Long, contextSentence: String? = null, inherited: WordStatus? = null,
+    ): VocabEntry = when {
         entry == null -> VocabEntry(
             form = form,
-            status = WordStatus.LEVEL_1,
+            status = inherited ?: WordStatus.LEVEL_1,
             contextSentence = contextSentence,
             firstSeenMillis = now,
             lastSeenMillis = now,
@@ -29,7 +32,7 @@ object VocabularyRules {
         )
 
         entry.status == WordStatus.NEW -> entry.copy(
-            status = WordStatus.LEVEL_1,
+            status = inherited ?: WordStatus.LEVEL_1,
             contextSentence = entry.contextSentence ?: contextSentence,
             lastSeenMillis = now,
         )
@@ -51,26 +54,30 @@ object VocabularyRules {
             .toList()
 
     /**
-     * Turning past a page: every word still NEW on it enters the vocabulary at LEVEL_1 (never KNOWN — only the
-     * learner marks words as known), with the sentence it appeared in and any AI lemma/meaning from [details].
+     * Turning past a page: every word still NEW on it enters the vocabulary at LEVEL_1, with the sentence it
+     * appeared in and any AI lemma/meaning from [details]. A word whose family the learner already has (see
+     * [WordFamilies]) enters at that family's status instead ([inherited], by form); that is the only way a word
+     * becomes KNOWN without the learner marking it.
      */
     fun applyPageFinished(
         pageWordForms: Collection<String>,
         entries: Map<String, VocabEntry>,
         now: Long,
         details: Map<String, WordDetail> = emptyMap(),
+        inherited: Map<String, WordStatus> = emptyMap(),
     ): List<VocabEntry> =
         onPageFinished(pageWordForms, entries.mapValues { it.value.status }).map { form ->
             val d = details[form]
             val existing = entries[form]
+            val status = inherited[form] ?: WordStatus.LEVEL_1
             existing?.copy(
-                status = WordStatus.LEVEL_1,
+                status = status,
                 lemma = existing.lemma ?: d?.lemma,
                 translation = existing.translation ?: d?.translation,
                 contextSentence = existing.contextSentence ?: d?.contextSentence,
                 lastSeenMillis = now,
             ) ?: VocabEntry(
-                form = form, lemma = d?.lemma, status = WordStatus.LEVEL_1, translation = d?.translation,
+                form = form, lemma = d?.lemma, status = status, translation = d?.translation,
                 contextSentence = d?.contextSentence, firstSeenMillis = now, lastSeenMillis = now,
             )
         }

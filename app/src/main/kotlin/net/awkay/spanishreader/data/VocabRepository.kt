@@ -42,9 +42,12 @@ class VocabRepository(
     suspend fun statuses(forms: Collection<String>): Map<String, WordStatus> =
         entries(forms).mapValues { it.value.status }
 
-    /** A NEW word was tapped: auto-add at LEVEL_1. Returns the resulting entry. */
-    suspend fun tap(form: String, contextSentence: String?): VocabEntry = db.withTransaction {
-        val updated = VocabularyRules.onTap(dao.get(form)?.toEntry(), form, clock(), contextSentence)
+    /**
+     * A NEW word was tapped: auto-add at LEVEL_1, or at [inherited], its word family's status (see WordFamilies).
+     * Returns the resulting entry.
+     */
+    suspend fun tap(form: String, contextSentence: String?, inherited: WordStatus? = null): VocabEntry = db.withTransaction {
+        val updated = VocabularyRules.onTap(dao.get(form)?.toEntry(), form, clock(), contextSentence, inherited)
         dao.upsert(VocabEntity.from(updated))
         updated
     }
@@ -73,9 +76,12 @@ class VocabRepository(
     /**
      * Turning past a page: its words still NEW enter the vocabulary at LEVEL_1 (only the learner marks words KNOWN),
      * with their sentence and, when pre-glossing got to them, the AI lemma and meaning. [pageWords] are
-     * (normalized form, sentence) in page order. Returns the forms added.
+     * (normalized form, sentence) in page order. Words whose family the learner has enter at the family's status
+     * ([inherited], by form). Returns the forms added.
      */
-    suspend fun finishPage(pageWords: List<Pair<String, String>>): List<String> {
+    suspend fun finishPage(
+        pageWords: List<Pair<String, String>>, inherited: Map<String, WordStatus> = emptyMap(),
+    ): List<String> {
         val forms = pageWords.map { it.first }
         val firstSentence = LinkedHashMap<String, String>()
         pageWords.forEach { (form, sentence) -> firstSentence.putIfAbsent(form, sentence) }
@@ -87,17 +93,43 @@ class VocabRepository(
             WordDetail(sentence, gloss?.lemma, gloss?.meaningInContext)
         }
         return db.withTransaction {
-            val added = VocabularyRules.applyPageFinished(forms, entries(forms), clock(), details)
+            val added = VocabularyRules.applyPageFinished(forms, entries(forms), clock(), details, inherited)
             added.chunked(MAX_BIND_ARGS).forEach { dao.upsertAll(it.map(VocabEntity::from)) }
             added.map { it.form }
         }
     }
 
-    /** The learner's explicit "all the blue words here are known". Returns the forms marked. */
-    suspend fun markNewAsKnown(pageForms: Collection<String>): List<String> = db.withTransaction {
-        val marked = VocabularyRules.markNewAsKnown(pageForms, entries(pageForms), clock())
-        marked.chunked(MAX_BIND_ARGS).forEach { dao.upsertAll(it.map(VocabEntity::from)) }
-        marked.map { it.form }
+    /**
+     * The learner's explicit "all the blue words here are known". Returns the forms marked. Their cached AI lemma is
+     * stored too, so their spellings in later lessons count as the same family.
+     */
+    suspend fun markNewAsKnown(pageForms: Collection<String>): List<String> {
+        val newForms = VocabularyRules.onPageFinished(pageForms, statuses(pageForms))
+        val lemmas = newForms.associateWith { glossCache?.getByForm(it)?.lemma }
+        return db.withTransaction {
+            val marked = VocabularyRules.markNewAsKnown(pageForms, entries(pageForms), clock())
+                .map { it.copy(lemma = it.lemma ?: lemmas[it.form]) }
+            marked.chunked(MAX_BIND_ARGS).forEach { dao.upsertAll(it.map(VocabEntity::from)) }
+            marked.map { it.form }
+        }
+    }
+
+    /**
+     * Gives entries saved without a lemma the one from their cached AI gloss, so they join their word family.
+     * Safe to repeat; returns how many entries were filled in.
+     */
+    suspend fun backfillLemmas(): Int {
+        val cache = glossCache ?: return 0
+        val missing = dao.getAllOnce().filter { it.lemma == null }
+        val filled = missing.mapNotNull { e -> cache.getByForm(e.form)?.lemma?.takeIf { it.isNotBlank() }?.let { e.copy(lemma = it) } }
+        if (filled.isEmpty()) return 0
+        return db.withTransaction {
+            // Only rows still without a lemma, in case something annotated them meanwhile.
+            val current = filled.map { it.form }.chunked(MAX_BIND_ARGS).flatMap { dao.getAll(it) }.associateBy { it.form }
+            val updates = filled.mapNotNull { f -> current[f.form]?.takeIf { it.lemma == null }?.copy(lemma = f.lemma) }
+            updates.chunked(MAX_BIND_ARGS).forEach { dao.upsertAll(it) }
+            updates.size
+        }
     }
 
     private companion object {

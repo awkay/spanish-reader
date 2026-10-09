@@ -7,7 +7,7 @@ import type { Lesson } from '../db.ts';
 import { Player } from '../player.ts';
 import {
   type Lookup, finishPage, improve, lookup, markPageKnown, phraseVersion, preGloss, saveLesson, sentenceRows, settings as settingsObs,
-  annotate, statusOf, tapWord, translation, updateSettings, vocab as vocabObs,
+  annotate, inheritedFor, lessonLemmas, loadLessonLemmas, shownStatus, tapWord, translation, updateSettings, vocab as vocabObs,
 } from '../services.ts';
 import { statusBackground } from './colors.ts';
 import { navigate, useObservable } from './hooks.ts';
@@ -24,11 +24,14 @@ export interface Selection {
   improving: boolean;
   improveError: string | null;
   translation: string | { error: string } | null;
+  /** When the word was first met already colored by its word family: that family's lemma. */
+  familyLemma?: string | null;
 }
 
 export function Reader({ id }: { id: string }) {
   const settings = useObservable(settingsObs);
-  const vocab = useObservable(vocabObs);
+  useObservable(vocabObs);
+  const lemmas = useObservable(lessonLemmas);
   const phraseVer = useObservable(phraseVersion);
   const audio = useObservable(player.state);
   const [lesson, setLesson] = useState<Lesson | null | undefined>(undefined);
@@ -52,6 +55,9 @@ export function Reader({ id }: { id: string }) {
 
   const text = useMemo(() => (lesson ? tokenize(lesson.text) : null), [lesson?.text]);
   const pages = useMemo(() => (text ? paginate(text, settings.wordsPerPage) : []), [text, settings.wordsPerPage]);
+  useEffect(() => {
+    if (text) loadLessonLemmas(text);
+  }, [text]);
   const page: Page | undefined = pages[Math.min(pageIndex, Math.max(0, pages.length - 1))];
 
   /** Speakable sentences of a page: (tokenizer index, text). */
@@ -169,7 +175,8 @@ export function Reader({ id }: { id: string }) {
     if (!token.normalized) return;
     if (audio.playing) player.pause();
     const sentence = text.sentenceFor(token);
-    const sel: Selection = { token, sentence, result: null, improving: false, improveError: null, translation: null };
+    const familyLemma = inheritedFor(token.normalized) !== null ? lemmas.get(token.normalized) ?? null : null;
+    const sel: Selection = { token, sentence, result: null, improving: false, improveError: null, translation: null, familyLemma };
     setSelection(sel);
     await tapWord(token.normalized, sentence);
     translation(sentence).then((tr) => setSelection((cur) => (cur?.token === token ? { ...cur, translation: tr } : cur)));
@@ -179,7 +186,7 @@ export function Reader({ id }: { id: string }) {
   };
 
   // Next/Prev in the sheet: the nearest still-highlighted word on this page; never turns the page.
-  const statusFor = (f: string) => vocab.get(f)?.status ?? Status.NEW;
+  const statusFor = shownStatus;
   const selIndex = selection?.token.index;
   const selPos = selIndex === undefined ? -1 : page.tokens.findIndex((t) => t.index === selIndex);
   const stepTo = (dir: 1 | -1) => {
@@ -206,7 +213,7 @@ export function Reader({ id }: { id: string }) {
     player.prefetch(pageSentences(pages[page.index + 1]).map((s) => s.text));
   };
 
-  const blueCount = new Set(pageWordForms(page).filter((f) => statusOf(f) === Status.NEW)).size;
+  const blueCount = new Set(pageWordForms(page).filter((f) => shownStatus(f) === Status.NEW)).size;
   const isLast = page.index === pages.length - 1;
 
   return (
@@ -221,7 +228,7 @@ export function Reader({ id }: { id: string }) {
         <button class="icon-btn" title="Larger text" onClick={() => updateSettings({ fontSize: Math.min(36, settings.fontSize + 2) })}>A+</button>
       </header>
       <main class="content" style={selection ? { paddingBottom: `${sheetHeight + 24}px` } : undefined} onTouchStart={swipeStart} onTouchEnd={(e) => swipeEnd(e, () => goTo(page.index + 1), () => goTo(page.index - 1))}>
-        <PageText page={page} vocab={vocab} spans={spans} selected={selection?.token ?? null}
+        <PageText page={page} statusOf={shownStatus} spans={spans} selected={selection?.token ?? null}
           spoken={audio.pageIndex === page.index ? audio.sentenceIndex : null} fontSize={settings.fontSize} onTap={onTap} />
         <div class="page-nav">
           <button disabled={page.index === 0} onClick={() => goTo(page.index - 1)}>‹ Previous</button>
@@ -255,7 +262,7 @@ export function Reader({ id }: { id: string }) {
       </footer>
       {toast && <div class="toast">{toast}</div>}
       {selection && (
-        <WordSheet selection={selection} status={vocab.get(selection.token.normalized!)?.status ?? Status.NEW}
+        <WordSheet selection={selection} status={shownStatus(selection.token.normalized!)}
           phrases={spans.get(selection.token.index) ?? []} onImprove={onImprove} onClose={() => setSelection(null)}
           onPrev={stepTo(-1)} onNext={stepTo(1)} onHeight={setSheetHeight} />
       )}
@@ -274,8 +281,8 @@ function swipeEnd(e: TouchEvent, next: () => void, prev: () => void) {
   if (Math.abs(dx) > 70 && Math.abs(dx) > 2 * Math.abs(dy)) (dx < 0 ? next : prev)();
 }
 
-function PageText({ page, vocab, spans, selected, spoken, fontSize, onTap }: {
-  page: Page; vocab: Map<string, { status: number }>; spans: Map<number, PhraseSpan[]>; selected: Token | null;
+function PageText({ page, statusOf, spans, selected, spoken, fontSize, onTap }: {
+  page: Page; statusOf: (form: string) => number; spans: Map<number, PhraseSpan[]>; selected: Token | null;
   spoken: number | null; fontSize: number; onTap: (t: Token) => void;
 }) {
   // Trim leading/trailing whitespace tokens like the Android reader.
@@ -302,7 +309,7 @@ function PageText({ page, vocab, spans, selected, spoken, fontSize, onTap }: {
           underlined.has(t.index) ? 'phrase' : '',
         ];
         if (t.kind !== 'WORD') return <span key={t.index} class={cls.join(' ')} data-s={t.sentenceIndex}>{t.text}</span>;
-        const status = vocab.get(t.normalized!)?.status ?? Status.NEW;
+        const status = statusOf(t.normalized!);
         const bg = statusBackground(status);
         cls.push('w');
         if (bg) cls.push('hl');

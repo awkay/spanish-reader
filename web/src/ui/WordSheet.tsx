@@ -67,6 +67,7 @@ export function WordSheet({ selection, status, phrases, onImprove, onClose, onPr
               onClick={() => setWordStatus(token.normalized!, s, sentence)} title={STATUS_LABEL[s]}>{label}</button>
           ))}
         </div>
+        {selection.familyLemma && <p class="small muted family">Same word family as “{selection.familyLemma}”, so it starts at that status.</p>}
       </div>
       <div class="sheet-body" ref={body}>
         {!result && <p class="muted">Looking up…</p>}

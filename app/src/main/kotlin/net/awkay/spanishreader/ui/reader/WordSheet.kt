@@ -176,6 +176,13 @@ fun WordSheet(
                         )
                     }
                 }
+                selection.familyLemma?.let {
+                    Text(
+                        "Same word family as “$it”, so it starts at that status.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
             val details = rememberScrollState()
             LaunchedEffect(selection.token) { details.scrollTo(0) }

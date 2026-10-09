@@ -120,5 +120,28 @@ await check('vocabulary lists the words added by the page rule', async () => {
   await shot('07-vocab');
 });
 
+await check('word families: a new conjugation of a word already met is not blue', async () => {
+  // "levantaba" (lemma levantar) was tapped in step 4, so "levanté" belongs to a family at level 1.
+  await page.goto(base + '/#/');
+  await page.getByText('＋ New lesson').click();
+  await page.getByPlaceholder('Spanish text').fill('Ayer me levanté muy tarde.\n\nDespués desayuné con mi familia en la cocina.');
+  await page.getByRole('button', { name: 'Create lesson' }).click();
+  const word = page.locator('.page-text .w', { hasText: /^levanté$/ }).first();
+  await word.waitFor();
+  const blue = 'rgba(100, 181, 246, 0.4)';
+  // Pre-gloss has to bring the lemma first, after it finishes the first lesson's queued pages (can take minutes).
+  const deadline = Date.now() + 300_000;
+  while ((await word.evaluate((el) => getComputedStyle(el).backgroundColor)) === blue) {
+    if (Date.now() > deadline) throw new Error('levanté stayed blue');
+    await page.waitForTimeout(1000);
+  }
+  await word.click();
+  await page.getByText(/Same word family as “levantar/).waitFor();
+  const chip = await page.locator('.sheet .chip.on').innerText();
+  if (chip !== '1') throw new Error('expected level 1 selected, got ' + chip);
+  await shot('08-family');
+  await page.locator('.sheet').getByTitle('Close').click();
+});
+
 await browser.close();
 console.log('all checks passed');

@@ -1,6 +1,6 @@
 # Status
 
-_Last updated: 2026-10-02_
+_Last updated: 2026-10-09_
 
 **Android app: all planned features built; Tony uses it daily.** New: a **web app (PWA) for iPhone** plus a small Go
 server, **deployed 2026-10-01 at https://portal.fulcrologic.com** (Linode, build-6, nginx site in
@@ -10,8 +10,8 @@ The Android app's "Share to web" default URL moved there too (an old saved `span
 ## Build / verify
 ```
 scripts/install-android-sdk.sh          # each fresh cloud container
-./gradlew :core:test                     # 104 tests (2 live tests skipped without env vars)
-./gradlew :app:testDebugUnitTest         # 35 Robolectric tests incl. UI smoke test and v1→v3 migration
+./gradlew :core:test                     # 110 tests (2 live tests skipped without env vars)
+./gradlew :app:testDebugUnitTest         # 41 Robolectric tests incl. UI smoke test and v1→v3 migration
 ./gradlew :app:assembleDebug             # app/build/outputs/apk/debug/app-debug.apk
 ```
 Live LLM check (not run by default):
@@ -20,7 +20,7 @@ Live LLM check (not run by default):
 Web app / server:
 ```
 cd server && go vet ./... && go test ./...    # gate delay/lockout, tokens, AI protocols, TTS (fake piper/lame), store
-cd web && npm ci && npm run typecheck && npm test && npm run build    # 20 tests incl. 13 golden-fixture tests
+cd web && npm ci && npm run typecheck && npm test && npm run build    # 28 tests incl. 13 golden-fixture tests
 UPDATE_GOLDEN=1 ./gradlew :core:test --tests '*GoldenFixtureTest*'    # regenerate fixtures/ after changing :core text/prompt logic
 # e2e (Playwright, iPhone 13 profile) against a running server serving web/dist:
 BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_modules/playwright/index.mjs node web/e2e/smoke.mjs
@@ -51,6 +51,16 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
   glosses/translations/idioms under the app's keys (local results win), then pre-glosses only what's missing.
 - **Voice**: Tony chose Piper `es_MX-claude-high` (no es-CO voice exists in Piper; Azure has es-CO neural voices if
   ever wanted). Changing it is one env setting, `SR_PIPER_MODEL`.
+
+## Word families (both apps)
+- New spellings of a word Tony already has (`hablaban` when `hablo`/`hablar` is known) are no longer blue: they show at
+  their family's status, and a tap or turning the page adds them at that status (see CLAUDE.md rules). The lemma
+  comes from the cached AI gloss, so it appears once pre-glossing has reached the page; the word sheet says "Same
+  word family as “…”" when a word started that way. "Mark all blue Known" stores lemmas too, and older vocabulary
+  entries get their lemma backfilled from cached glosses (once per app start, Android).
+- Library counts (new / % known) still use each spelling's own status.
+- Web pre-gloss is one serial queue: a newly opened lesson waits for an earlier lesson's queued pages (the e2e test
+  saw ~2.5 min), so family colors (and instant taps) arrive late there. Worth prioritizing the open lesson.
 
 ## Features (Android app)
 - **Import**: share sheet (`ACTION_SEND` text/plain, incl. shared .txt streams), "Open with" for .txt, paste button,

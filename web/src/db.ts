@@ -103,4 +103,11 @@ export async function latestGlossForForm(formKey: string): Promise<GlossRow | un
   return rows.sort((a, b) => b.storedAt - a.storedAt)[0];
 }
 
+/** Every stored gloss of each of [formKeys], in one transaction. */
+export async function glossesForForms(formKeys: string[]): Promise<Map<string, GlossRow[]>> {
+  const index = (await tx('glosses', 'readonly')).index('formKey');
+  const rows = await Promise.all(formKeys.map((k) => wrap(index.getAll(k)) as Promise<GlossRow[]>));
+  return new Map(formKeys.map((k, i) => [k, rows[i]]));
+}
+
 export const glossKey = (hash: string, formKey: string) => `${hash}|${formKey}`;

@@ -24,8 +24,12 @@ Rules:
 - Tapping a NEW word sets it to LEVEL_1 and adds it to the vocabulary.
 - **Finishing a page adds every word still NEW on it to the vocabulary at LEVEL_1** (with its sentence and any AI
   lemma/meaning). Words become KNOWN **only when the reader marks them** (per word, or the explicit
-  "Mark all blue words Known" button on a page). Never auto-promote to KNOWN.
+  "Mark all blue words Known" button on a page). Never auto-promote to KNOWN — except through word families below.
 - Vocabulary is keyed by **lowercased written form** (`hablo` ≠ `hablas`, `sí` ≠ `si`). Lemma is stored for grouping.
+- **Word families** (Tony's request; `core/.../vocab/WordFamilies.kt`, ported in `web/src/core/vocab.ts`): a spelling
+  still NEW whose AI lemma (from the cached gloss) matches a word already LEVEL_1..KNOWN (by that word's lemma or own
+  form; reflexive `-se` ignored; highest status wins) is shown at that family's status, and a tap or the page rule
+  adds it at that status instead of LEVEL_1. Its own status can then be changed independently.
 
 ## Architecture decisions (settled — don't relitigate)
 - **Two clients**: the native Android app (primary; don't disturb it beyond additive changes) and a **web app (PWA) for

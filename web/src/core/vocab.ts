@@ -26,13 +26,15 @@ export interface VocabEntry {
 
 export interface WordDetail { contextSentence?: string | null; lemma?: string | null; translation?: string | null }
 
-/** A tapped word: absent or NEW → added at LEVEL_1; anything else unchanged. */
-export function onTap(entry: VocabEntry | undefined, form: string, now: number, contextSentence: string | null): VocabEntry {
+/** A tapped word: absent or NEW → added at LEVEL_1, or at [inherited] (its word family's status); else unchanged. */
+export function onTap(
+  entry: VocabEntry | undefined, form: string, now: number, contextSentence: string | null, inherited: number | null = null,
+): VocabEntry {
   if (!entry) {
-    return { form, lemma: null, status: Status.LEVEL_1, translation: null, contextSentence, firstSeenMillis: now, lastSeenMillis: now, timesSeen: 1 };
+    return { form, lemma: null, status: inherited ?? Status.LEVEL_1, translation: null, contextSentence, firstSeenMillis: now, lastSeenMillis: now, timesSeen: 1 };
   }
   if (entry.status === Status.NEW) {
-    return { ...entry, status: Status.LEVEL_1, contextSentence: entry.contextSentence ?? contextSentence, lastSeenMillis: now };
+    return { ...entry, status: inherited ?? Status.LEVEL_1, contextSentence: entry.contextSentence ?? contextSentence, lastSeenMillis: now };
   }
   return entry;
 }
@@ -53,22 +55,27 @@ export function newFormsOnPage(forms: string[], statuses: Map<string, number>): 
   return out;
 }
 
-/** Turning past a page: still-NEW words enter at LEVEL_1 with sentence and AI details. Never KNOWN. */
+/**
+ * Turning past a page: still-NEW words enter at LEVEL_1 with sentence and AI details, or at their word family's
+ * status ([inherited], by form) — the only way a word becomes KNOWN without the learner marking it.
+ */
 export function applyPageFinished(
   forms: string[], entries: Map<string, VocabEntry>, now: number, details: Map<string, WordDetail>,
+  inherited: Map<string, number> = new Map(),
 ): VocabEntry[] {
   const statuses = new Map([...entries].map(([k, v]) => [k, v.status]));
   return newFormsOnPage(forms, statuses).map((form) => {
     const d = details.get(form);
     const e = entries.get(form);
+    const status = inherited.get(form) ?? Status.LEVEL_1;
     if (e) {
       return {
-        ...e, status: Status.LEVEL_1, lemma: e.lemma ?? d?.lemma ?? null, translation: e.translation ?? d?.translation ?? null,
+        ...e, status, lemma: e.lemma ?? d?.lemma ?? null, translation: e.translation ?? d?.translation ?? null,
         contextSentence: e.contextSentence ?? d?.contextSentence ?? null, lastSeenMillis: now,
       };
     }
     return {
-      form, lemma: d?.lemma ?? null, status: Status.LEVEL_1, translation: d?.translation ?? null,
+      form, lemma: d?.lemma ?? null, status, translation: d?.translation ?? null,
       contextSentence: d?.contextSentence ?? null, firstSeenMillis: now, lastSeenMillis: now, timesSeen: 1,
     };
   });
@@ -82,6 +89,48 @@ export function markNewAsKnown(forms: string[], entries: Map<string, VocabEntry>
     return e ? { ...e, status: Status.KNOWN, lastSeenMillis: now }
       : { form, lemma: null, status: Status.KNOWN, translation: null, contextSentence: null, firstSeenMillis: now, lastSeenMillis: now, timesSeen: 1 };
   });
+}
+
+// ---------- word families (port of WordFamilies.kt) ----------
+
+/** Comparable lemma: NFC, lowercase, typographic apostrophe folded, reflexive infinitive without `se`. */
+export function normalizeLemma(lemma: string | null | undefined): string | null {
+  const l = lemma?.trim();
+  if (!l) return null;
+  return l.normalize('NFC').replace(/’/g, "'").toLowerCase().replace(/([aeií]r)se$/, '$1');
+}
+
+/**
+ * Each family's status: the highest LEVEL_1..KNOWN status of an entry whose lemma is that family, or whose own form
+ * is. NEW and IGNORED entries don't count.
+ */
+export function familyStatuses(entries: Iterable<VocabEntry>): Map<string, number> {
+  const out = new Map<string, number>();
+  const offer = (key: string | null, s: number) => {
+    if (key === null) return;
+    const cur = out.get(key);
+    if (cur === undefined || s > cur) out.set(key, s);
+  };
+  for (const e of entries) {
+    if (e.status < Status.LEVEL_1 || e.status > Status.KNOWN) continue;
+    offer(normalizeLemma(e.lemma), e.status);
+    offer(normalizeLemma(e.form), e.status);
+  }
+  return out;
+}
+
+/** [own] unless it is NEW or absent; then the status of the family of [lemma]; else NEW. */
+export function effectiveStatus(own: number | undefined, lemma: string | null | undefined, families: Map<string, number>): number {
+  if (own !== undefined && own !== Status.NEW) return own;
+  const key = normalizeLemma(lemma);
+  return (key !== null ? families.get(key) : undefined) ?? Status.NEW;
+}
+
+/** The status a family lends a form that is still NEW or absent; null when it has none. */
+export function inheritedStatus(own: number | undefined, lemma: string | null | undefined, families: Map<string, number>): number | null {
+  if (own !== undefined && own !== Status.NEW) return null;
+  const s = effectiveStatus(undefined, lemma, families);
+  return s === Status.NEW ? null : s;
 }
 
 export interface LessonStats { totalWords: number; uniqueWords: number; newCount: number; learningCount: number; knownPercent: number }

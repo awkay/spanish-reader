@@ -77,6 +77,14 @@ interface GlossDao {
     @Query("SELECT * FROM gloss_cache WHERE form_key = :formKey ORDER BY stored_at DESC LIMIT 1")
     suspend fun latestByForm(formKey: String): GlossEntity?
 
+    /** Keep [formKeys] under SQLite's bound-variable limit. */
+    @Query("SELECT * FROM gloss_cache WHERE form_key IN (:formKeys)")
+    suspend fun forForms(formKeys: List<String>): List<GlossEntity>
+
+    /** Emits whenever glosses are added or replaced. */
+    @Query("SELECT MAX(stored_at) FROM gloss_cache")
+    fun observeLatest(): Flow<Long?>
+
     @Upsert
     suspend fun upsert(entity: GlossEntity)
 

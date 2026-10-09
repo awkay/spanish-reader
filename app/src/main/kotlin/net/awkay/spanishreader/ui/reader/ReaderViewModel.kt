@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
@@ -28,6 +29,7 @@ import net.awkay.spanishreader.core.text.Token
 import net.awkay.spanishreader.core.text.TokenizedText
 import net.awkay.spanishreader.core.text.Tokenizer
 import net.awkay.spanishreader.core.vocab.NavDirection
+import net.awkay.spanishreader.core.vocab.WordFamilies
 import net.awkay.spanishreader.core.vocab.WordNavigation
 import net.awkay.spanishreader.core.vocab.WordStatus
 import net.awkay.spanishreader.gloss.LookupResult
@@ -59,6 +61,8 @@ data class WordSelection(
     val improveError: String? = null,
     /** The whole sentence in English, shown under it in the sheet. */
     val translation: TranslationState = TranslationState.Hidden,
+    /** When the word was first met already colored by its family: that family's lemma. */
+    val familyLemma: String? = null,
 ) {
     val form: String get() = token.normalized!!
 }
@@ -79,8 +83,27 @@ class ReaderViewModel(private val app: SpanishReaderApp, private val lessonId: L
 
     val missing = MutableStateFlow(false)
 
+    /** The AI lemma of each word in this lesson, from cached glosses; fills in as pre-glossing runs. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val lemmas: StateFlow<Map<String, String>> = _content.filterNotNull().flatMapLatest { c ->
+        val sentenceByForm = LinkedHashMap<String, String>()
+        for (t in c.text.tokens) t.normalized?.let { f -> sentenceByForm.getOrPut(f) { c.text.sentenceFor(t) } }
+        app.glossCache.changes().map { app.glossCache.lemmas(sentenceByForm) }
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+
+    private val snapshot: StateFlow<StatusSnapshot> = combine(app.vocab.observeAll(), lemmas) { entries, lemmas ->
+        val own = entries.associate { it.form to it.status }
+        val families = WordFamilies.familyStatuses(entries)
+        StatusSnapshot(own, WordFamilies.effectiveStatuses(lemmas.keys, own, lemmas, families), lemmas)
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.Eagerly, StatusSnapshot())
+
+    /**
+     * What each word is shown as: its own status, or for a spelling still NEW, the status of its word family (a new
+     * conjugation of a known verb isn't blue). Absent forms are NEW.
+     */
     val statuses: StateFlow<Map<String, WordStatus>> =
-        app.vocab.observeStatuses().stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+        snapshot.map { it.effective }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+
 
     val fontSize: StateFlow<Int> = app.settings.settings.map { it.readerFontSize }
         .stateIn(viewModelScope, SharingStarted.Eagerly, 20)
@@ -136,11 +159,12 @@ class ReaderViewModel(private val app: SpanishReaderApp, private val lessonId: L
             lastPage = c.initialPage
             _content.value = c
         }
+        viewModelScope.launch { app.backfillLemmasOnce() }
     }
 
     /**
      * The reader settled on [page]. Moving forward finishes every page passed over: its still-NEW words enter the
-     * vocabulary at LEVEL_1. Only the learner makes words KNOWN.
+     * vocabulary at LEVEL_1, or at their word family's status. Otherwise only the learner makes words KNOWN.
      */
     fun onPageSettled(page: Int) {
         val c = _content.value ?: return
@@ -148,7 +172,7 @@ class ReaderViewModel(private val app: SpanishReaderApp, private val lessonId: L
         lastPage = page
         viewModelScope.launch {
             if (page > from) {
-                for (p in from until page) app.vocab.finishPage(pageWords(c, p))
+                for (p in from until page) finishPage(c, p)
             }
             app.lessons.setCurrentPage(lessonId, page)
             preGlossAround(page)
@@ -210,10 +234,19 @@ class ReaderViewModel(private val app: SpanishReaderApp, private val lessonId: L
     private fun pageWords(c: ReaderContent, page: Int): List<Pair<String, String>> =
         c.pages[page].tokens.mapNotNull { t -> t.normalized?.let { it to c.text.sentenceFor(t) } }
 
+    private suspend fun finishPage(c: ReaderContent, page: Int): Int {
+        val words = pageWords(c, page)
+        val s = snapshot.value
+        val inherited = words.mapNotNull { (form, _) -> s.inherited(form)?.let { form to it } }.toMap()
+        return app.vocab.finishPage(words, inherited).size
+    }
+
     /** Explicit "every blue word on this page is known". Returns how many words were marked. */
     suspend fun markPageKnown(page: Int): Int {
         val c = _content.value ?: return 0
-        return app.vocab.markNewAsKnown(c.pages.getOrNull(page)?.wordForms ?: return 0).size
+        val forms = c.pages.getOrNull(page)?.wordForms ?: return 0
+        val shown = statuses.value
+        return app.vocab.markNewAsKnown(forms.filter { (shown[it] ?: WordStatus.NEW) == WordStatus.NEW }).size
     }
 
     /** Finishing the last page; returns the number of words added at LEVEL_1. */
@@ -221,7 +254,7 @@ class ReaderViewModel(private val app: SpanishReaderApp, private val lessonId: L
         val c = _content.value ?: return 0
         val last = c.pages.lastIndex
         if (last < 0) return 0
-        val promoted = app.vocab.finishPage(pageWords(c, last)).size
+        val promoted = finishPage(c, last)
         app.lessons.setCurrentPage(lessonId, last)
         return promoted
     }
@@ -232,11 +265,13 @@ class ReaderViewModel(private val app: SpanishReaderApp, private val lessonId: L
         val sentence = c.text.sentenceFor(token)
         // Looking a word up while listening: pause so the audio doesn't run away from you.
         if (audio.value.isPlaying) app.audio.pause()
-        _selection.value = WordSelection(token, sentence)
+        val snap = snapshot.value
+        val inherited = snap.inherited(form)
+        _selection.value = WordSelection(token, sentence, familyLemma = inherited?.let { snap.lemmas[form] })
         showTranslation()
         lookupJob?.cancel()
         lookupJob = viewModelScope.launch {
-            app.vocab.tap(form, sentence)
+            app.vocab.tap(form, sentence, inherited)
             lookup()
         }
     }
@@ -326,4 +361,16 @@ class ReaderViewModel(private val app: SpanishReaderApp, private val lessonId: L
         app.settings.update { it.copy(readerFontSize = it.readerFontSize + delta) }
     }
 
+}
+
+/** Own statuses by form, what each form is shown as (see [WordFamilies]), and the lemmas behind that. */
+private class StatusSnapshot(
+    val own: Map<String, WordStatus> = emptyMap(),
+    val effective: Map<String, WordStatus> = emptyMap(),
+    val lemmas: Map<String, String> = emptyMap(),
+) {
+    /** The family status shown for [form] while its own status is still NEW; null otherwise. */
+    fun inherited(form: String): WordStatus? =
+        if ((own[form] ?: WordStatus.NEW) != WordStatus.NEW) null
+        else effective[form]?.takeIf { it != WordStatus.NEW }
 }
