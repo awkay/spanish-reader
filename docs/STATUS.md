@@ -118,6 +118,10 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
   .txt decoding handles BOMs, UTF-8 and Windows-1252. A bare URL gets a warning (article extraction not built).
 - **Library**: lessons with word count, new/learning counts, % known, page progress, pre-gloss progress/failure;
   rename, delete, "Pre-gloss now".
+- **Reader Back (Tony's request)**: in the reader the system Back gesture/button does nothing (`BackHandler { }`),
+  so a page swipe started too near the edge can't leave the lesson; the top arrow and "Finish lesson" leave, and
+  Back still closes an open word sheet. A 200 dp band mid-height on both edges is excluded from the gesture
+  (`systemGestureExclusion`, Android's per-edge cap), so swipes there turn the page. Not yet tried on a device.
 - **Reader**: `HorizontalPager` of ~250-word pages (setting), words colored by status via `LinkAnnotation`,
   tap → bottom sheet (meaning in context, lemma, POS, grammar note, other meanings, idiom/phrase, pronounce button,
   status chips 1–4 / Known / Ignore). Status colors are drawn as separate rounded boxes hugging each word (not
@@ -217,6 +221,8 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
 - Idiom underlines appear only for pages the pre-gloss worker has scanned (pre-gloss must be on).
 - Robolectric (SDK 36) on JDK 21 needs `--add-opens java.base/jdk.internal.access` (set in `app/build.gradle.kts`).
 - Maven Central intermittently returns 429 through the cloud proxy; just rerun Gradle.
+- `:app:lintDebug` fails on `PlaybackService.kt` (Media3 `UnstableApi` opt-in missing, from the YouTube change);
+  CI doesn't run lint, so releases are unaffected.
 
 ## Next
 1. Deploy the web app on the Linode (`web-port.md`) and try it on the iPhones.

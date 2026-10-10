@@ -1,6 +1,7 @@
 package net.awkay.spanishreader.ui.reader
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NavigateBefore
@@ -109,6 +111,10 @@ fun ReaderScreen(lessonId: Long, onBack: () -> Unit, onListen: () -> Unit) {
         return
     }
     val pager = rememberPagerState(initialPage = c.initialPage) { c.pages.size }
+    // A page swipe that starts too near the edge reads as the system Back gesture and used to leave the lesson.
+    // Back does nothing here (the top arrow and "Finish lesson" leave; an open word sheet still closes on Back), and
+    // the middle of both edges is excluded from the gesture so swipes there turn the page instead.
+    BackHandler { }
     // Height of the open word sheet, so the page can keep the current word visible above it.
     var sheetPx by remember { mutableStateOf(0) }
     val obscuredPx = if (selection != null) sheetPx else 0
@@ -165,7 +171,11 @@ fun ReaderScreen(lessonId: Long, onBack: () -> Unit, onListen: () -> Unit) {
             )
         },
     ) { padding ->
-        BoxWithConstraints(Modifier.fillMaxSize().padding(padding)) {
+        BoxWithConstraints(
+            Modifier.fillMaxSize().padding(padding)
+                .systemGestureExclusion { edgeBand(it.size.width.toFloat(), it.size.height.toFloat(), left = true, density.density) }
+                .systemGestureExclusion { edgeBand(it.size.width.toFloat(), it.size.height.toFloat(), left = false, density.density) },
+        ) {
             val sheetMaxHeight = maxHeight
             HorizontalPager(pager, Modifier.fillMaxSize(), beyondViewportPageCount = 1) { index ->
                 val page = c.pages[index]
@@ -429,3 +439,13 @@ private fun PageText(
     )
 }
 
+/**
+ * A strip along the left or right edge where page swipes beat the system Back gesture: 200 dp tall (Android honors at
+ * most 200 dp per edge), vertically centered over the text.
+ */
+private fun edgeBand(width: Float, height: Float, left: Boolean, density: Float): Rect {
+    val half = minOf(100f * density, height / 2)
+    val strip = minOf(48f * density, width / 2)
+    val mid = height / 2
+    return if (left) Rect(0f, mid - half, strip, mid + half) else Rect(width - strip, mid - half, width, mid + half)
+}
