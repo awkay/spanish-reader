@@ -1,6 +1,6 @@
 # Status
 
-_Last updated: 2026-10-09 (Android YouTube download)_
+_Last updated: 2026-10-10 (photo lessons, reader Back, word sheet height)_
 
 **Android app: all planned features built; Tony uses it daily.** New: a **web app (PWA) for iPhone** plus a small Go
 server, **deployed 2026-10-01 at https://portal.fulcrologic.com** (Linode, build-6, nginx site in
@@ -11,7 +11,7 @@ The Android app's "Share to web" default URL moved there too (an old saved `span
 ```
 scripts/install-android-sdk.sh          # each fresh cloud container
 ./gradlew :core:test                     # 110 tests (2 live tests skipped without env vars)
-./gradlew :app:testDebugUnitTest         # 48 Robolectric/JVM tests incl. UI smoke test and v1→v3 migration
+./gradlew :app:testDebugUnitTest         # 52 Robolectric/JVM tests incl. UI smoke test and v1→v3 migration
 ./gradlew :app:assembleDebug             # app/build/outputs/apk/debug/app-debug.apk
 ```
 Live LLM check (not run by default):
@@ -61,6 +61,21 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
 - Library counts (new / % known) still use each spelling's own status.
 - Web pre-gloss is one serial queue: a newly opened lesson waits for an earlier lesson's queued pages (the e2e test
   saw ~2.5 min), so family colors (and instant taps) arrive late there. Worth prioritizing the open lesson.
+
+## Photo lessons (2026-10-10; server + Android; not yet tried on the Linode or a phone)
+- **Flow (Android only)**: New lesson → **Camera** (repeat for more pages) or **Photos** (gallery, up to 6), or share
+  images to the app ("Read in Spanish Reader"). Thumbnails replace the text box; the title is optional. "Read the
+  photo" shrinks each to ≤2048 px JPEG (`share/PhotoPrep.kt`, ImageDecoder applies EXIF rotation), posts them to
+  `POST /api/image` (`server/image.go`), then adds the returned shared lesson like "Get from web" and pre-glosses it.
+  Camera files live in `cache/photos/` (FileProvider `${applicationId}.photos`) and are deleted after the import.
+- **Server**: the photos stay in memory only. One vision request (`SR_VISION_MODEL`, default `SR_AI_MODEL`; the AI
+  proxy now sends images for all three protocols, server-side only) with reasoning effort **high**: on Tony's real
+  park sign (Medellín, "Corredor biótico") low effort misread a crack ("relict o", a Cyrillic "relictо") and dropped
+  the heading; high got it right 2 of 3 times (once "relicts") in ~12 s. The prompt keeps only the main Spanish text
+  (drops other signs, other languages, graffiti, stickers, page numbers, running headers; rejoins hyphenation).
+  Cyrillic/Greek look-alike letters are folded to Latin. No Spanish → HTTP 422, no lesson. Lessons get `source: "photo"`.
+- Tested live against z.ai `glm-5.3-flash` (Responses API) with Tony's photo, a rendered book page and an
+  English-only sign. Transcription isn't perfect: a wrong letter can still slip through on a damaged sign.
 
 ## YouTube lessons (2026-10-09; server + web + Android; not yet tried with a real ASR key or on the Linode)
 - **Flow**: paste a YouTube link in the web app's New lesson screen, or share/paste one on Android → "Import from

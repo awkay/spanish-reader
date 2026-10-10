@@ -134,6 +134,39 @@ class WebShareService(
         }
     }
 
+    /**
+     * Turns photos of Spanish text (a sign, a menu, pages of a book; JPEG bytes, in order) into a lesson: the web
+     * server has a vision model transcribe them and stores the result as a shared lesson, which is then added here
+     * like [download]. A blank [title] lets the server take it from the text. The photos aren't kept anywhere.
+     */
+    suspend fun importPhotos(
+        photos: List<ByteArray>,
+        title: String,
+        lessons: LessonRepository,
+        onProgress: (String) -> Unit,
+    ): Downloaded {
+        require(photos.isNotEmpty()) { "No photo to read" }
+        val webName = settings.current().webName.trim()
+        val form = MultipartBody.Builder().setType(MultipartBody.FORM)
+            .apply {
+                if (title.isNotBlank()) addFormDataPart("title", title.trim())
+                if (webName.isNotEmpty()) addFormDataPart("sharedBy", webName)
+                photos.forEachIndexed { i, bytes ->
+                    addFormDataPart("image", "photo${i + 1}.jpg", bytes.toRequestBody(JPEG))
+                }
+            }
+            .build()
+        val reading = if (photos.size == 1) "Reading the text in the photo…" else "Reading the text in ${photos.size} photos…"
+        onProgress("Uploading… 0%")
+        val body = ProgressBody(form) { p -> onProgress(if (p < 100) "Uploading… $p%" else reading) }
+        val summary = withContext(Dispatchers.IO) {
+            Json.parseToJsonElement(callBytes("/api/image", "Reading the photo", body, uploadHttp).toString(Charsets.UTF_8)).jsonObject
+        }
+        val id = summary.str("id") ?: throw IOException("The server made no lesson")
+        onProgress("Adding the lesson…")
+        return download(id, lessons)
+    }
+
     /** The server has nothing for this video: fetch the audio here and upload it; returns the server's job. */
     private suspend fun downloadAndUpload(prep: JsonObject, workDir: File, onProgress: (String) -> Unit): JsonObject {
         val videoId = prep.str("videoId")?.takeIf { VIDEO_ID.matches(it) } ?: throw IOException("The server sent no video ID")
@@ -331,6 +364,7 @@ class WebShareService(
 
     private companion object {
         val JSON = "application/json".toMediaType()
+        val JPEG = "image/jpeg".toMediaType()
         const val CACHE_CHUNK = 500 // the server accepts up to 2000 hashes per request
         val VIDEO_ID = Regex("^[A-Za-z0-9_-]{11}$")
     }

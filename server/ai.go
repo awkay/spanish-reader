@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -38,6 +39,20 @@ type aiRequest struct {
 	User    string `json:"user"`
 	Items   int    `json:"items"`   // number of words/sentences, to size max_tokens for Anthropic
 	Improve bool   `json:"improve"` // use SR_AI_IMPROVE_MODEL
+	// Set only by server code (photo import), never from a client's JSON.
+	Model  string    `json:"-"` // overrides the configured model
+	Effort string    `json:"-"` // reasoning effort when not "low" (Responses API; z.ai chat then keeps thinking on)
+	Images []aiImage `json:"-"` // sent after the text, in order
+}
+
+// aiImage is a photo for a vision-capable model.
+type aiImage struct {
+	MediaType string // image/jpeg, image/png or image/webp
+	Data      []byte
+}
+
+func (im aiImage) dataURL() string {
+	return "data:" + im.MediaType + ";base64," + base64.StdEncoding.EncodeToString(im.Data)
 }
 
 func (s *Server) handleAI(w http.ResponseWriter, r *http.Request) {
@@ -69,6 +84,9 @@ func (p *AIProxy) Complete(ctx context.Context, req aiRequest) (string, error) {
 	model := p.cfg.AIModel
 	if req.Improve {
 		model = p.cfg.AIImproveModel
+	}
+	if req.Model != "" {
+		model = req.Model
 	}
 	url, body, headers := p.build(req, model)
 	var lastErr error
@@ -121,28 +139,57 @@ func (p *AIProxy) build(req aiRequest, model string) (string, []byte, map[string
 		if n := req.Items * 600; n > maxTokens {
 			maxTokens = min(n, 16000)
 		}
+		var content any = req.User
+		if len(req.Images) > 0 {
+			parts := []map[string]any{}
+			for _, im := range req.Images {
+				parts = append(parts, map[string]any{"type": "image", "source": map[string]string{
+					"type": "base64", "media_type": im.MediaType, "data": base64.StdEncoding.EncodeToString(im.Data)}})
+			}
+			content = append(parts, map[string]any{"type": "text", "text": req.User})
+		}
 		body = map[string]any{
 			"model": model, "max_tokens": maxTokens, "temperature": 0.2, "system": req.System,
-			"messages": []map[string]string{{"role": "user", "content": req.User}},
+			"messages": []map[string]any{{"role": "user", "content": content}},
 		}
 	case "chat":
 		url = base + "/chat/completions"
 		auth["Authorization"] = "Bearer " + p.cfg.AIKey
+		var content any = req.User
+		if len(req.Images) > 0 {
+			parts := []map[string]any{{"type": "text", "text": req.User}}
+			for _, im := range req.Images {
+				parts = append(parts, map[string]any{"type": "image_url", "image_url": map[string]string{"url": im.dataURL()}})
+			}
+			content = parts
+		}
 		b := map[string]any{
 			"model": model, "temperature": 0.2,
 			"response_format": map[string]string{"type": "json_object"},
-			"messages":        []map[string]string{{"role": "system", "content": req.System}, {"role": "user", "content": req.User}},
+			"messages":        []map[string]any{{"role": "system", "content": req.System}, {"role": "user", "content": content}},
 		}
-		if strings.Contains(base, "z.ai") || strings.Contains(base, "bigmodel.cn") {
+		if (strings.Contains(base, "z.ai") || strings.Contains(base, "bigmodel.cn")) && req.Effort == "" {
 			b["thinking"] = map[string]string{"type": "disabled"} // GLM reasons by default; glossing doesn't need it
 		}
 		body = b
 	default: // responses
+		effort := "low"
+		if req.Effort != "" {
+			effort = req.Effort
+		}
 		url = base + "/responses"
 		auth["Authorization"] = "Bearer " + p.cfg.AIKey
+		var input any = req.User
+		if len(req.Images) > 0 {
+			parts := []map[string]any{{"type": "input_text", "text": req.User}}
+			for _, im := range req.Images {
+				parts = append(parts, map[string]any{"type": "input_image", "image_url": im.dataURL()})
+			}
+			input = []map[string]any{{"role": "user", "content": parts}}
+		}
 		body = map[string]any{
-			"model": model, "instructions": req.System, "input": req.User, "temperature": 0.2,
-			"reasoning": map[string]string{"effort": "low"},
+			"model": model, "instructions": req.System, "input": input, "temperature": 0.2,
+			"reasoning": map[string]string{"effort": effort},
 			"text":      map[string]any{"format": map[string]string{"type": "json_object"}},
 		}
 	}

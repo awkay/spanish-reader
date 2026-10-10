@@ -50,6 +50,7 @@ func (s *Server) routes() http.Handler {
 	mux.HandleFunc("POST /api/lessons", s.requireAuth(s.handlePutLesson))
 	mux.HandleFunc("GET /api/lessons/{id}", s.requireAuth(s.handleGetLesson))
 	mux.HandleFunc("DELETE /api/lessons/{id}", s.requireAuth(s.handleDeleteLesson))
+	mux.HandleFunc("POST /api/image", s.requireAuth(s.handleImageLesson))
 	mux.HandleFunc("POST /api/youtube", s.requireAuth(s.handleYouTubeStart))
 	mux.HandleFunc("POST /api/youtube/upload", s.requireAuth(s.handleYouTubeUpload))
 	mux.HandleFunc("GET /api/youtube/jobs/{id}", s.requireAuth(s.handleYouTubeJob))

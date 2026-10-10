@@ -24,6 +24,7 @@ type Config struct {
 	AIKey          string // SR_AI_API_KEY
 	AIModel        string // SR_AI_MODEL, e.g. glm-5.3-flash
 	AIImproveModel string // SR_AI_IMPROVE_MODEL: model for "Improve answer" (default: SR_AI_MODEL)
+	VisionModel    string // SR_VISION_MODEL: reads photos for photo lessons; must accept images (default: SR_AI_MODEL)
 
 	PiperBin   string // SR_PIPER_BIN, e.g. /opt/piper/piper
 	PiperModel string // SR_PIPER_MODEL, e.g. /opt/piper/voices/es_MX-claude-high.onnx
@@ -71,6 +72,7 @@ func loadConfig() (*Config, error) {
 		AIKey:          env("SR_AI_API_KEY", ""),
 		AIModel:        env("SR_AI_MODEL", ""),
 		AIImproveModel: env("SR_AI_IMPROVE_MODEL", ""),
+		VisionModel:    env("SR_VISION_MODEL", ""),
 		PiperBin:       env("SR_PIPER_BIN", ""),
 		PiperModel:     env("SR_PIPER_MODEL", ""),
 		LameBin:        env("SR_LAME_BIN", "lame"),
@@ -98,6 +100,9 @@ func loadConfig() (*Config, error) {
 	}
 	if c.AIImproveModel == "" {
 		c.AIImproveModel = c.AIModel
+	}
+	if c.VisionModel == "" {
+		c.VisionModel = c.AIModel
 	}
 	if err := os.MkdirAll(c.DataDir, 0o700); err != nil {
 		return nil, err

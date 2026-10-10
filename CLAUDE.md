@@ -4,7 +4,8 @@ Personal Android app replicating the core of LingQ for **Latin American Spanish*
 Current state and next steps: `docs/STATUS.md` — read it first.
 
 ## Product
-- **Import** Spanish text: Android share sheet (primary), paste, .txt. Later: web article extraction, EPUB.
+- **Import** Spanish text: Android share sheet (primary), paste, .txt, YouTube links, photos (camera, gallery or shared
+  images; the web server's vision model transcribes them into a shared lesson). Later: web article extraction, EPUB.
 - **Listen mode**: natural Latin American Spanish TTS, current sentence highlighted, speed control, loop sentence,
   background playback with lock-screen controls.
 - **Read mode**: paged text (~250 words/page). Words colored by status. Tap a word → bottom sheet with meaning

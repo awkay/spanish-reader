@@ -139,6 +139,9 @@ sudo nano /etc/spanish-reader.env     # or sed: fill in the two CHANGE_ME values
   | OpenAI-compatible chat (Ollama Cloud, local Ollama, z.ai chat) | `SR_AI_PROTOCOL=chat` with `SR_AI_BASE_URL=https://ollama.com/v1` |
   | Anthropic | `SR_AI_PROTOCOL=anthropic`, `SR_AI_BASE_URL=https://api.anthropic.com`, `SR_AI_MODEL=claude-haiku-4-5` |
 
+- `SR_VISION_MODEL` (optional): reads photos for Android photo lessons. It defaults to `SR_AI_MODEL`, which must then
+  accept images (`glm-5.3-flash` does; `glm-5.3` doesn't). Photos arrive through the plain `/api/` location (20 MB
+  body limit, plenty for the phone's shrunk photos), so nginx needs no change.
 - `SR_PIPER_MODEL`: the voice from step 4.
 - `SR_SECRET` is optional. If it's unset, the server generates `/var/lib/spanish-reader/secret` on first start. That
   file signs session tokens, and deleting it signs everyone out.

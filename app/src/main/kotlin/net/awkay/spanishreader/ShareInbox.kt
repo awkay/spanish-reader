@@ -9,8 +9,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import net.awkay.spanishreader.core.text.TextDecoding
 
-/** Text handed to the app from outside (share sheet, "open with"), waiting for the import screen to pick it up. */
-data class SharedText(val title: String, val text: String)
+/**
+ * Text handed to the app from outside (share sheet, "open with"), waiting for the import screen to pick it up; or
+ * shared [photos] of Spanish text, to be read by the web server.
+ */
+data class SharedText(val title: String, val text: String, val photos: List<Uri> = emptyList())
 
 object ShareInbox {
     private val _pending = MutableStateFlow<SharedText?>(null)
@@ -21,7 +24,13 @@ object ShareInbox {
     /** Extracts shared text from [intent]; returns true if the intent carried something to import. */
     fun offer(context: Context, intent: Intent?): Boolean {
         intent ?: return false
+        val isImage = intent.type?.startsWith("image/") == true
         val shared = when (intent.action) {
+            Intent.ACTION_SEND if isImage ->
+                IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)?.let { SharedText("", "", listOf(it)) }
+            Intent.ACTION_SEND_MULTIPLE if isImage ->
+                IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
+                    ?.takeIf { it.isNotEmpty() }?.let { SharedText("", "", it.toList()) }
             Intent.ACTION_SEND -> {
                 val text = intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
                 val subject = intent.getStringExtra(Intent.EXTRA_SUBJECT).orEmpty()

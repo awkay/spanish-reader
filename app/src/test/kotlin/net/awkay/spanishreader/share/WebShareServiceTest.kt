@@ -338,4 +338,41 @@ class WebShareServiceTest : DbTestBase() {
         assertTrue("age-restricted" in e.message!!)
         assertEquals(4, server.requestCount, "nothing uploaded")
     }
+
+    @Test
+    fun photosAreReadByTheServerIntoASharedLessonThenAddedHere() = runTest {
+        val s = settings()
+        s.update { it.copy(webUrl = server.url("/").toString(), webAccessCode = "1", webToken = "tok", webName = "Tony") }
+        val phrases = PhraseStore(db.phrases())
+        val lessons = LessonRepository(db) { now }
+        val service = WebShareService(s, RoomGlossCache(db.glosses(), phrases), phrases, OkHttpClient())
+        val ok = { body: String -> MockResponse.Builder().code(200).body(body).build() }
+        server.enqueue(ok("""{"id":"P1","title":"CORREDOR BIÓTICO","words":6,"source":"photo"}"""))
+        server.enqueue(ok("""{"id":"P1","title":"CORREDOR BIÓTICO","text":"CORREDOR BIÓTICO\n\nCada una de las orillas.","createdAt":1,"source":"photo"}"""))
+        server.enqueue(ok("{}"))
+        val progress = mutableListOf<String>()
+        val first = ByteArray(5000) { 1 }
+        val result = service.importPhotos(listOf(first, ByteArray(3000) { 2 }), " ", lessons, onProgress = { progress += it })
+
+        val lesson = lessons.get(result.lessonId)!!
+        assertEquals("CORREDOR BIÓTICO", lesson.title)
+        assertTrue(lesson.text.startsWith("CORREDOR BIÓTICO"))
+        assertEquals(listOf("Uploading… 0%", "Reading the text in 2 photos…", "Adding the lesson…"), progress.distinct().filter { "%" !in it || it == "Uploading… 0%" })
+
+        val up = server.takeRequest()
+        assertEquals("/api/image", up.url.encodedPath)
+        assertEquals("Bearer tok", up.headers["Authorization"])
+        val text = String(up.body!!.toByteArray(), Charsets.ISO_8859_1)
+        val names = Regex("""name="([a-zA-Z]+)"""").findAll(text).map { it.groupValues[1] }.toList()
+        assertEquals(listOf("sharedBy", "image", "image"), names, "a blank title isn't sent, so the server takes the heading")
+        for (v in listOf("filename=\"photo1.jpg\"", "filename=\"photo2.jpg\"", "Content-Type: image/jpeg")) assertTrue(v in text, v)
+        assertEquals("/api/lessons/P1", server.takeRequest().url.encodedPath)
+        assertEquals("/api/cache/get", server.takeRequest().url.encodedPath)
+
+        server.enqueue(MockResponse.Builder().code(422).body("""{"error":"no Spanish text found in the photo"}""").build())
+        val e = assertFailsWith<java.io.IOException> { service.importPhotos(listOf(first), "Letrero", lessons, onProgress = {}) }
+        assertEquals("no Spanish text found in the photo", e.message)
+        val second = String(server.takeRequest().body!!.toByteArray(), Charsets.UTF_8)
+        assertTrue(Regex("""name="title"\r?\n(?:[^\r\n]+\r?\n)*\r?\nLetrero\r?\n""").containsMatchIn(second), "a typed title is sent")
+    }
 }
