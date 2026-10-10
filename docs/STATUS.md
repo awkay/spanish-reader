@@ -133,7 +133,7 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
   "Follow" button jumps back. Tapping a word pauses playback. Tapping a NEW word → LEVEL_1 + vocab entry with context sentence. Turning
   forward finishes the pages passed (NEW → KNOWN); "Finish lesson" on the last page. Position is saved. Text size ±.
 - **Word-by-word flow (2026-10-02, not yet compiled locally; CI is the first build)**: the word sheet is now a
-  non-modal panel over the page (drag handle: peek/expand, drag down or Back/✕ closes), so tapping another word
+  non-modal panel over the page (one height, half the reading area; drag down or Back/✕ closes), so tapping another word
   switches the sheet to it. Fixed header: word, pronounce, **‹ Prev / Next ›**, status chips; below it the meaning
   (first), lemma/POS, expressions, grammar cards, Improve, sentence + translation. Next/Prev = nearest NEW or
   learning (0..4) word on the *same page* (`core/vocab/WordNavigation`, mirrored in `web/src/core`); landing on a

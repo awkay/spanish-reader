@@ -3,7 +3,6 @@ package net.awkay.spanishreader.ui.reader
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animate
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -75,13 +74,10 @@ object CliticColors {
     }
 }
 
-/** How far the sheet opens at first: the header, the status row and the start of the meaning. */
-private val PEEK_HEIGHT = 300.dp
-
 /**
  * The word sheet. Non-modal: the page behind it stays tappable, so tapping another word switches the sheet to it.
- * The header (word, Prev/Next, status chips) stays fixed; the explanation below it scrolls. Drag the handle to
- * resize (down past the peek closes it), tap it to toggle peek/expanded.
+ * The header (word, Prev/Next, status chips) stays fixed; the explanation below it scrolls. It has one height, half
+ * the reading area (Tony found a third too small and two thirds too much); dragging the handle down closes it.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -99,14 +95,15 @@ fun WordSheet(
     onTranslate: () -> Unit,
     onSpeak: () -> Unit,
     onDismiss: () -> Unit,
-    /** Height of the area the sheet sits in; it peeks at part of it and expands to most of it. */
+    /** Height of the area the sheet sits in; the sheet takes half of it. */
     maxHeight: Dp,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
-    val peekPx = with(density) { minOf(PEEK_HEIGHT, maxHeight * 0.6f).toPx() }
-    val fullPx = with(density) { (maxHeight * 0.9f).toPx() }.coerceAtLeast(peekPx)
-    var heightPx by remember { mutableStateOf(peekPx) }
+    val openPx = with(density) { (maxHeight * 0.5f).toPx() }
+    var heightPx by remember { mutableStateOf(openPx) }
+    // Follow a change of the reading area (rotation, window resize) unless a drag is under way.
+    LaunchedEffect(openPx) { heightPx = openPx }
     var settleJob by remember { mutableStateOf<Job?>(null) }
     val scope = rememberCoroutineScope()
     fun settle(target: Float) {
@@ -124,22 +121,17 @@ fun WordSheet(
         Column(Modifier.fillMaxWidth()) {
             Box(
                 Modifier.fillMaxWidth().height(36.dp)
-                    .pointerInput(peekPx, fullPx) {
+                    .pointerInput(openPx) {
                         detectVerticalDragGestures(
                             onDragStart = { settleJob?.cancel() },
                             onDragEnd = {
-                                when {
-                                    heightPx < peekPx * 0.6f -> onDismiss()
-                                    heightPx > (peekPx + fullPx) / 2 -> settle(fullPx)
-                                    else -> settle(peekPx)
-                                }
+                                if (heightPx < openPx * 0.6f) onDismiss() else settle(openPx)
                             },
                         ) { change, dragAmount ->
                             change.consume()
-                            heightPx = (heightPx - dragAmount).coerceIn(0f, fullPx)
+                            heightPx = (heightPx - dragAmount).coerceIn(0f, openPx)
                         }
-                    }
-                    .clickable { settle(if (heightPx < (peekPx + fullPx) / 2) fullPx else peekPx) },
+                    },
             ) {
                 Box(
                     Modifier.align(Alignment.Center).size(width = 36.dp, height = 4.dp)
