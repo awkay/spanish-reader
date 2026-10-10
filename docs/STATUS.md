@@ -221,8 +221,6 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
 - Idiom underlines appear only for pages the pre-gloss worker has scanned (pre-gloss must be on).
 - Robolectric (SDK 36) on JDK 21 needs `--add-opens java.base/jdk.internal.access` (set in `app/build.gradle.kts`).
 - Maven Central intermittently returns 429 through the cloud proxy; just rerun Gradle.
-- `:app:lintDebug` fails on `PlaybackService.kt` (Media3 `UnstableApi` opt-in missing, from the YouTube change);
-  CI doesn't run lint, so releases are unaffected.
 
 ## Next
 1. Deploy the web app on the Linode (`web-port.md`) and try it on the iPhones.

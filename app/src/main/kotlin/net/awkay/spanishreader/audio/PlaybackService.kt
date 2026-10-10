@@ -1,9 +1,11 @@
 package net.awkay.spanishreader.audio
 
 import android.content.Intent
+import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.extractor.DefaultExtractorsFactory
@@ -20,6 +22,8 @@ import com.google.common.util.concurrent.ListenableFuture
 class PlaybackService : MediaSessionService() {
     private var session: MediaSession? = null
 
+    // The MP3 extractor flags and DefaultMediaSourceFactory(context, extractors) are Media3 @UnstableApi.
+    @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
         // Index seeking makes clips of an MP3 (YouTube lessons: one recording per page) start at the exact time.
