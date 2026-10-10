@@ -357,7 +357,7 @@ class WebShareServiceTest : DbTestBase() {
         val lesson = lessons.get(result.lessonId)!!
         assertEquals("CORREDOR BIÓTICO", lesson.title)
         assertTrue(lesson.text.startsWith("CORREDOR BIÓTICO"))
-        assertEquals(listOf("Uploading… 0%", "Reading the text in 2 photos…", "Adding the lesson…"), progress.distinct().filter { "%" !in it || it == "Uploading… 0%" })
+        assertEquals(listOf("Uploading… 0%", "Reading the text in 2 photos (it reads them several times to be sure; about half a minute)…", "Adding the lesson…"), progress.distinct().filter { "%" !in it || it == "Uploading… 0%" })
 
         val up = server.takeRequest()
         assertEquals("/api/image", up.url.encodedPath)

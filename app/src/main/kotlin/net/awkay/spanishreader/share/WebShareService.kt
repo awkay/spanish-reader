@@ -52,8 +52,13 @@ class WebShareService(
     private val http: OkHttpClient,
     private val videoAudio: VideoAudioSource = NewPipeAudioSource(http),
 ) {
-    /** Uploads of a video's audio may take minutes on mobile data: no overall call deadline. */
-    private val uploadHttp by lazy { http.newBuilder().callTimeout(0, TimeUnit.SECONDS).writeTimeout(120, TimeUnit.SECONDS).build() }
+    /**
+     * Uploads of a video's audio may take minutes on mobile data: no overall call deadline. Photos get no answer
+     * until the server has read them several times (~30 s a photo set, more for many pages): wait as long as nginx.
+     */
+    private val uploadHttp by lazy {
+        http.newBuilder().callTimeout(0, TimeUnit.SECONDS).writeTimeout(120, TimeUnit.SECONDS).readTimeout(300, TimeUnit.SECONDS).build()
+    }
     private val json = Json { encodeDefaults = false; explicitNulls = false }
     private val lenient = Json { ignoreUnknownKeys = true; coerceInputValues = true }
 
@@ -156,7 +161,8 @@ class WebShareService(
                 }
             }
             .build()
-        val reading = if (photos.size == 1) "Reading the text in the photo…" else "Reading the text in ${photos.size} photos…"
+        val reading = (if (photos.size == 1) "Reading the text in the photo" else "Reading the text in ${photos.size} photos") +
+            " (it reads them several times to be sure; about half a minute)…"
         onProgress("Uploading… 0%")
         val body = ProgressBody(form) { p -> onProgress(if (p < 100) "Uploading… $p%" else reading) }
         val summary = withContext(Dispatchers.IO) {

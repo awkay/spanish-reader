@@ -68,14 +68,19 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
   photo" shrinks each to ≤2048 px JPEG (`share/PhotoPrep.kt`, ImageDecoder applies EXIF rotation), posts them to
   `POST /api/image` (`server/image.go`), then adds the returned shared lesson like "Get from web" and pre-glosses it.
   Camera files live in `cache/photos/` (FileProvider `${applicationId}.photos`) and are deleted after the import.
-- **Server**: the photos stay in memory only. One vision request (`SR_VISION_MODEL`, default `SR_AI_MODEL`; the AI
-  proxy now sends images for all three protocols, server-side only) with reasoning effort **high**: on Tony's real
-  park sign (Medellín, "Corredor biótico") low effort misread a crack ("relict o", a Cyrillic "relictо") and dropped
-  the heading; high got it right 2 of 3 times (once "relicts") in ~12 s. The prompt keeps only the main Spanish text
-  (drops other signs, other languages, graffiti, stickers, page numbers, running headers; rejoins hyphenation).
-  Cyrillic/Greek look-alike letters are folded to Latin. No Spanish → HTTP 422, no lesson. Lessons get `source: "photo"`.
-- Tested live against z.ai `glm-5.3-flash` (Responses API) with Tony's photo, a rendered book page and an
-  English-only sign. Transcription isn't perfect: a wrong letter can still slip through on a damaged sign.
+- **Server**: the photos stay in memory only. `readPhotos` makes **3 independent readings in parallel** (vision model
+  `SR_VISION_MODEL`, default `SR_AI_MODEL`; reasoning effort high; the AI proxy sends images for all three protocols,
+  server-side only). If they agree (ignoring layout) that's the text; otherwise a **reconciling call** gets the photos
+  plus the readings and picks, where they differ, what is visible *and* makes sense in the sentence and the whole
+  text, without touching clearly legible text. Most readings "not found" → HTTP 422, no lesson; a failed reconcile
+  falls back to the first reading. Both prompts say a hard-to-read word should make sense in context but legible
+  text is never corrected. Cyrillic/Greek look-alike letters are folded to Latin before comparing. No heading →
+  the title is the text's opening words. Lessons get `source: "photo"`.
+- **Measured live** (z.ai `glm-5.3-flash`, Responses API) on Tony's real sign (Medellín, "Corredor biótico", a crack
+  through "relicto"): one reading at low effort gave "relict o"/Cyrillic "relictо" and dropped the heading; one at
+  high effort was right 2 of 3 times; 3 readings + reconcile were right 6 of 6 (once when no single reading was),
+  in 24–45 s. A legible misspelling ("PROHIBIDO VOTAR BASURA") is kept; an English-only sign gives 422.
+- Android waits up to 300 s for the answer (`uploadHttp` read timeout; nginx `/api/` allows 300 s).
 
 ## YouTube lessons (2026-10-09; server + web + Android; not yet tried with a real ASR key or on the Linode)
 - **Flow**: paste a YouTube link in the web app's New lesson screen, or share/paste one on Android → "Import from
@@ -236,6 +241,7 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
 - Idiom underlines appear only for pages the pre-gloss worker has scanned (pre-gloss must be on).
 - Robolectric (SDK 36) on JDK 21 needs `--add-opens java.base/jdk.internal.access` (set in `app/build.gradle.kts`).
 - Maven Central intermittently returns 429 through the cloud proxy; just rerun Gradle.
+- `go test -race` fails the two YouTube tests (their fixed waits time out under the race detector); plain `go test` passes.
 
 ## Next
 1. Deploy the web app on the Linode (`web-port.md`) and try it on the iPhones.
