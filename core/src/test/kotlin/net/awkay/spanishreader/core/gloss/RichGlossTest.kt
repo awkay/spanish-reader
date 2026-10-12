@@ -46,6 +46,32 @@ class RichGlossTest {
     }
 
     @Test
+    fun `verb lemmas are cleaned to the plain infinitive`() {
+        // Tony's case: "Y prepárate para viajar…" came back as lemma "prepararse" and infinitive "prepárase".
+        val reply = """
+            {"glosses":[{"id":"1","form":"prepárate","lemma":"prepárarse","lemma_meaning":" to prepare ","partOfSpeech":"verb",
+              "meaningInContext":"get ready, prepare yourself","verb":{"infinitive":"prepárase","mood":"imperative"},
+              "clitics":[{"pronoun":"te","role":"reflexive"}]}]}
+        """.trimIndent()
+        val g = GlossParser.parse(reply, listOf(GlossRequest("prepárate", "Y prepárate para viajar y aprender español.", "1"))).getValue("1")
+        assertEquals("preparar", g.lemma)
+        assertEquals("preparar", g.verb!!.infinitive)
+        assertEquals("to prepare", g.lemmaMeaning)
+
+        assertEquals("reír", Infinitives.plain("Reírse"))
+        assertEquals("ir", Infinitives.plain("irse"))
+        assertEquals("oír", Infinitives.plain("oír"))
+        assertEquals("argüir", Infinitives.plain("argüir"))
+        assertNull(Infinitives.plain("prepárase"))
+        assertNull(Infinitives.plain("casa"))
+        // A bad lemma falls back to a good infinitive; non-verbs are untouched.
+        val v = Gloss("vámonos", "vámonos", "verb", "let's go", verb = VerbForm("irse"))
+        assertEquals("ir", v.tidy().lemma)
+        val noun = Gloss("base", "base", "noun", "base")
+        assertEquals(noun, noun.tidy())
+    }
+
+    @Test
     fun `old cached glosses still decode`() {
         val old = """{"form":"hablo","lemma":"hablar","partOfSpeech":"verb","meaningInContext":"I speak","grammarNote":"present"}"""
         val g = Json { ignoreUnknownKeys = true }.decodeFromString(Gloss.serializer(), old)

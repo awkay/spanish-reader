@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { CLITIC_LABEL, type Gloss, cliticRole, lacksDetail, splitClitics, verbSummary } from '../core/gloss.ts';
+import { CLITIC_LABEL, type Gloss, cliticRole, lacksDetail, splitClitics, tidyGloss, verbSummary } from '../core/gloss.ts';
 import { STATUS_LABEL, Status } from '../core/vocab.ts';
 import { setWordStatus } from '../services.ts';
 import { CLITIC_COLOR, statusSwatch } from './colors.ts';
@@ -91,8 +91,10 @@ export function WordSheet({ selection, status, phrases, onImprove, onClose, onPr
   );
 }
 
-function GlossDetails({ gloss: g, written, fromOther }: { gloss: Gloss; written: string; fromOther: boolean }) {
-  const sub = [g.lemma && g.lemma.toLowerCase() !== g.form.toLowerCase() ? `from ${g.lemma}` : null, g.partOfSpeech || null].filter(Boolean).join(' · ');
+function GlossDetails({ gloss, written, fromOther }: { gloss: Gloss; written: string; fromOther: boolean }) {
+  const g = tidyGloss(gloss); // also fixes glosses cached before the lemma cleanup
+  const sub = [g.lemma && g.lemma.toLowerCase() !== g.form.toLowerCase() ? `from ${g.lemma}` : null, g.partOfSpeech || null, g.lemmaMeaning || null]
+    .filter(Boolean).join(' · ');
   return (
     <>
       {sub && <div class="muted">{sub}</div>}

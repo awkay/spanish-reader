@@ -13,11 +13,12 @@ object GlossPrompt {
         For every item, explain the word as it is used in THAT sentence, with these fields:
         - "id": echo the item's id.
         - "form": the word exactly as given.
-        - "lemma": the dictionary form (infinitive for verbs, masculine singular for nouns and adjectives).
+        - "lemma": the dictionary form: masculine singular for nouns and adjectives; for verbs the plain infinitive with no pronouns, even when the verb is used reflexively or has pronouns attached ("preparar" for "prepárate", "dar" for "dáselo", "ir" for "vámonos"). Infinitives carry no written accent except -ír verbs (reír, oír).
+        - "lemmaMeaning": the lemma's basic English dictionary meaning, short ("to prepare", "house"), even when the meaning in this sentence differs.
         - "partOfSpeech": verb, noun, adjective, adverb, pronoun, preposition, conjunction, determiner, interjection, etc.
         - "meaningInContext": a short English meaning that fits this sentence.
         - "verb": ONLY if the word is a verb form in this sentence (including infinitives, gerunds, participles and forms with pronouns attached), otherwise null. An object with:
-            "infinitive";
+            "infinitive": the same plain infinitive as "lemma";
             "tense": present, preterite, imperfect, future, conditional, present perfect, pluperfect, etc. (null for infinitive/gerund/participle);
             "mood": indicative, subjunctive, imperative, infinitive, gerund or past participle;
             "person": 1st, 2nd or 3rd, naming usted/ustedes/vos when that is the subject; null for non-finite forms;
@@ -33,7 +34,7 @@ object GlossPrompt {
         - "phraseMeaning": English meaning of the whole expression, or null.
         Write all explanations in English and keep each field brief.
         Respond with ONLY a JSON object, no markdown fences and no commentary, shaped exactly like:
-        {"glosses":[{"id":"1","form":"...","lemma":"...","partOfSpeech":"...","meaningInContext":"...","verb":null,"clitics":[],"roots":null,"grammarNote":null,"otherMeanings":[],"isIdiomOrPhrase":false,"phrase":null,"phraseMeaning":null}]}
+        {"glosses":[{"id":"1","form":"...","lemma":"...","lemmaMeaning":"...","partOfSpeech":"...","meaningInContext":"...","verb":null,"clitics":[],"roots":null,"grammarNote":null,"otherMeanings":[],"isIdiomOrPhrase":false,"phrase":null,"phraseMeaning":null}]}
         Include exactly one entry per item.
     """.trimIndent()
 

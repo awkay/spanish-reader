@@ -276,12 +276,14 @@ private fun PhraseCard(phrase: String, meaning: String) = Section("Expression") 
 
 @Composable
 private fun GlossDetails(r: LookupResult.Found, written: String, expressions: List<Pair<String, String>>) {
-    val g = r.gloss
-    // Meaning first so it shows while the sheet only peeks.
+    val g = r.gloss.tidy() // also fixes glosses cached before the lemma cleanup
     Text(g.meaningInContext, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
     Text(
-        listOfNotNull(g.lemma.takeIf { it.isNotBlank() && !it.equals(g.form, ignoreCase = true) }?.let { "from $it" }, g.partOfSpeech.takeIf { it.isNotBlank() })
-            .joinToString(" · "),
+        listOfNotNull(
+            g.lemma.takeIf { it.isNotBlank() && !it.equals(g.form, ignoreCase = true) }?.let { "from $it" },
+            g.partOfSpeech.takeIf { it.isNotBlank() },
+            g.lemmaMeaning,
+        ).joinToString(" · "),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )

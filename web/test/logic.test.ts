@@ -1,12 +1,31 @@
 // Ports of the Kotlin unit tests for parsing, clitics and vocabulary rules.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { cliticRole, parseGlosses, parseSentences, splitClitics, verbSummary } from '../src/core/gloss.ts';
+import { cliticRole, parseGlosses, parseSentences, plainInfinitive, splitClitics, tidyGloss, verbSummary } from '../src/core/gloss.ts';
 import {
   Status, applyPageFinished, effectiveStatus, familyStatuses, inheritedStatus, markNewAsKnown, normalizeLemma, onTap, type VocabEntry,
 } from '../src/core/vocab.ts';
 
 const req = { id: '1', form: 'observándome', sentence: 'Estaba observándome.' };
+
+test('verb lemmas are cleaned to the plain infinitive (RichGlossTest)', () => {
+  const reply = '{"glosses":[{"id":"1","form":"prepárate","lemma":"prepárarse","lemma_meaning":" to prepare ","partOfSpeech":"verb",' +
+    '"meaningInContext":"get ready, prepare yourself","verb":{"infinitive":"prepárase","mood":"imperative"},' +
+    '"clitics":[{"pronoun":"te","role":"reflexive"}]}]}';
+  const g = parseGlosses(reply, [{ id: '1', form: 'prepárate', sentence: 'Y prepárate para viajar y aprender español.' }]).get('1')!;
+  assert.equal(g.lemma, 'preparar');
+  assert.equal(g.verb!.infinitive, 'preparar');
+  assert.equal(g.lemmaMeaning, 'to prepare');
+  assert.equal(plainInfinitive('Reírse'), 'reír');
+  assert.equal(plainInfinitive('irse'), 'ir');
+  assert.equal(plainInfinitive('oír'), 'oír');
+  assert.equal(plainInfinitive('argüir'), 'argüir');
+  assert.equal(plainInfinitive('prepárase'), null);
+  assert.equal(plainInfinitive('casa'), null);
+  assert.equal(tidyGloss({ form: 'vámonos', lemma: 'vámonos', partOfSpeech: 'verb', meaningInContext: "let's go", verb: { infinitive: 'irse' } }).lemma, 'ir');
+  const noun = { form: 'base', lemma: 'base', partOfSpeech: 'noun', meaningInContext: 'base' };
+  assert.equal(tidyGloss(noun), noun);
+});
 
 test('rich gloss parsing, fenced and with prose around it', () => {
   const text = 'Sure!\n```json\n{"glosses":[{"id":"1","form":"observándome","lemma":"observar","partOfSpeech":"verb","meaningInContext":"watching me",' +

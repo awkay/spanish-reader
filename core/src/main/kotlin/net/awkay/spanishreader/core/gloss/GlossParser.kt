@@ -81,7 +81,8 @@ object GlossParser {
             roots = gloss.roots?.takeIf { it.isNotBlank() },
             verb = gloss.verb?.takeIf { it.infinitive.isNotBlank() },
             clitics = gloss.clitics.filter { it.pronoun.isNotBlank() },
-        )
+            lemmaMeaning = gloss.lemmaMeaning?.trim()?.takeIf { it.isNotEmpty() },
+        ).tidy()
     }
 
     /** Parses a sentence-analysis reply per sentence id. Sentences missing from the reply are absent. */

@@ -1,6 +1,6 @@
 # Status
 
-_Last updated: 2026-10-10 (photo lessons, reader Back, word sheet height)_
+_Last updated: 2026-10-12 (word sheet: verb lemmas and the lemma's own meaning)_
 
 **Android app: all planned features built; Tony uses it daily.** New: a **web app (PWA) for iPhone** plus a small Go
 server, **deployed 2026-10-01 at https://portal.fulcrologic.com** (Linode, build-6, nginx site in
@@ -51,6 +51,14 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
   glosses/translations/idioms under the app's keys (local results win), then pre-glosses only what's missing.
 - **Voice**: Tony chose Piper `es_MX-claude-high` (no es-CO voice exists in Piper; Azure has es-CO neural voices if
   ever wanted). Changing it is one env setting, `SR_PIPER_MODEL`.
+
+## Word sheet lemma (2026-10-12, both apps)
+- Tony saw "from prepararse" and a Verb line "prepárase" for "prepárate". The gloss prompt now asks for the plain
+  infinitive as a verb's lemma (no pronouns, no stray accent) and a new `lemmaMeaning` ("to prepare"), shown in the
+  subtitle: "from preparar · verb · to prepare". `Gloss.tidy()` (ported as `tidyGloss`) also repairs what a model
+  still gets wrong ("prepárarse" → "preparar"; an infinitive that isn't one is replaced by the lemma). It runs on parse
+  and when the sheet shows a gloss, so cached glosses get the corrected lemma, but only new or improved glosses have
+  the meaning. Live (z.ai, 3 runs): the raw answers were already right with the new prompt.
 
 ## Word families (both apps)
 - New spellings of a word Tony already has (`hablaban` when `hablo`/`hablar` is known) are no longer blue: they show at

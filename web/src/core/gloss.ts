@@ -14,6 +14,8 @@ export interface Gloss {
   form: string; lemma: string; partOfSpeech: string; meaningInContext: string;
   grammarNote?: string | null; otherMeanings?: string[]; isIdiomOrPhrase?: boolean; phrase?: string | null;
   phraseMeaning?: string | null; verb?: VerbForm | null; clitics?: Clitic[]; roots?: string | null;
+  /** The lemma's basic English dictionary meaning ("to prepare"). */
+  lemmaMeaning?: string | null;
 }
 export interface FoundPhrase { phrase: string; meaning: string }
 export interface SentenceAnalysis { translation: string | null; phrases: FoundPhrase[] }
@@ -35,6 +37,7 @@ function previousJson(g: Gloss): Record<string, unknown> {
   if (g.verb != null) o.verb = g.verb;
   if (g.clitics && g.clitics.length) o.clitics = g.clitics;
   if (g.roots != null) o.roots = g.roots;
+  if (g.lemmaMeaning != null) o.lemmaMeaning = g.lemmaMeaning;
   return o;
 }
 
@@ -151,7 +154,7 @@ function decodeGloss(o: Record<string, unknown>, request: GlossRequest): Gloss |
     }))
     : [];
   const other = pick(o, 'otherMeanings', 'other_meanings');
-  return {
+  return tidyGloss({
     form: nonBlank(o.form) ?? request.form,
     lemma: nonBlank(o.lemma) ?? request.form,
     partOfSpeech: str(pick(o, 'partOfSpeech', 'part_of_speech', 'pos')) ?? '',
@@ -164,7 +167,40 @@ function decodeGloss(o: Record<string, unknown>, request: GlossRequest): Gloss |
     verb: decodeVerb(o.verb),
     clitics,
     roots: nonBlank(o.roots),
-  };
+    lemmaMeaning: nonBlank(pick(o, 'lemmaMeaning', 'lemma_meaning'))?.trim() ?? null,
+  });
+}
+
+// --- Infinitives (Gloss.kt) ---
+
+const PRONOUN_SUFFIX = /(se|me|te|nos|os)$/;
+const INFINITIVE = /^\p{L}*(ar|er|ir|ír)$/u;
+
+/** Removes acute accents, keeping the one of an -ír ending; ñ and ü are kept. */
+function stripAccents(w: string): string {
+  const keep = w.endsWith('ír');
+  const stem = keep ? w.slice(0, -2) : w;
+  const plain = stem.normalize('NFD').replace(/\u0301/g, '').normalize('NFC');
+  return keep ? plain + 'ír' : plain;
+}
+
+/** [word] as a plain infinitive ("prepárarse" → "preparar", "reírse" → "reír"), or null when it isn't one. */
+export function plainInfinitive(word: string): string | null {
+  let w = word.trim().toLowerCase();
+  const m = PRONOUN_SUFFIX.exec(w);
+  if (m) {
+    const rest = w.slice(0, m.index);
+    if (INFINITIVE.test(stripAccents(rest))) w = rest;
+  }
+  w = stripAccents(w);
+  return INFINITIVE.test(w) ? w : null;
+}
+
+/** Verb lemma and infinitive as the plain infinitive, as Gloss.tidy() does; non-verbs unchanged. */
+export function tidyGloss(g: Gloss): Gloss {
+  if (!g.verb) return g;
+  const plain = plainInfinitive(g.lemma) ?? plainInfinitive(g.verb.infinitive);
+  return plain ? { ...g, lemma: plain, verb: { ...g.verb, infinitive: plain } } : g;
 }
 
 /** Valid glosses for [requests] by id; throws MalformedResponse if the text has no usable JSON. */

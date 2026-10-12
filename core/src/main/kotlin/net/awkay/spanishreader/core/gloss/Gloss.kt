@@ -31,10 +31,49 @@ data class Gloss(
     val clitics: List<Clitic> = emptyList(),
     /** Origin or word structure worth knowing (Latin root, compound pattern such as en- + caja + -ar). */
     val roots: String? = null,
+    /** The lemma's basic English dictionary meaning ("to prepare"), shown next to it. */
+    @JsonNames("lemma_meaning")
+    val lemmaMeaning: String? = null,
 ) {
+    /**
+     * Fixes what models get wrong about verb lemmas: a pronoun left on ("prepararse", even "prepárase" for
+     * "prepárate") or a stray written accent ("prepárar"). Both [lemma] and the verb's infinitive become the plain
+     * infinitive ("preparar"); the pronouns are explained under [clitics]. Non-verbs are left alone.
+     */
+    fun tidy(): Gloss {
+        if (verb == null) return this
+        val plain = Infinitives.plain(lemma) ?: Infinitives.plain(verb.infinitive) ?: return this
+        return copy(lemma = plain, verb = verb.copy(infinitive = plain))
+    }
+
     /** True for glosses cached before the richer fields existed (or from a model that ignored them). */
     val lacksDetail: Boolean
         get() = roots == null && verb == null && clitics.isEmpty() && partOfSpeech.contains("verb", ignoreCase = true)
+}
+
+/** Recognizes Spanish infinitives and strips what doesn't belong in a dictionary form. */
+object Infinitives {
+    private val PRONOUN_SUFFIX = Regex("(se|me|te|nos|os)$")
+    private val INFINITIVE = Regex("^\\p{L}*(ar|er|ir|ír)$")
+
+    /**
+     * [word] as a plain infinitive (lowercase, no attached pronoun, no written accent except -ír), or null when it
+     * isn't one: "Prepararse" → "preparar", "prepárarse" → "preparar", "reírse" → "reír", "prepárase" → null.
+     */
+    fun plain(word: String): String? {
+        var w = word.trim().lowercase()
+        PRONOUN_SUFFIX.find(w)?.let { m -> w.removeRange(m.range).takeIf { stripAccents(it).let(INFINITIVE::matches) }?.let { w = it } }
+        w = stripAccents(w)
+        return w.takeIf { INFINITIVE.matches(it) }
+    }
+
+    /** Removes acute accents, keeping the one of an -ír ending; ñ and ü are kept. */
+    private fun stripAccents(w: String): String {
+        val keep = w.endsWith("ír")
+        val stem = if (keep) w.dropLast(2) else w
+        val plain = java.text.Normalizer.normalize(java.text.Normalizer.normalize(stem, java.text.Normalizer.Form.NFD).replace("\u0301", ""), java.text.Normalizer.Form.NFC)
+        return if (keep) plain + "ír" else plain
+    }
 }
 
 /** How a verb form is built and why it is used in its sentence. */
