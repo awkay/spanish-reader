@@ -93,3 +93,10 @@ h2 { font-size: 15px; color: var(--accent); margin: 20px 0 8px; }
 .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
 .indent { padding-left: 20px; }
 .setting { display: flex; flex-direction: column; gap: 6px; }
+.practice .verb { font-size: 20px; }
+.practice .english { font-size: 21px; margin: 18px 0 12px; }
+.practice .try { margin: 10px 0; }
+.practice .hint { background: var(--spoken); border-radius: 8px; padding: 6px 8px; margin-top: 4px; }
+.practice textarea { margin: 8px 0; font-size: 18px; }
+.practice .ok { color: #2e7d32; }
+@media (prefers-color-scheme: dark) { .practice .ok { color: #81c995; } }

@@ -4,5 +4,306 @@
     "improveNote": "\nThe learner found the \"previousAnswer\" given for an item unhelpful or wrong. Re-read the sentence carefully and\ngive a corrected, more careful and more complete answer: check the lemma, the exact conjugation and why it is used,\nevery clitic and its role, and whether the word belongs to an expression. Do not simply repeat the previous answer.",
     "sampleUser": "Gloss these items:\n{\"items\":[{\"id\":\"1\",\"form\":\"banco\",\"sentence\":\"Me senté en el banco.\"},{\"id\":\"2\",\"form\":\"dáselo\",\"sentence\":\"Dáselo \\\"ya\\\".\"}]}",
     "sampleUserImprove": "Gloss these items:\n{\"items\":[{\"id\":\"1\",\"form\":\"banco\",\"sentence\":\"Me senté en el banco.\",\"previousAnswer\":{\"form\":\"banco\",\"lemma\":\"banco\",\"partOfSpeech\":\"noun\",\"meaningInContext\":\"bank\"}}]}\nThe learner found the \"previousAnswer\" given for an item unhelpful or wrong. Re-read the sentence carefully and\ngive a corrected, more careful and more complete answer: check the lemma, the exact conjugation and why it is used,\nevery clitic and its role, and whether the word belongs to an expression. Do not simply repeat the previous answer.\nYour previous reply could not be parsed. Reply with valid JSON only.",
-    "sampleSentenceUser": "Translate these sentences and find their expressions:\n{\"sentences\":[{\"id\":\"0\",\"sentence\":\"Hola.\"},{\"id\":\"1\",\"sentence\":\"¿Qué tal?\"}]}"
+    "sampleSentenceUser": "Translate these sentences and find their expressions:\n{\"sentences\":[{\"id\":\"0\",\"sentence\":\"Hola.\"},{\"id\":\"1\",\"sentence\":\"¿Qué tal?\"}]}",
+    "practiceExerciseSystem": "You write translation exercises for an English-speaking learner of Latin American Spanish.\nYou get a Spanish verb, a tense or construction, a subject, and Spanish words the learner already knows.\nWrite ONE natural, everyday English sentence (5 to 14 words) whose most natural Latin American Spanish translation\nuses that verb, conjugated in exactly that tense or construction, with that subject.\n- The English must make the tense unambiguous: add the time words or context it needs (\"every summer\" for the\n  imperfect, \"yesterday\" for the preterite, a trigger like \"I want you to...\" for the subjunctive).\n- Build the rest of the sentence mostly from the known words; use other words only when needed, and keep them common.\n- Use Latin American Spanish: ustedes, never vosotros.\n- If the verb is normally used with an indirect object (gustar, encantar, doler) or is impersonal (llover), use its\n  natural construction and make the subject the person it is about.\nRespond with ONLY a JSON object, no markdown fences and no commentary, shaped exactly like:\n{\"english\":\"...\",\"spanish\":\"...\",\"verbForm\":\"...\",\"verbMeaning\":\"...\"}\n\"spanish\": your translation, with every written accent and ¿ ¡ where needed; \"verbForm\": the conjugated verb in it,\nwith any helper verb (\"íbamos a ir\");\n\"verbMeaning\": the verb's basic English meaning (\"to go\").",
+    "practiceCheckSystem": "You check a translation exercise for an English-speaking learner of Latin American Spanish. You get the English\nsentence, the verb, tense and subject being practiced, a model answer and its verb form, the learner's earlier wrong\ntries, this try number (of 3), and the learner's answer.\n- \"correct\": true if the answer is a natural, grammatical Latin American Spanish translation with the same meaning\n  that uses the practiced verb in the practiced tense and person. Other wording than the model answer is fine.\n  Ignore capitalization and punctuation; accept missing written accents and missing subject pronouns.\n- \"feedback\": one or two short English sentences. If correct, mention a missing written accent only if a word in\n  the answer really lacks one; never comment on punctuation or capitalization. If not correct, say what kind of\n  problem there is without giving away the correction.\n- \"hint\": null when correct. Otherwise write your own hint for the learner, following \"howToHint\" (null when it\n  says none). Never copy \"howToHint\" itself.\nRespond with ONLY a JSON object, no markdown fences and no commentary, shaped exactly like:\n{\"correct\":false,\"feedback\":\"...\",\"hint\":\"...\"}",
+    "practiceMaxTries": 3,
+    "practiceTenses": [
+        {
+            "id": "present",
+            "label": "present",
+            "example": "hablo",
+            "instruction": "simple present indicative: a habit, a fact, or what is happening now",
+            "subjects": [
+                "YO",
+                "TU",
+                "EL",
+                "ELLA",
+                "USTED",
+                "NOSOTROS",
+                "ELLOS",
+                "USTEDES"
+            ]
+        },
+        {
+            "id": "preterite",
+            "label": "preterite",
+            "example": "hablé",
+            "instruction": "preterite: a completed past action at a definite time (yesterday, last year, once)",
+            "subjects": [
+                "YO",
+                "TU",
+                "EL",
+                "ELLA",
+                "USTED",
+                "NOSOTROS",
+                "ELLOS",
+                "USTEDES"
+            ]
+        },
+        {
+            "id": "imperfect",
+            "label": "imperfect",
+            "example": "hablaba",
+            "instruction": "imperfect: a past habit (used to, would every day) or a background/ongoing past state",
+            "subjects": [
+                "YO",
+                "TU",
+                "EL",
+                "ELLA",
+                "USTED",
+                "NOSOTROS",
+                "ELLOS",
+                "USTEDES"
+            ]
+        },
+        {
+            "id": "future",
+            "label": "future",
+            "example": "hablaré",
+            "instruction": "simple future (will ...)",
+            "subjects": [
+                "YO",
+                "TU",
+                "EL",
+                "ELLA",
+                "USTED",
+                "NOSOTROS",
+                "ELLOS",
+                "USTEDES"
+            ]
+        },
+        {
+            "id": "conditional",
+            "label": "conditional",
+            "example": "hablaría",
+            "instruction": "conditional (would ...), e.g. a hypothetical or a polite request",
+            "subjects": [
+                "YO",
+                "TU",
+                "EL",
+                "ELLA",
+                "USTED",
+                "NOSOTROS",
+                "ELLOS",
+                "USTEDES"
+            ]
+        },
+        {
+            "id": "present-perfect",
+            "label": "present perfect",
+            "example": "he hablado",
+            "instruction": "present perfect with haber (have/has done)",
+            "subjects": [
+                "YO",
+                "TU",
+                "EL",
+                "ELLA",
+                "USTED",
+                "NOSOTROS",
+                "ELLOS",
+                "USTEDES"
+            ]
+        },
+        {
+            "id": "pluperfect",
+            "label": "pluperfect",
+            "example": "había hablado",
+            "instruction": "pluperfect with haber in the imperfect (had done)",
+            "subjects": [
+                "YO",
+                "TU",
+                "EL",
+                "ELLA",
+                "USTED",
+                "NOSOTROS",
+                "ELLOS",
+                "USTEDES"
+            ]
+        },
+        {
+            "id": "conditional-perfect",
+            "label": "conditional perfect",
+            "example": "habría hablado",
+            "instruction": "conditional perfect (would have done)",
+            "subjects": [
+                "YO",
+                "TU",
+                "EL",
+                "ELLA",
+                "USTED",
+                "NOSOTROS",
+                "ELLOS",
+                "USTEDES"
+            ]
+        },
+        {
+            "id": "present-subjunctive",
+            "label": "present subjunctive",
+            "example": "hable",
+            "instruction": "present subjunctive, triggered by a wish, request, doubt, emotion or a conjunction like para que / cuando (future)",
+            "subjects": [
+                "YO",
+                "TU",
+                "EL",
+                "ELLA",
+                "USTED",
+                "NOSOTROS",
+                "ELLOS",
+                "USTEDES"
+            ]
+        },
+        {
+            "id": "imperfect-subjunctive",
+            "label": "imperfect subjunctive",
+            "example": "hablara",
+            "instruction": "imperfect subjunctive (-ra form), e.g. after si in a hypothetical (if I had...) or a past wish/request",
+            "subjects": [
+                "YO",
+                "TU",
+                "EL",
+                "ELLA",
+                "USTED",
+                "NOSOTROS",
+                "ELLOS",
+                "USTEDES"
+            ]
+        },
+        {
+            "id": "imperative",
+            "label": "affirmative command",
+            "example": "habla / hable",
+            "instruction": "affirmative command to the subject",
+            "subjects": [
+                "TU",
+                "USTED",
+                "USTEDES",
+                "NOSOTROS"
+            ]
+        },
+        {
+            "id": "negative-imperative",
+            "label": "negative command",
+            "example": "no hables",
+            "instruction": "negative command (don't ...) to the subject",
+            "subjects": [
+                "TU",
+                "USTED",
+                "USTEDES",
+                "NOSOTROS"
+            ]
+        },
+        {
+            "id": "near-future",
+            "label": "ir a + infinitive",
+            "example": "voy a hablar",
+            "instruction": "near future with ir a + infinitive (going to ...)",
+            "subjects": [
+                "YO",
+                "TU",
+                "EL",
+                "ELLA",
+                "USTED",
+                "NOSOTROS",
+                "ELLOS",
+                "USTEDES"
+            ]
+        },
+        {
+            "id": "past-near-future",
+            "label": "ir (imperfect) a + infinitive",
+            "example": "iba a hablar",
+            "instruction": "ir in the imperfect + a + infinitive (was/were going to ...)",
+            "subjects": [
+                "YO",
+                "TU",
+                "EL",
+                "ELLA",
+                "USTED",
+                "NOSOTROS",
+                "ELLOS",
+                "USTEDES"
+            ]
+        },
+        {
+            "id": "present-progressive",
+            "label": "present progressive",
+            "example": "estoy hablando",
+            "instruction": "estar in the present + gerund (am/is/are ...ing right now)",
+            "subjects": [
+                "YO",
+                "TU",
+                "EL",
+                "ELLA",
+                "USTED",
+                "NOSOTROS",
+                "ELLOS",
+                "USTEDES"
+            ]
+        },
+        {
+            "id": "past-progressive",
+            "label": "past progressive",
+            "example": "estaba hablando",
+            "instruction": "estar in the imperfect + gerund (was/were ...ing)",
+            "subjects": [
+                "YO",
+                "TU",
+                "EL",
+                "ELLA",
+                "USTED",
+                "NOSOTROS",
+                "ELLOS",
+                "USTEDES"
+            ]
+        }
+    ],
+    "practiceSubjects": [
+        {
+            "id": "YO",
+            "spanish": "yo",
+            "english": "I"
+        },
+        {
+            "id": "TU",
+            "spanish": "tú",
+            "english": "you, informal"
+        },
+        {
+            "id": "EL",
+            "spanish": "él",
+            "english": "he"
+        },
+        {
+            "id": "ELLA",
+            "spanish": "ella",
+            "english": "she"
+        },
+        {
+            "id": "USTED",
+            "spanish": "usted",
+            "english": "you, formal"
+        },
+        {
+            "id": "NOSOTROS",
+            "spanish": "nosotros",
+            "english": "we"
+        },
+        {
+            "id": "ELLOS",
+            "spanish": "ellos",
+            "english": "they"
+        },
+        {
+            "id": "USTEDES",
+            "spanish": "ustedes",
+            "english": "you all"
+        }
+    ],
+    "samplePracticeUser": "Write one exercise:\n{\"verb\":\"ir\",\"verbMeaning\":\"to go\",\"tense\":\"ir (imperfect) a + infinitive\",\"tenseNote\":\"ir in the imperfect + a + infinitive (was/were going to ...)\",\"example\":\"iba a hablar\",\"subject\":\"nosotros (we)\",\"knownWords\":[\"casa\",\"aeropuerto\",\"\\\"día\\\"\"]}",
+    "samplePracticeUserNoMeaningRetry": "Write one exercise:\n{\"verb\":\"ir\",\"tense\":\"ir (imperfect) a + infinitive\",\"tenseNote\":\"ir in the imperfect + a + infinitive (was/were going to ...)\",\"example\":\"iba a hablar\",\"subject\":\"nosotros (we)\",\"knownWords\":[\"casa\",\"aeropuerto\",\"\\\"día\\\"\"]}\nYour previous reply could not be parsed. Reply with valid JSON only.",
+    "samplePracticeCheck": "Check this answer:\n{\"english\":\"We were going to go to the airport.\",\"verb\":\"ir\",\"tense\":\"ir (imperfect) a + infinitive\",\"subject\":\"nosotros (we)\",\"modelAnswer\":\"Íbamos a ir al aeropuerto.\",\"earlierTries\":[\"Vamos al aeropuerto\",\"Ibamos al aeropuerto\"],\"try\":3,\"answer\":\"Íbamos a ir al aeropuerto\",\"howToHint\":\"none\"}",
+    "samplePracticeCheckFirst": "Check this answer:\n{\"english\":\"We were going to go to the airport.\",\"verb\":\"ir\",\"tense\":\"ir (imperfect) a + infinitive\",\"subject\":\"nosotros (we)\",\"modelAnswer\":\"Íbamos a ir al aeropuerto.\",\"modelVerbForm\":\"íbamos a ir\",\"earlierTries\":[],\"try\":1,\"answer\":\"x\",\"howToHint\":\"say where the problem is and which rule applies, without any Spanish words from the model answer\"}",
+    "samplePracticeCheckSecond": "Check this answer:\n{\"english\":\"We were going to go to the airport.\",\"verb\":\"ir\",\"tense\":\"ir (imperfect) a + infinitive\",\"subject\":\"nosotros (we)\",\"modelAnswer\":\"Íbamos a ir al aeropuerto.\",\"modelVerbForm\":\"íbamos a ir\",\"earlierTries\":[\"y\"],\"try\":2,\"answer\":\"x\",\"howToHint\":\"give the correct verb form exactly (\\\"íbamos a ir\\\") and explain how the sentence is built, without giving the whole sentence\"}",
+    "samplePracticeCheckSecondNoForm": "Check this answer:\n{\"english\":\"We were going to go to the airport.\",\"verb\":\"ir\",\"tense\":\"ir (imperfect) a + infinitive\",\"subject\":\"nosotros (we)\",\"modelAnswer\":\"Íbamos a ir al aeropuerto.\",\"earlierTries\":[\"y\"],\"try\":2,\"answer\":\"x\",\"howToHint\":\"give the correct verb form exactly and explain how the sentence is built, without giving the whole sentence\"}"
 }

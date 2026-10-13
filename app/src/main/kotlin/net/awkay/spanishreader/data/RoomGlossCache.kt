@@ -44,6 +44,17 @@ class RoomGlossCache(
         return out
     }
 
+    /** Every cached gloss of each of [forms] (any sentence), by the form as given. */
+    suspend fun glossesByForm(forms: Collection<String>): Map<String, List<Gloss>> {
+        val byKey = forms.groupBy { GlossCache.formKey(it) }
+        val out = HashMap<String, List<Gloss>>()
+        for (row in byKey.keys.toList().chunked(MAX_BIND_ARGS).flatMap { dao.forForms(it) }.groupBy { it.formKey }) {
+            val glosses = row.value.mapNotNull { it.decode() }
+            byKey[row.key]?.forEach { out[it] = glosses }
+        }
+        return out
+    }
+
     override suspend fun put(form: String, sentence: String, gloss: Gloss) {
         dao.upsert(
             GlossEntity(

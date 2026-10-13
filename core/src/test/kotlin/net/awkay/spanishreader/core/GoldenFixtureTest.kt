@@ -7,6 +7,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
 import kotlinx.serialization.json.addJsonObject
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -121,6 +122,37 @@ class GoldenFixtureTest {
                 net.awkay.spanishreader.core.gloss.GlossRequest("banco", "Me senté en el banco.", "1", previous = previous),
             ), isRetry = true))
             put("sampleSentenceUser", net.awkay.spanishreader.core.gloss.GlossPrompt.sentenceUser(listOf("0" to "Hola.", "1" to "¿Qué tal?")))
+            val p = net.awkay.spanishreader.core.practice.PracticePrompt
+            val spec = net.awkay.spanishreader.core.practice.PracticeSpec(
+                net.awkay.spanishreader.core.practice.PracticeVerb("ir", "to go", listOf("vamos")),
+                net.awkay.spanishreader.core.practice.VerbTenses.byId("past-near-future")!!,
+                net.awkay.spanishreader.core.practice.Subject.NOSOTROS,
+                listOf("casa", "aeropuerto", "\"día\""),
+            )
+            val noMeaning = spec.copy(verb = spec.verb.copy(meaning = null))
+            val ex = net.awkay.spanishreader.core.practice.VerbExercise("We were going to go to the airport.", "Íbamos a ir al aeropuerto.")
+            put("practiceExerciseSystem", p.EXERCISE_SYSTEM)
+            put("practiceCheckSystem", p.CHECK_SYSTEM)
+            put("practiceMaxTries", p.MAX_TRIES)
+            put("practiceTenses", buildJsonArray {
+                net.awkay.spanishreader.core.practice.VerbTenses.ALL.forEach { t ->
+                    addJsonObject {
+                        put("id", t.id); put("label", t.label); put("example", t.example); put("instruction", t.instruction)
+                        put("subjects", buildJsonArray { t.subjects.forEach { add(JsonPrimitive(it.name)) } })
+                    }
+                }
+            })
+            put("practiceSubjects", buildJsonArray {
+                net.awkay.spanishreader.core.practice.Subject.entries.forEach { s ->
+                    addJsonObject { put("id", s.name); put("spanish", s.spanish); put("english", s.english) }
+                }
+            })
+            put("samplePracticeUser", p.exerciseUser(spec))
+            put("samplePracticeUserNoMeaningRetry", p.exerciseUser(noMeaning, isRetry = true))
+            put("samplePracticeCheck", p.checkUser(spec, ex, listOf("Vamos al aeropuerto", "Ibamos al aeropuerto"), "Íbamos a ir al aeropuerto"))
+            put("samplePracticeCheckFirst", p.checkUser(spec, ex.copy(verbForm = "íbamos a ir"), emptyList(), "x"))
+            put("samplePracticeCheckSecond", p.checkUser(spec, ex.copy(verbForm = "íbamos a ir"), listOf("y"), "x"))
+            put("samplePracticeCheckSecondNoForm", p.checkUser(spec, ex, listOf("y"), "x"))
         }
         return Json { prettyPrint = true }.encodeToString(JsonElement.serializer(), root) + "\n"
     }

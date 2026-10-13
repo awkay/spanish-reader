@@ -186,6 +186,11 @@ data class SentenceAnalysis(val translation: String?, val phrases: List<FoundPhr
  * Analyzes whole sentences (translation + idioms), independently of which words get glossed, so idioms made of
  * already-known words are found too.
  */
+/** One free-form prompt → the model's reply text (verb practice). Throws on HTTP or transport failure. */
+interface TextCompleter {
+    suspend fun complete(system: String, user: String): String
+}
+
 interface SentenceAnalyzer {
     /** One result per input sentence, in order; null for a sentence whose batch failed. */
     suspend fun analyze(sentences: List<String>): List<SentenceAnalysis?>

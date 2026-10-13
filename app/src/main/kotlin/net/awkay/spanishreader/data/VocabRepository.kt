@@ -30,6 +30,8 @@ class VocabRepository(
     fun observeStatuses(): Flow<Map<String, WordStatus>> =
         dao.observeStatuses().map { rows -> rows.associate { it.form to it.status } }
 
+    suspend fun all(): List<VocabEntry> = dao.getAllOnce().map { it.toEntry() }
+
     suspend fun get(form: String): VocabEntry? = dao.get(form)?.toEntry()
 
     /** Forgets [form] entirely; it becomes NEW again. */

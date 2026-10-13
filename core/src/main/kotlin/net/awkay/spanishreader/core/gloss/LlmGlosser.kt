@@ -32,13 +32,16 @@ private const val SENTENCE_BATCH = 15
 abstract class LlmGlosser(
     protected val httpClient: OkHttpClient,
     val options: GlossOptions,
-) : Glosser, SentenceAnalyzer {
+) : Glosser, SentenceAnalyzer, TextCompleter {
     private val permits = Semaphore(options.maxConcurrency)
 
     protected abstract fun buildRequest(system: String, user: String, itemCount: Int): Request
 
     /** Extracts the assistant text from a successful response body. */
     protected abstract fun replyText(responseBody: String): String
+
+    override suspend fun complete(system: String, user: String): String =
+        permits.withPermit { replyText(httpClient.executeWithRetry(buildRequest(system, user, 1), options.retry)) }
 
     override suspend fun gloss(requests: List<GlossRequest>): List<GlossResult> {
         if (requests.isEmpty()) return emptyList()

@@ -79,6 +79,10 @@ object GlosserFactory {
         return single(config, httpClient, options) as SentenceAnalyzer
     }
 
+    /** A free-form prompt client for [config] (every provider supports it). */
+    fun createCompleter(config: GlosserConfig, httpClient: OkHttpClient = defaultHttpClient, options: GlossOptions = GlossOptions()): TextCompleter =
+        createSentenceAnalyzer(config, httpClient, options) as TextCompleter
+
     private fun single(c: GlosserConfig, http: OkHttpClient, options: GlossOptions): Glosser = when (c.provider) {
         GlossProvider.ZAI_RESPONSES -> OpenAiResponsesGlosser(
             baseUrl = c.effectiveBaseUrl, apiKey = c.apiKey.trim().ifEmpty { null }, model = c.effectiveModel,

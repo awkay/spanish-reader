@@ -11,6 +11,7 @@ import net.awkay.spanishreader.core.gloss.Glosser
 import net.awkay.spanishreader.core.gloss.GlosserFactory
 import net.awkay.spanishreader.core.gloss.GlosserConfig
 import net.awkay.spanishreader.core.gloss.SentenceAnalyzer
+import net.awkay.spanishreader.core.gloss.TextCompleter
 import net.awkay.spanishreader.data.PhraseStore
 import net.awkay.spanishreader.data.SettingsRepository
 import okhttp3.OkHttpClient
@@ -34,6 +35,12 @@ class GlossService(
     suspend fun sentenceAnalyzer(): SentenceAnalyzer? {
         val primary = settings.current().primaryGlosser
         return if (primary.isComplete) sentenceFactory(primary) else null
+    }
+
+    /** A free-form prompt client for the primary provider (verb practice), or null when glossing isn't configured. */
+    suspend fun completer(): TextCompleter? {
+        val primary = settings.current().primaryGlosser
+        return if (primary.isComplete) GlosserFactory.createCompleter(primary, sharedHttp) else null
     }
 
     /**

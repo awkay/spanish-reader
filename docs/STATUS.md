@@ -1,6 +1,6 @@
 # Status
 
-_Last updated: 2026-10-12 (word sheet: verb lemmas and the lemma's own meaning)_
+_Last updated: 2026-10-13 (verb practice, both apps)_
 
 **Android app: all planned features built; Tony uses it daily.** New: a **web app (PWA) for iPhone** plus a small Go
 server, **deployed 2026-10-01 at https://portal.fulcrologic.com** (Linode, build-6, nginx site in
@@ -51,6 +51,25 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
   glosses/translations/idioms under the app's keys (local results win), then pre-glosses only what's missing.
 - **Voice**: Tony chose Piper `es_MX-claude-high` (no es-CO voice exists in Piper; Azure has es-CO neural voices if
   ever wanted). Changing it is one env setting, `SR_PIPER_MODEL`.
+
+## Verb practice (2026-10-13, both apps)
+- **Flow**: Library → 🎓 (Android) / ✍︎ (web) → "Verb practice". A verb you've met is picked locally: any
+  LEVEL_1..KNOWN vocabulary word whose cached gloss is a verb, grouped by plain infinitive (`Infinitives.plain`); the
+  meaning comes from the gloss's `lemmaMeaning` (else the AI's `verbMeaning`). A random tense/construction (16 in
+  `VerbTenses.ALL`, e.g. preterite, present subjunctive, "ir (imperfect) a + infinitive", negative command) and a
+  subject allowed for it (commands: tú/usted/ustedes/nosotros) are picked too, plus up to 100 random exposed words
+  (lemmas). The last 5 verbs are avoided while others remain.
+- **AI**: two calls, prompts in `core/.../practice/VerbPractice.kt` (`PracticePrompt`, carried to the web app by
+  `fixtures/prompts.json`): `EXERCISE_SYSTEM` → `{english, spanish, verbForm, verbMeaning}`; `CHECK_SYSTEM` grades each
+  try → `{correct, feedback, hint}`. The hint level is decided in code (`howToHint`): try 1 points to the problem
+  without Spanish words, try 2 gives the exact verb form, try 3 gets none and the model answer is shown. An answer equal
+  to the model answer (ignoring case/punctuation/spacing, not accents) is accepted without a call; an echoed
+  instruction is dropped. Android uses the primary glossing provider (`TextCompleter`, new on `LlmGlosser`), the web
+  app the server's `/api/ai` (no server change).
+- **Verified live** (z.ai glm-5.3-flash via the local server): 6 tenses generated correctly (~2 s each); grading
+  accepted accent-less and pronoun-added variants, rejected wrong tense/person/verb, try-2 hint quoted "íbamos a ir".
+  Not yet tried on a phone. Limits: only verbs with a cached gloss count (KNOWN words marked before ever being glossed
+  don't); no tense filter yet; results aren't recorded (no effect on word statuses).
 
 ## Word sheet lemma (2026-10-12, both apps)
 - Tony saw "from prepararse" and a Verb line "prepárase" for "prepárate". The gloss prompt now asks for the plain

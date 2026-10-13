@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -55,6 +56,7 @@ fun LibraryScreen(
     onListen: (Long) -> Unit,
     onImport: () -> Unit,
     onVocabulary: () -> Unit,
+    onPractice: () -> Unit,
     onSettings: () -> Unit,
     onGetFromWeb: () -> Unit = {},
 ) {
@@ -74,6 +76,7 @@ fun LibraryScreen(
                 title = { Text("Spanish Reader") },
                 actions = {
                     IconButton(onClick = onGetFromWeb) { Icon(Icons.Default.CloudDownload, "Get from web") }
+                    IconButton(onClick = onPractice) { Icon(Icons.Default.School, "Verb practice") }
                     IconButton(onClick = onVocabulary) { Icon(Icons.Default.Translate, "Vocabulary") }
                     IconButton(onClick = onSettings) { Icon(Icons.Default.Settings, "Settings") }
                 },

@@ -6,6 +6,7 @@ import {
   glossUserPrompt, pageWindow, parseGlosses, parseSentences, planPreGloss, sentenceUserPrompt,
 } from './core/gloss.ts';
 import { formKey, sentenceHash } from './core/hash.ts';
+import { type PracticeVerb, practiceVerbs } from './core/practice.ts';
 import { type Page, type TokenizedText, cleanImport, paginate, pageWordForms, suggestTitle, tokenize } from './core/text.ts';
 import {
   type VocabEntry, type WordDetail, Status, applyPageFinished, effectiveStatus, familyStatuses, inheritedStatus, markNewAsKnown,
@@ -129,6 +130,18 @@ function noteGlossRows(rows: GlossRow[]) {
   }
   if (next) lessonLemmas.set(next);
 }
+
+// ---------- verb practice ----------
+
+/** The verbs the learner has met (exposed vocabulary whose cached gloss is a verb). */
+export async function loadPracticeVerbs(): Promise<PracticeVerb[]> {
+  const exposed = [...vocab.get().values()].filter((e) => e.status >= Status.LEVEL_1 && e.status <= Status.KNOWN);
+  const rows = await db.glossesForForms([...new Set(exposed.map((e) => formKey(e.form)))]);
+  return practiceVerbs(exposed, (f) => (rows.get(formKey(f)) ?? []).map((r) => r.gloss));
+}
+
+/** One free-form AI call through the server (verb practice). */
+export const complete = (system: string, user: string) => api.ai(system, user, 1);
 
 async function saveEntries(entries: VocabEntry[]) {
   if (entries.length === 0) return;

@@ -14,6 +14,7 @@ import net.awkay.spanishreader.ui.importer.ImportScreen
 import net.awkay.spanishreader.ui.library.LibraryScreen
 import net.awkay.spanishreader.ui.library.SharedLibraryScreen
 import net.awkay.spanishreader.ui.listen.ListenScreen
+import net.awkay.spanishreader.ui.practice.PracticeScreen
 import net.awkay.spanishreader.ui.reader.ReaderScreen
 import net.awkay.spanishreader.ui.settings.SettingsScreen
 import net.awkay.spanishreader.ui.vocab.VocabularyScreen
@@ -24,6 +25,7 @@ object Routes {
     const val VOCAB = "vocab"
     const val SETTINGS = "settings"
     const val SHARED = "shared"
+    const val PRACTICE = "practice"
     fun reader(id: Long) = "reader/$id"
     fun listen(id: Long) = "listen/$id"
 }
@@ -43,6 +45,7 @@ fun AppNav() {
                 onListen = { nav.navigate(Routes.listen(it)) },
                 onImport = { nav.navigate(Routes.IMPORT) },
                 onVocabulary = { nav.navigate(Routes.VOCAB) },
+                onPractice = { nav.navigate(Routes.PRACTICE) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
                 onGetFromWeb = { nav.navigate(Routes.SHARED) },
             )
@@ -68,6 +71,7 @@ fun AppNav() {
             val id = entry.arguments!!.getLong("id")
             ListenScreen(id, onBack = { nav.popBackStack() }, onRead = { nav.navigate(Routes.reader(id)) { popUpTo(Routes.LIBRARY) } })
         }
+        composable(Routes.PRACTICE) { PracticeScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.VOCAB) { VocabularyScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.SETTINGS) { SettingsScreen(onBack = { nav.popBackStack() }) }
     }

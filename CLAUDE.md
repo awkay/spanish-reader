@@ -11,6 +11,8 @@ Current state and next steps: `docs/STATUS.md` — read it first.
 - **Read mode**: paged text (~250 words/page). Words colored by status. Tap a word → bottom sheet with meaning
   *in this sentence*, lemma, grammar note (conjugation/clitics), status buttons.
 - **Vocabulary**: every word tapped is auto-added; list filterable by status, with saved context sentence.
+- **Verb practice**: a verb the reader has met + random tense/subject (picked locally); the AI writes an English
+  sentence using known words and grades the Spanish answer in 3 tries with growing hints (`core/.../practice/`).
 
 ### Word status model (mirrors LingQ)
 | Status | Highlight |

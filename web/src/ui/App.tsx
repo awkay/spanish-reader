@@ -3,6 +3,7 @@ import { api, setUnauthorizedHandler } from '../api.ts';
 import { Import } from './Import.tsx';
 import { Library } from './Library.tsx';
 import { Login } from './Login.tsx';
+import { Practice } from './Practice.tsx';
 import { Reader } from './Reader.tsx';
 import { Settings } from './Settings.tsx';
 import { Vocabulary } from './Vocabulary.tsx';
@@ -39,6 +40,7 @@ export function App() {
   if (read) return <Reader id={decodeURIComponent(read[1])} />;
   if (hash === '#/import') return <Import />;
   if (hash === '#/vocab') return <Vocabulary />;
+  if (hash === '#/practice') return <Practice />;
   if (hash === '#/settings') return <Settings onSignOut={signOut} />;
   return <Library />;
 }
