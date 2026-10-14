@@ -57,6 +57,7 @@ export function Library() {
     <div class="screen">
       <header class="bar">
         <h1>Spanish Reader</h1>
+        <a class="icon-btn" href="#/sync" title="Sync">⇅</a>
         <a class="icon-btn" href="#/practice" title="Verb practice">✍︎</a>
         <a class="icon-btn" href="#/vocab" title="Vocabulary">📖</a>
         <a class="icon-btn" href="#/settings" title="Settings">⚙︎</a>

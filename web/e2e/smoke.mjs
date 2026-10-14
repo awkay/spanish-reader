@@ -44,6 +44,7 @@ page.on('pageerror', (e) => console.log('  page error:', e.message));
 
 await check('login screen; a wrong code is refused after a delay', async () => {
   await page.goto(base + '/');
+  await page.getByLabel('Your name').fill('tester');
   await page.getByLabel('Access code').fill('000000');
   const t = Date.now();
   await page.getByRole('button', { name: 'Enter' }).click();

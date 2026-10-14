@@ -7,6 +7,7 @@ import {
 } from './core/gloss.ts';
 import { formKey, sentenceHash } from './core/hash.ts';
 import { type PracticeVerb, practiceVerbs } from './core/practice.ts';
+import { type BackupFile, type BackupLesson, type SyncMeta, type SyncState, fingerprint, hasLocalChanges, replacePlan, snapshot } from './core/sync.ts';
 import { type Page, type TokenizedText, cleanImport, paginate, pageWordForms, suggestTitle, tokenize } from './core/text.ts';
 import {
   type VocabEntry, type WordDetail, Status, applyPageFinished, effectiveStatus, familyStatuses, inheritedStatus, markNewAsKnown,
@@ -259,8 +260,8 @@ export async function addSharedLesson(id: string): Promise<Lesson> {
   return lesson;
 }
 
-/** Shares a local lesson plus every AI result this device has for its sentences. Never vocabulary. */
-export async function shareLesson(l: Lesson): Promise<void> {
+/** Every AI result this device has for the sentences of [l] (glosses, translation, idioms). */
+async function sentenceDataFor(l: Lesson): Promise<SentenceData[]> {
   const text = tokenize(l.text);
   const sentences: SentenceData[] = [];
   for (let i = 0; i < text.sentenceCount; i++) {
@@ -277,8 +278,14 @@ export async function shareLesson(l: Lesson): Promise<void> {
       sentences.push({ hash, translation: row?.translation ?? undefined, phrases: row?.phrases, scanned: row?.scanned, glosses });
     }
   }
+  return sentences;
+}
+
+/** Shares a local lesson plus every AI result this device has for its sentences. Never vocabulary. */
+export async function shareLesson(l: Lesson): Promise<void> {
+  const sentences = await sentenceDataFor(l);
   const video = l.videoId ? { source: 'youtube', videoId: l.videoId, sourceUrl: l.sourceUrl ?? undefined } : {};
-  const summary = await api.shareLesson({ title: l.title, text: l.text, sharedBy: settings.get().name || undefined, ...video, sentences });
+  const summary = await api.shareLesson({ title: l.title, text: l.text, sharedBy: settings.get().name || account.get() || undefined, ...video, sentences });
   await saveLesson({ ...l, sharedId: summary.id });
   const cur = shared.get();
   shared.set({ ...cur, list: [summary, ...(cur.list ?? []).filter((s) => s.id !== summary.id)] });
@@ -301,6 +308,119 @@ export async function importYouTube(url: string, onProgress: (text: string) => v
   const lesson = await addSharedLesson(job.lessonId);
   void refreshShared();
   return lesson;
+}
+
+// ---------- account + manual sync ----------
+// "Sync up" replaces the account's copy on the server with this device's lessons and vocabulary; "sync down" replaces
+// this device's with the server's. Each warns first when it would throw away newer work (see core/sync.ts).
+
+/** The signed-in account ("" for a session from before accounts). */
+export const account = new Observable<string>('');
+
+export class SyncConflict extends Error {
+  readonly current: SyncMeta;
+  constructor(current: SyncMeta) {
+    super('The server has a newer copy.');
+    this.current = current;
+  }
+}
+export class LocalChanges extends Error {
+  readonly state: SyncState | null;
+  constructor(state: SyncState | null) {
+    super('This device has changes that are not on the server.');
+    this.state = state;
+  }
+}
+
+const syncKey = () => `sync:${account.get()}`;
+export const loadSyncState = () => db.get<SyncState>('settings', syncKey());
+const deviceName = () => (/iPhone|iPad/.test(navigator.userAgent) ? 'Web (iPhone)' : 'Web');
+
+async function localState(): Promise<BackupFile> {
+  const ls: BackupLesson[] = (await db.getAll<Lesson>('lessons')).map((l) => ({
+    title: l.title, text: l.text, createdAtMillis: l.createdAt, currentPage: l.currentPage,
+    videoId: l.videoId ?? null, sourceUrl: l.sourceUrl ?? null, sharedId: l.sharedId ?? null,
+  }));
+  return snapshot(ls, [...vocab.get().values()], Date.now());
+}
+
+export interface SyncStatus { state: SyncState | null; server: SyncMeta | null; serverError: string | null; localChanges: boolean }
+
+export async function syncStatus(): Promise<SyncStatus> {
+  const state = (await loadSyncState()) ?? null;
+  const localChanges = await hasLocalChanges(state, await localState());
+  try {
+    return { state, server: await api.syncMeta(), serverError: null, localChanges };
+  } catch (e) {
+    return { state, server: null, serverError: (e as Error).message, localChanges };
+  }
+}
+
+async function saveSyncState(revision: number, direction: 'up' | 'down') {
+  const state: SyncState = { revision, fingerprint: await fingerprint(await localState()), atMillis: Date.now(), direction };
+  await db.put('settings', state, syncKey());
+}
+
+/** Pushes this device's state. Throws [SyncConflict] when someone pushed since this device last synced, unless forced. */
+export async function syncUp(force = false, onProgress: (text: string) => void = () => {}): Promise<string> {
+  const state = await loadSyncState();
+  const snap = await localState();
+  let meta: SyncMeta;
+  try {
+    meta = await api.syncPut({ baseRevision: state?.revision ?? 0, force, device: deviceName(), snapshot: snap });
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 409) throw new SyncConflict(e.data.current as SyncMeta);
+    throw e;
+  }
+  await saveSyncState(meta.revision, 'up');
+  // Share this device's AI results for these lessons, so other devices don't ask the AI again (best effort).
+  onProgress('Sharing word meanings…');
+  let pending: SentenceData[] = [];
+  for (const l of lessons.get()) {
+    pending.push(...(await sentenceDataFor(l)));
+    if (pending.length >= 300) {
+      await api.cachePut(pending).catch(() => {});
+      pending = [];
+    }
+  }
+  if (pending.length) await api.cachePut(pending).catch(() => {});
+  return `Synced up: ${snap.lessons.length} lessons and ${snap.vocab.length} words (server revision ${meta.revision}).`;
+}
+
+/** Replaces this device's state with the server's. Throws [LocalChanges] when that would lose unsynced work, unless forced. */
+export async function syncDown(force = false, onProgress: (text: string) => void = () => {}): Promise<string> {
+  const state = (await loadSyncState()) ?? null;
+  if (!force && (await hasLocalChanges(state, await localState()))) throw new LocalChanges(state);
+  const remote = await api.syncGet();
+  if (!remote.snapshot || remote.revision === 0) throw new Error('Nothing on the server yet. Sync up from a device first.');
+  const snap = remote.snapshot;
+  const local = await db.getAll<Lesson>('lessons');
+  const plan = replacePlan<Lesson>(local.map((l) => [l, { title: l.title, text: l.text, createdAtMillis: l.createdAt, currentPage: l.currentPage }]), snap.lessons ?? []);
+  const fromSnap = (l: BackupLesson) => ({
+    title: l.title, text: l.text, createdAt: l.createdAtMillis, currentPage: l.currentPage ?? 0,
+    sharedId: l.sharedId ?? null, videoId: l.videoId ?? null, sourceUrl: l.sourceUrl ?? null,
+  });
+  for (const l of plan.delete) await db.del('lessons', l.id);
+  await db.putAll('lessons', [
+    ...plan.update.map(([l, b]) => ({ ...l, ...fromSnap(b), sharedId: b.sharedId ?? l.sharedId ?? null } satisfies Lesson)),
+    ...plan.insert.map((b) => ({ id: newId(), ...fromSnap(b) } satisfies Lesson)),
+  ]);
+  const entries: VocabEntry[] = (snap.vocab ?? []).map((v) => ({
+    form: v.form, lemma: v.lemma ?? null, status: v.status, translation: v.translation ?? null, contextSentence: v.contextSentence ?? null,
+    firstSeenMillis: v.firstSeenMillis, lastSeenMillis: v.lastSeenMillis, timesSeen: v.timesSeen ?? 1,
+  }));
+  await db.clear('vocab');
+  await db.putAll('vocab', entries);
+  await loadVocab();
+  await loadLessons();
+  await saveSyncState(remote.revision, 'down');
+  // Fetch the word meanings other devices already looked up for these lessons (best effort).
+  onProgress('Fetching word meanings…');
+  for (const l of lessons.get()) {
+    const text = tokenize(l.text);
+    await pullServerCache(Array.from({ length: text.sentenceCount }, (_, i) => text.sentenceText(i)));
+  }
+  return `Synced down: ${(snap.lessons ?? []).length} lessons and ${entries.length} words (server revision ${remote.revision}, from ${remote.device || 'another device'}).`;
 }
 
 // ---------- shared library ----------
@@ -590,13 +710,6 @@ export function preGloss(lesson: Lesson, fromPage: number, count: number): Promi
 }
 
 // ---------- backup (same JSON format as the Android app) ----------
-
-interface BackupFile {
-  version: number;
-  exportedAtMillis: number;
-  lessons: Array<{ title: string; text: string; createdAtMillis: number; currentPage: number }>;
-  vocab: VocabEntry[];
-}
 
 export async function exportBackup(): Promise<string> {
   const ls = await db.getAll<Lesson>('lessons');

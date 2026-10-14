@@ -17,6 +17,7 @@ import net.awkay.spanishreader.data.SettingsRepository
 import net.awkay.spanishreader.data.TtsEngine
 import net.awkay.spanishreader.data.VocabRepository
 import net.awkay.spanishreader.gloss.GlossService
+import net.awkay.spanishreader.share.SyncService
 import net.awkay.spanishreader.share.WebShareService
 import java.io.File
 
@@ -34,6 +35,7 @@ class SpanishReaderApp : Application() {
     val audioCache: SentenceAudioCache by lazy { SentenceAudioCache(File(filesDir, "tts")) }
     val audio: LessonAudio by lazy { LessonAudio(this) }
     val webShare: WebShareService by lazy { WebShareService(settings, glossCache, phrases, GlossService.sharedHttp) }
+    val sync: SyncService by lazy { SyncService(database, settings, webShare, "Android (${android.os.Build.MODEL})") }
 
     private var lemmasBackfilled = false
 

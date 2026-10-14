@@ -41,7 +41,7 @@ func (s *Server) routes() http.Handler {
 	})
 	mux.HandleFunc("GET /api/session", s.requireAuth(func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, map[string]any{"ok": true, "tts": s.tts.Enabled(), "voice": s.tts.Voice(), "youtube": s.yt.Enabled(),
-			"youtubeUpload": s.yt.UploadEnabled()})
+			"youtubeUpload": s.yt.UploadEnabled(), "user": userOf(r)})
 	}))
 	mux.HandleFunc("POST /api/ai", s.requireAuth(s.handleAI))
 	mux.HandleFunc("POST /api/tts", s.requireAuth(s.handleTTS))
@@ -57,6 +57,9 @@ func (s *Server) routes() http.Handler {
 	mux.HandleFunc("POST /api/youtube/{video}/audio", s.requireAuth(s.handleVideoAudio))
 	mux.HandleFunc("POST /api/cache/get", s.requireAuth(s.handleCacheGet))
 	mux.HandleFunc("POST /api/cache/put", s.requireAuth(s.handleCachePut))
+	mux.HandleFunc("GET /api/sync/meta", s.requireAuth(s.handleSyncMeta))
+	mux.HandleFunc("GET /api/sync", s.requireAuth(s.handleSyncGet))
+	mux.HandleFunc("PUT /api/sync", s.requireAuth(s.handleSyncPut))
 	if s.cfg.WebDir != "" {
 		mux.Handle("/", http.FileServer(http.Dir(s.cfg.WebDir)))
 	}

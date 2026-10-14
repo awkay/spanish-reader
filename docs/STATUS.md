@@ -1,6 +1,6 @@
 # Status
 
-_Last updated: 2026-10-13 (verb practice, both apps)_
+_Last updated: 2026-10-14 (accounts + manual sync, all three parts)_
 
 **Android app: all planned features built; Tony uses it daily.** New: a **web app (PWA) for iPhone** plus a small Go
 server, **deployed 2026-10-01 at https://portal.fulcrologic.com** (Linode, build-6, nginx site in
@@ -51,6 +51,50 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
   glosses/translations/idioms under the app's keys (local results win), then pre-glosses only what's missing.
 - **Voice**: Tony chose Piper `es_MX-claude-high` (no es-CO voice exists in Piper; Azure has es-CO neural voices if
   ever wanted). Changing it is one env setting, `SR_PIPER_MODEL`.
+
+## Accounts + manual sync (2026-10-14; server + web + Android)
+- **Accounts**: login takes `{username, code}`. The username is one lowercase word (`^[a-z]{1,32}$`), and the code is
+  still the shared credential, so accounts are implicit.
+  - Tokens are `expiry.user.hmac`. Old tokens `expiry.hmac` still work for everything except sync (403), so nothing
+    broke on deploy.
+  - `/api/session` returns `user`.
+  - Web login asks for "Your name" (remembered in localStorage).
+  - Android Settings → Web app has "Account". Changing it drops the token, and a 403 on sync re-logs in once.
+- **Server** (`server/sync.go`): `store/users/<user>/sync.json` holds `{revision, updatedAt, device, snapshot}`, and
+  the last 5 revisions are kept as `sync-<rev>.json`.
+  - `GET /api/sync/meta` and `GET /api/sync`.
+  - `PUT /api/sync {baseRevision, force, device, snapshot}` answers 409 with `current` when the base is stale and not
+    forced. The snapshot must be backup format version 1. The body is capped at 32 MB.
+- **Snapshot** = the backup format (`BackupFile`): lessons (with `currentPage` and the new optional
+  `videoId`/`sourceUrl`/`sharedId`) and all vocabulary. Settings are not synced.
+- **Shared logic** (`core/.../backup/Sync.kt`, ported in `web/src/core/sync.ts`):
+  - `snapshot` uses a deterministic order.
+  - `fingerprint` (SHA-256, per device only).
+  - `replacePlan` matches lessons by title+text, so local ids and cached audio survive; lessons the snapshot lacks
+    are deleted. Vocabulary is replaced wholesale.
+  - `hasLocalChanges`.
+  - Each device stores its `SyncState {revision, fingerprint, atMillis, direction}` per account. Web keeps it in the
+    IndexedDB `settings` store under `sync:<user>`; Android keeps it in `AppSettings.syncState` (JSON with the user).
+- **Warnings** (confirm and continue, never merge):
+  - Up warns when someone pushed since this device's last sync (409).
+  - Down warns when this device changed since its last sync, or when it never synced and has data.
+- **Word meanings**: after sync up, the device's AI results for all its lessons go to `/api/cache/put` (Android
+  `WebShareService.pushCache`; web `sentenceDataFor`). After sync down, the server cache is pulled for all lessons.
+  Android's pre-gloss worker also pulls the server cache for its page window first, when the web app is set up, so
+  lookups made on the iPhone aren't paid for again.
+- **UI**: web Library ⇅ opens `#/sync`; Android Library has a sync icon that opens a dialog. Both show the server
+  revision, its device and age, and this device's last sync with "changed since".
+- **Verified**:
+  - Go tests: names, user-bound tokens, 409/force, isolation, rotation.
+  - Core and web tests.
+  - Robolectric `SyncServiceTest` against an in-memory fake server: up, conflict, local-changes warning, forced
+    down keeps the lesson id, page and video, vocab replaced.
+  - Playwright with two iPhone contexts against a local server: up, warned down, in-step up, cancelled then forced
+    conflict, and a second account sees nothing.
+  - The existing smoke test, updated for the name field, passes.
+- **Not yet tried** on the phones or the Linode.
+  - The web `sharedId` is kept on sync down when the snapshot has none (Android doesn't store it).
+  - Old web sessions keep working but need sign-out and sign-in with a name to sync.
 
 ## Verb practice (2026-10-13, both apps)
 - **Flow**: Library → 🎓 (Android) / ✍︎ (web) → "Verb practice". A verb you've met is picked locally: any

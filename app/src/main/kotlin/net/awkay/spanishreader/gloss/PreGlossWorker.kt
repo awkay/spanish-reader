@@ -37,7 +37,10 @@ class PreGlossWorker(context: Context, params: WorkerParameters) : CoroutineWork
             inputData.getInt(KEY_FROM_PAGE, 0),
             inputData.getInt(KEY_PAGE_COUNT, 0),
         )
-        analyzeSentences(app, window.map { it.sentenceIndex }.distinct().map(text::sentenceText))
+        val windowSentences = window.map { it.sentenceIndex }.distinct().map(text::sentenceText)
+        // What other devices already looked up (the web app's shared cache) is free; only the rest goes to the AI.
+        if (settings.webAccessCode.isNotBlank()) runCatching { app.webShare.pullCacheSentences(windowSentences) }
+        analyzeSentences(app, windowSentences)
 
         val statuses = app.vocab.statuses(window.mapNotNull { it.normalized })
         val plan = PreGlossPlanner.plan(text, statuses, settings.preGlossSentencesPerWord, window)

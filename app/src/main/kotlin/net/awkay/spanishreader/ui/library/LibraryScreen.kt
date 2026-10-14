@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -47,6 +48,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.awkay.spanishreader.ui.appViewModel
+import net.awkay.spanishreader.ui.sync.SyncDialog
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,12 +71,15 @@ fun LibraryScreen(
     }
     var deleting by remember { mutableStateOf<LessonRow?>(null) }
     var renaming by remember { mutableStateOf<LessonRow?>(null) }
+    var syncing by remember { mutableStateOf(false) }
+    if (syncing) SyncDialog(onDismiss = { syncing = false }, onSettings = { syncing = false; onSettings() })
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Spanish Reader") },
                 actions = {
+                    IconButton(onClick = { syncing = true }) { Icon(Icons.Default.Sync, "Sync") }
                     IconButton(onClick = onGetFromWeb) { Icon(Icons.Default.CloudDownload, "Get from web") }
                     IconButton(onClick = onPractice) { Icon(Icons.Default.School, "Verb practice") }
                     IconButton(onClick = onVocabulary) { Icon(Icons.Default.Translate, "Vocabulary") }

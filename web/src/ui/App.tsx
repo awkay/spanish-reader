@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'preact/hooks';
 import { api, setUnauthorizedHandler } from '../api.ts';
+import { account } from '../services.ts';
 import { Import } from './Import.tsx';
 import { Library } from './Library.tsx';
 import { Login } from './Login.tsx';
 import { Practice } from './Practice.tsx';
 import { Reader } from './Reader.tsx';
 import { Settings } from './Settings.tsx';
+import { Sync } from './Sync.tsx';
 import { Vocabulary } from './Vocabulary.tsx';
 
 type Auth = 'checking' | 'in' | 'out';
@@ -25,13 +27,18 @@ export function App() {
   const hash = useHash();
   useEffect(() => {
     setUnauthorizedHandler(() => setAuth('out'));
-    api.session().then(() => setAuth('in'), (e) => {
+    api.session().then((s) => {
+      account.set(s.user ?? '');
+      setAuth('in');
+    }, (e) => {
       // Offline: let the app work from local data; the server will ask again when reachable.
       setAuth(e.status === 401 ? 'out' : 'in');
     });
   }, []);
   if (auth === 'checking') return <div class="screen center muted">…</div>;
-  if (auth === 'out') return <Login onDone={() => setAuth('in')} />;
+  if (auth === 'out') {
+    return <Login onDone={() => api.session().then((s) => account.set(s.user ?? ''), () => {}).finally(() => setAuth('in'))} />;
+  }
   const signOut = async () => {
     await fetch('/api/logout', { method: 'POST' }).catch(() => {});
     setAuth('out');
@@ -41,6 +48,7 @@ export function App() {
   if (hash === '#/import') return <Import />;
   if (hash === '#/vocab') return <Vocabulary />;
   if (hash === '#/practice') return <Practice />;
+  if (hash === '#/sync') return <Sync onSignOut={signOut} />;
   if (hash === '#/settings') return <Settings onSignOut={signOut} />;
   return <Library />;
 }

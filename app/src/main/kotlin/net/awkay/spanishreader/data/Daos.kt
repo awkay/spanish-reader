@@ -13,6 +13,9 @@ interface LessonDao {
     @Insert
     suspend fun insert(lesson: LessonEntity): Long
 
+    @androidx.room.Update
+    suspend fun update(lesson: LessonEntity)
+
     @Query("SELECT * FROM lessons ORDER BY created_at DESC")
     fun observeAll(): Flow<List<LessonEntity>>
 
@@ -59,6 +62,9 @@ interface VocabDao {
 
     @Query("DELETE FROM vocab WHERE form = :form")
     suspend fun delete(form: String)
+
+    @Query("DELETE FROM vocab")
+    suspend fun deleteAll()
 
     @Query("SELECT * FROM vocab WHERE status = :status ORDER BY last_seen DESC")
     fun observeByStatus(status: WordStatus): Flow<List<VocabEntity>>

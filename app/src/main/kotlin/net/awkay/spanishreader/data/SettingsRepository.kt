@@ -45,6 +45,10 @@ data class AppSettings(
     val webName: String = "",
     /** Session token from the web app's login, reused until it stops working. */
     val webToken: String = "",
+    /** Account on the web app (one lowercase word), for sync. */
+    val webUser: String = "",
+    /** JSON of the last sync ({user, state}), see SyncService. */
+    val syncState: String = "",
 ) {
     fun config(p: GlossProvider): GlosserConfig = providerConfigs[p] ?: GlosserConfig(p)
 
@@ -103,6 +107,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             webAccessCode = p[WEB_CODE] ?: d.webAccessCode,
             webName = p[WEB_NAME] ?: d.webName,
             webToken = p[WEB_TOKEN] ?: d.webToken,
+            webUser = p[WEB_USER] ?: d.webUser,
+            syncState = p[SYNC_STATE] ?: d.syncState,
         )
     }
 
@@ -133,6 +139,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             p[WEB_CODE] = s.webAccessCode
             p[WEB_NAME] = s.webName
             p[WEB_TOKEN] = s.webToken
+            p[WEB_USER] = s.webUser
+            p[SYNC_STATE] = s.syncState
         }
     }
 
@@ -174,6 +182,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val WEB_CODE = stringPreferencesKey("web.accessCode")
         val WEB_NAME = stringPreferencesKey("web.name")
         val WEB_TOKEN = stringPreferencesKey("web.token")
+        val WEB_USER = stringPreferencesKey("web.user")
+        val SYNC_STATE = stringPreferencesKey("sync.state")
 
         fun providerKey(p: GlossProvider, field: String) = stringPreferencesKey("gloss.${p.name}.$field")
     }

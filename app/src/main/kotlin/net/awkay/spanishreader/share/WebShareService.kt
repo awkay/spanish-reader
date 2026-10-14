@@ -242,11 +242,13 @@ class WebShareService(
      */
     internal suspend fun pullCache(text: String): Int {
         val tokens = Tokenizer.tokenize(text)
+        return pullCacheSentences(tokens.sentenceRanges.indices.map(tokens::sentenceText))
+    }
+
+    /** [pullCache] for these sentences. */
+    suspend fun pullCacheSentences(sentenceList: List<String>): Int = withContext(Dispatchers.IO) {
         val sentenceByHash = LinkedHashMap<String, String>()
-        for (i in tokens.sentenceRanges.indices) {
-            val sentence = tokens.sentenceText(i)
-            sentenceByHash.getOrPut(GlossCache.sentenceHash(sentence)) { sentence }
-        }
+        for (sentence in sentenceList) sentenceByHash.getOrPut(GlossCache.sentenceHash(sentence)) { sentence }
         var added = 0
         for (chunk in sentenceByHash.keys.chunked(CACHE_CHUNK)) {
             val body = buildJsonObject { putJsonArray("hashes") { chunk.forEach { add(JsonPrimitive(it)) } } }
@@ -276,8 +278,38 @@ class WebShareService(
                 if ((d["scanned"] as? JsonPrimitive)?.booleanOrNull == true) sentences.markScanned(listOf(sentence))
             }
         }
-        return added
+        added
     }
+
+    /** [method] [path] with the Bearer token (logging in when needed); the status and body, whatever the status. */
+    internal suspend fun request(method: String, path: String, body: String? = null): Pair<Int, String> = withContext(Dispatchers.IO) {
+        val s = settings.current()
+        val base = s.webUrl.trim().trimEnd('/')
+        require(base.startsWith("https://") || base.startsWith("http://")) { "Set the web app address in Settings" }
+        require(s.webAccessCode.isNotBlank()) { "Set the web app access code in Settings" }
+        val rb = body?.toRequestBody(JSON)
+        var token = s.webToken.ifBlank { login(base, s.webAccessCode) }
+        var resp = send(base + path, token, rb, method = method)
+        if (resp.first == 401) {
+            token = login(base, s.webAccessCode)
+            resp = send(base + path, token, rb, method = method)
+        }
+        resp.first to resp.second.toString(Charsets.UTF_8)
+    }
+
+    /** Uploads this device's AI results for [lessons]' sentences to the shared cache, so other devices reuse them. */
+    suspend fun pushCache(lessons: List<LessonEntity>) = withContext(Dispatchers.IO) {
+        val all = ArrayList<kotlinx.serialization.json.JsonElement>()
+        for (l in lessons) all.addAll(payload(l, "")["sentences"] as JsonArray)
+        for (chunk in all.chunked(CACHE_PUSH_CHUNK)) {
+            call("/api/cache/put", buildJsonObject { put("sentences", JsonArray(chunk)) }.toString().toRequestBody(JSON), "Sharing AI results")
+        }
+    }
+
+    /** Fetches the shared cache's AI results for [text]'s sentences (see [pullCache]). */
+    suspend fun pullCacheFor(text: String): Int = pullCache(text)
+
+    internal fun errorMessage(text: String): String? = errorOf(text)
 
     /** POSTs [body] (or GETs when null) to [path] with the Bearer token, logging in when there is none or it expired. */
     private suspend fun call(path: String, body: okhttp3.RequestBody?, what: String): String =
@@ -301,8 +333,9 @@ class WebShareService(
     }
 
     private suspend fun login(base: String, code: String): String {
+        val user = settings.current().webUser.trim()
         val req = Request.Builder().url("$base/api/login")
-            .post(buildJsonObject { put("code", code.trim()) }.toString().toRequestBody(JSON)).build()
+            .post(buildJsonObject { put("code", code.trim()); if (user.isNotEmpty()) put("username", user) }.toString().toRequestBody(JSON)).build()
         val (status, text) = http.newCall(req).execute().use { it.code to it.body.string() }
         if (status != 200) throw IOException(errorOf(text) ?: "Web app login failed (HTTP $status)")
         val token = ((Json.parseToJsonElement(text) as JsonObject)["token"] as JsonPrimitive).content
@@ -310,9 +343,9 @@ class WebShareService(
         return token
     }
 
-    private fun send(url: String, token: String, body: okhttp3.RequestBody?, client: OkHttpClient = http): Pair<Int, ByteArray> {
+    private fun send(url: String, token: String, body: okhttp3.RequestBody?, client: OkHttpClient = http, method: String? = null): Pair<Int, ByteArray> {
         val req = Request.Builder().url(url).header("Authorization", "Bearer $token")
-            .apply { if (body != null) post(body) }.build()
+            .apply { if (method != null) method(method, body) else if (body != null) post(body) }.build()
         return client.newCall(req).execute().use { it.code to it.body.bytes() }
     }
 
@@ -372,6 +405,7 @@ class WebShareService(
         val JSON = "application/json".toMediaType()
         val JPEG = "image/jpeg".toMediaType()
         const val CACHE_CHUNK = 500 // the server accepts up to 2000 hashes per request
+        const val CACHE_PUSH_CHUNK = 300
         val VIDEO_ID = Regex("^[A-Za-z0-9_-]{11}$")
     }
 }

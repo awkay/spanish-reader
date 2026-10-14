@@ -12,6 +12,11 @@ data class BackupLesson(
     val text: String,
     val createdAtMillis: Long,
     val currentPage: Int = 0,
+    /** YouTube video the lesson was transcribed from (its audio is the original recording). */
+    val videoId: String? = null,
+    val sourceUrl: String? = null,
+    /** Id of the lesson in the server's shared library, when it came from or was shared there (web app). */
+    val sharedId: String? = null,
 )
 
 @Serializable

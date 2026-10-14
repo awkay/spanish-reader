@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -37,8 +39,11 @@ func newGate(code string, secret []byte) *Gate {
 	return &Gate{code: code, secret: secret, now: time.Now, sleep: time.Sleep}
 }
 
-// Check returns (token, ok, lockedOut).
-func (g *Gate) Check(code string) (string, bool, bool) {
+// usernameRe: one lowercase word, the name of a person's account (sync).
+var usernameRe = regexp.MustCompile(`^[a-z]{1,32}$`)
+
+// Check returns (token, ok, lockedOut). [user] is a valid username or "" (a session without an account).
+func (g *Gate) Check(code, user string) (string, bool, bool) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	now := g.now()
@@ -54,7 +59,7 @@ func (g *Gate) Check(code string) (string, bool, bool) {
 		return "", false, true
 	}
 	if subtle.ConstantTimeCompare([]byte(strings.TrimSpace(code)), []byte(g.code)) == 1 {
-		return g.issue(now.Add(sessionLifetime)), true, false
+		return g.issue(now.Add(sessionLifetime), user), true, false
 	}
 	g.failures = append(g.failures, now)
 	g.sleep(failureDelay)
@@ -67,34 +72,53 @@ func (g *Gate) mac(payload string) string {
 	return base64.RawURLEncoding.EncodeToString(m.Sum(nil))
 }
 
-// issue creates "<unix expiry>.<hmac>". Changing SR_SECRET (or the access code, see Valid) logs everyone out.
-func (g *Gate) issue(expiry time.Time) string {
+// issue creates "<unix expiry>.<user>.<hmac>", or "<unix expiry>.<hmac>" without a user (tokens from before accounts
+// look like that too). Changing SR_SECRET (or the access code, see Valid) logs everyone out.
+func (g *Gate) issue(expiry time.Time, user string) string {
 	payload := strconv.FormatInt(expiry.Unix(), 10)
-	return payload + "." + g.mac(payload+"|"+g.code)
+	if user != "" {
+		payload += "." + user
+	}
+	return payload + "." + g.mac(strings.Replace(payload, ".", "|", 1)+"|"+g.code)
 }
 
-// Valid reports whether token was issued by this server for the current access code and hasn't expired.
-func (g *Gate) Valid(token string) bool {
-	payload, sig, ok := strings.Cut(token, ".")
-	if !ok {
-		return false
+// Valid reports whether token was issued by this server for the current access code and hasn't expired, and whose
+// account it is ("" for a session without one).
+func (g *Gate) Valid(token string) (string, bool) {
+	cut := strings.LastIndexByte(token, '.')
+	if cut < 0 {
+		return "", false
 	}
-	exp, err := strconv.ParseInt(payload, 10, 64)
+	payload, sig := token[:cut], token[cut+1:]
+	expText, user, _ := strings.Cut(payload, ".")
+	if user != "" && !usernameRe.MatchString(user) {
+		return "", false
+	}
+	exp, err := strconv.ParseInt(expText, 10, 64)
 	if err != nil || g.now().Unix() > exp {
-		return false
+		return "", false
 	}
-	return hmac.Equal([]byte(sig), []byte(g.mac(payload+"|"+g.code)))
+	if !hmac.Equal([]byte(sig), []byte(g.mac(strings.Replace(payload, ".", "|", 1)+"|"+g.code))) {
+		return "", false
+	}
+	return user, true
 }
 
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Code string `json:"code"`
+		Code     string `json:"code"`
+		Username string `json:"username"`
 	}
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&body); err != nil {
 		writeError(w, http.StatusBadRequest, "bad request")
 		return
 	}
-	token, ok, locked := s.gate.Check(body.Code)
+	user := strings.ToLower(strings.TrimSpace(body.Username))
+	if user != "" && !usernameRe.MatchString(user) {
+		writeError(w, http.StatusBadRequest, "Your name must be one word of lowercase letters (like tony).")
+		return
+	}
+	token, ok, locked := s.gate.Check(body.Code, user)
 	switch {
 	case locked:
 		writeError(w, http.StatusTooManyRequests, "Too many attempts. Try again later.")
@@ -105,7 +129,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 			Name: sessionCookie, Value: token, Path: "/", MaxAge: int(sessionLifetime.Seconds()),
 			HttpOnly: true, Secure: true, SameSite: http.SameSiteLaxMode,
 		})
-		writeJSON(w, map[string]string{"token": token})
+		writeJSON(w, map[string]string{"token": token, "user": user})
 	}
 }
 
@@ -119,10 +143,19 @@ func (s *Server) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 		if h := r.Header.Get("Authorization"); strings.HasPrefix(h, "Bearer ") {
 			token = strings.TrimPrefix(h, "Bearer ")
 		}
-		if !s.gate.Valid(token) {
+		user, ok := s.gate.Valid(token)
+		if !ok {
 			writeError(w, http.StatusUnauthorized, "Not signed in")
 			return
 		}
-		next(w, r)
+		next(w, r.WithContext(context.WithValue(r.Context(), userKey{}, user)))
 	}
+}
+
+type userKey struct{}
+
+// userOf is the signed-in account's name, or "" for a session from before accounts (or without a name).
+func userOf(r *http.Request) string {
+	u, _ := r.Context().Value(userKey{}).(string)
+	return u
 }

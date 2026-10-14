@@ -207,7 +207,9 @@ rm -f $J
 
 ## 9. On the phones (Tony does this)
 
-1. Open https://portal.fulcrologic.com in **Safari** and enter the access code.
+1. Open https://portal.fulcrologic.com in **Safari** and enter **your name** (one lowercase word, like `tony` or
+   `sabina`) and the access code. The name is your account for sync. Anyone with the code can use any name; that's
+   fine for the household, but it is not a password.
 2. Share → **Add to Home Screen**, then open it from the home-screen icon. From then on it runs full screen and works
    offline for lessons that are already loaded.
 3. In the app's Settings: set **Your name** (shown on shared lessons) and tap **Keep data on this device**, which
@@ -216,6 +218,11 @@ rm -f $J
 4. Android app → Settings → **Web app (Share to web)**: the URL is prefilled. Enter the access code and your name.
    Then, in the library, a lesson's menu → **Share to web** uploads the lesson with its cached glosses and
    translations (never word statuses). It appears under **Shared lessons** in the web app.
+5. **Sync between devices** (manual): set **Account** in the Android app's Settings → Web app to the same name used in
+   the web app. The library's sync button (⇅ in the web app) has **Sync up** (replace your account's copy on the server
+   with this device's lessons, pages and word statuses) and **Sync down** (replace this device's with the server's).
+   Each warns first when it would overwrite newer work: up when another device pushed since this one last synced,
+   down when this device changed since its last sync. Word meanings travel through the shared cache either way.
 
 ## Updating
 
@@ -241,6 +248,7 @@ Everything the server owns is under `/var/lib/spanish-reader`:
 |---|---|---|
 | `store/lessons/*.json` | shared lessons | yes |
 | `store/sentences/` | shared gloss/translation cache | yes (AI money went into it) |
+| `store/users/<name>/sync.json` | each account's synced lessons and vocabulary (`sync-<rev>.json`: the previous 5 pushes) | yes |
 | `secret` | token signing key | optional; losing it only signs everyone out |
 | `tts/` | regenerable MP3s and Piper WAVs | no |
 | `youtube/media/*.mp3` | downloaded YouTube audio (~30 MB per hour, kept) | optional; re-downloadable |

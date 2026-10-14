@@ -1,11 +1,15 @@
 // Calls to the Go server (same origin; the session is an HttpOnly cookie).
 import type { FoundPhrase, Gloss } from './core/gloss.ts';
+import type { BackupFile, SyncMeta } from './core/sync.ts';
 
 export class ApiError extends Error {
   readonly status: number;
-  constructor(status: number, message: string) {
+  /** The error response's JSON body. */
+  readonly data: Record<string, unknown>;
+  constructor(status: number, message: string, data: Record<string, unknown> = {}) {
     super(message);
     this.status = status;
+    this.data = data;
   }
 }
 
@@ -31,11 +35,11 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
     throw new NotSignedIn(401, 'Not signed in');
   }
   const data = await resp.json().catch(() => ({}));
-  if (!resp.ok) throw new ApiError(resp.status, (data as { error?: string }).error ?? `HTTP ${resp.status}`);
+  if (!resp.ok) throw new ApiError(resp.status, (data as { error?: string }).error ?? `HTTP ${resp.status}`, data as Record<string, unknown>);
   return data as T;
 }
 
-export interface SessionInfo { ok: boolean; tts: boolean; voice: string; youtube?: boolean }
+export interface SessionInfo { ok: boolean; tts: boolean; voice: string; youtube?: boolean; user?: string }
 export interface SharedLessonSummary {
   id: string; title: string; createdAt: number; words: number; sharedBy?: string; source?: string; videoId?: string;
 }
@@ -56,7 +60,7 @@ export interface SentenceData {
 }
 
 export const api = {
-  login: (code: string) => call<{ token: string }>('POST', '/api/login', { code }),
+  login: (code: string, username: string) => call<{ token: string; user: string }>('POST', '/api/login', { code, username }),
   session: () => call<SessionInfo>('GET', '/api/session'),
   ai: (system: string, user: string, items: number, improve = false) =>
     call<{ text: string }>('POST', '/api/ai', { system, user, items, improve }).then((r) => r.text),
@@ -71,6 +75,9 @@ export const api = {
     call<SharedLessonSummary>('POST', '/api/lessons', lesson),
   deleteShared: (id: string) => call<{ ok: boolean }>('DELETE', `/api/lessons/${encodeURIComponent(id)}`),
   cacheGet: (hashes: string[]) => call<Record<string, SentenceData>>('POST', '/api/cache/get', { hashes }),
+  syncMeta: () => call<SyncMeta>('GET', '/api/sync/meta'),
+  syncGet: () => call<SyncMeta & { snapshot: BackupFile | null }>('GET', '/api/sync'),
+  syncPut: (body: { baseRevision: number; force: boolean; device: string; snapshot: BackupFile }) => call<SyncMeta>('PUT', '/api/sync', body),
   cachePut: (sentences: SentenceData[]) => call<{ ok: boolean }>('POST', '/api/cache/put', { sentences }),
   audio: async (path: string): Promise<Blob> => {
     const resp = await fetch(path, { credentials: 'same-origin' });

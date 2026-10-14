@@ -152,42 +152,52 @@ func TestGateDelaysSerializesAndLocksOut(t *testing.T) {
 	var wg sync.WaitGroup
 	for i := 0; i < 5; i++ {
 		wg.Add(1)
-		go func() { defer wg.Done(); g.Check("000000") }()
+		go func() { defer wg.Done(); g.Check("000000", "") }()
 	}
 	wg.Wait()
 	if len(slept) != 5 || slept[0] != 2*time.Second {
 		t.Fatalf("each wrong code should cost 2s: %v", slept)
 	}
-	if _, ok, _ := g.Check(" 123456 "); !ok {
+	if _, ok, _ := g.Check(" 123456 ", ""); !ok {
 		t.Fatal("right code (with stray spaces) should pass")
 	}
 	for i := 0; i < lockoutFailures; i++ {
-		g.Check("999999")
+		g.Check("999999", "")
 	}
-	if _, ok, locked := g.Check("123456"); ok || !locked {
+	if _, ok, locked := g.Check("123456", ""); ok || !locked {
 		t.Fatal("after too many failures even the right code is refused")
 	}
 	// The window passes.
 	g.now = func() time.Time { return time.Now().Add(2 * lockoutWindow) }
-	if _, ok, _ := g.Check("123456"); !ok {
+	if _, ok, _ := g.Check("123456", ""); !ok {
 		t.Fatal("lockout should expire")
 	}
 }
 
 func TestTokens(t *testing.T) {
 	g := newGate("123456", []byte("s"))
-	tok, ok, _ := g.Check("123456")
-	if !ok || !g.Valid(tok) {
+	valid := func(g *Gate, tok string) bool { _, ok := g.Valid(tok); return ok }
+	tok, ok, _ := g.Check("123456", "")
+	if user, ok2 := g.Valid(tok); !ok || !ok2 || user != "" {
 		t.Fatal("issued token should be valid")
 	}
-	if g.Valid(tok+"x") || g.Valid("garbage") || g.Valid("") {
+	if valid(g, tok+"x") || valid(g, "garbage") || valid(g, "") {
 		t.Fatal("tampered tokens must be rejected")
 	}
-	if newGate("654321", []byte("s")).Valid(tok) {
+	if valid(newGate("654321", []byte("s")), tok) {
 		t.Fatal("changing the access code invalidates sessions")
 	}
+	named, _, _ := g.Check("123456", "sabina")
+	if user, ok := g.Valid(named); !ok || user != "sabina" {
+		t.Fatalf("named token: %q %v", user, ok)
+	}
+	exp, rest, _ := strings.Cut(named, ".")
+	_, sig, _ := strings.Cut(rest, ".")
+	if valid(g, exp+".tony."+sig) || valid(g, exp+"."+sig) {
+		t.Fatal("a token's name can't be changed or dropped")
+	}
 	g.now = func() time.Time { return time.Now().Add(sessionLifetime + time.Hour) }
-	if g.Valid(tok) {
+	if valid(g, tok) || valid(g, named) {
 		t.Fatal("expired token must be rejected")
 	}
 }
@@ -195,7 +205,7 @@ func TestTokens(t *testing.T) {
 func TestEverythingButLoginNeedsAuth(t *testing.T) {
 	_, ts := testServer(t, "")
 	for _, p := range [][2]string{{"GET", "/api/session"}, {"POST", "/api/ai"}, {"POST", "/api/tts"}, {"GET", "/api/lessons"},
-		{"POST", "/api/lessons"}, {"POST", "/api/cache/get"}, {"POST", "/api/cache/put"}, {"GET", "/api/audio/0123456789abcdef0123456789abcdef.mp3"}} {
+		{"POST", "/api/lessons"}, {"POST", "/api/cache/get"}, {"POST", "/api/cache/put"}, {"GET", "/api/sync"}, {"PUT", "/api/sync"}, {"GET", "/api/sync/meta"}, {"GET", "/api/audio/0123456789abcdef0123456789abcdef.mp3"}} {
 		resp, _ := do(t, ts, p[0], p[1], "", nil)
 		if resp.StatusCode != 401 {
 			t.Errorf("%s %s: got %d, want 401", p[0], p[1], resp.StatusCode)

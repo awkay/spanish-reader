@@ -100,3 +100,4 @@ h2 { font-size: 15px; color: var(--accent); margin: 20px 0 8px; }
 .practice textarea { margin: 8px 0; font-size: 18px; }
 .practice .ok { color: #2e7d32; }
 @media (prefers-color-scheme: dark) { .practice .ok { color: #81c995; } }
+.login input[type=text] { letter-spacing: normal; }

@@ -1,10 +1,11 @@
 import { useState } from 'preact/hooks';
 import * as db from '../db.ts';
-import { exportBackup, importBackup, settings as settingsObs, updateSettings } from '../services.ts';
+import { account, exportBackup, importBackup, settings as settingsObs, updateSettings } from '../services.ts';
 import { useObservable } from './hooks.ts';
 
 export function Settings({ onSignOut }: { onSignOut: () => void }) {
   const s = useObservable(settingsObs);
+  const user = useObservable(account);
   const [message, setMessage] = useState<string | null>(null);
 
   const download = async () => {
@@ -60,6 +61,7 @@ export function Settings({ onSignOut }: { onSignOut: () => void }) {
           <button onClick={async () => { await db.clear('audio'); setMessage('Saved audio cleared.'); }}>Clear saved audio</button>
         </div>
         <h2>Account</h2>
+        <p class="small muted">{user ? <>Signed in as <b>{user}</b>.</> : 'Signed in without a name: sign out and back in with your name to sync.'}</p>
         <button onClick={onSignOut}>Sign out</button>
       </main>
     </div>
