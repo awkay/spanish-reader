@@ -1,5 +1,6 @@
 // Calls to the Go server (same origin; the session is an HttpOnly cookie).
 import type { FoundPhrase, Gloss } from './core/gloss.ts';
+import type { DrillCard } from './core/drill.ts';
 import type { BackupFile, SyncMeta } from './core/sync.ts';
 
 export class ApiError extends Error {
@@ -75,6 +76,8 @@ export const api = {
     call<SharedLessonSummary>('POST', '/api/lessons', lesson),
   deleteShared: (id: string) => call<{ ok: boolean }>('DELETE', `/api/lessons/${encodeURIComponent(id)}`),
   cacheGet: (hashes: string[]) => call<Record<string, SentenceData>>('POST', '/api/cache/get', { hashes }),
+  drillGet: (verb: string) => call<{ verb: string; cards: DrillCard[] }>('GET', `/api/drill/${encodeURIComponent(verb)}`),
+  drillPut: (verb: string, cards: DrillCard[]) => call<{ verb: string; cards: DrillCard[] }>('PUT', `/api/drill/${encodeURIComponent(verb)}`, { cards }),
   syncMeta: () => call<SyncMeta>('GET', '/api/sync/meta'),
   syncGet: () => call<SyncMeta & { snapshot: BackupFile | null }>('GET', '/api/sync'),
   syncPut: (body: { baseRevision: number; force: boolean; device: string; snapshot: BackupFile }) => call<SyncMeta>('PUT', '/api/sync', body),

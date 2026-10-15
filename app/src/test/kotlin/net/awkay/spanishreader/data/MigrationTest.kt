@@ -41,5 +41,10 @@ class MigrationTest {
         }
         v4.execSQL("UPDATE lessons SET video_id = 'dQw4w9WgXcQ', source_url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'")
         v4.close()
+        val v5 = helper.runMigrationsAndValidate("m.db", 5, true)
+        v5.query("SELECT COUNT(*) FROM vocab").use { it.moveToFirst(); assertEquals(1, it.getInt(0)) }
+        v5.execSQL("INSERT INTO drill_cards (verb, json, stored_at) VALUES ('ir', '[]', 1)")
+        v5.execSQL("INSERT INTO drill_progress (card_id, correct, misses, last_millis, hidden) VALUES ('ir#1', 2, 0, 1, 0)")
+        v5.close()
     }
 }

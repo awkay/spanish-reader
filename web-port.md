@@ -248,6 +248,7 @@ Everything the server owns is under `/var/lib/spanish-reader`:
 |---|---|---|
 | `store/lessons/*.json` | shared lessons | yes |
 | `store/sentences/` | shared gloss/translation cache | yes (AI money went into it) |
+| `store/drill/<verb>.json` | shared verb-drill cards (written once by the AI, reviewed by `SR_AI_IMPROVE_MODEL`) | yes |
 | `store/users/<name>/sync.json` | each account's synced lessons and vocabulary (`sync-<rev>.json`: the previous 5 pushes) | yes |
 | `secret` | token signing key | optional; losing it only signs everyone out |
 | `tts/` | regenerable MP3s and Piper WAVs | no |

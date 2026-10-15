@@ -3,6 +3,7 @@ package net.awkay.spanishreader.core.backup
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import net.awkay.spanishreader.core.practice.DrillProgress
 import net.awkay.spanishreader.core.vocab.VocabEntry
 import net.awkay.spanishreader.core.vocab.WordStatus
 
@@ -48,6 +49,8 @@ data class BackupFile(
     val exportedAtMillis: Long,
     val lessons: List<BackupLesson> = emptyList(),
     val vocab: List<BackupVocab> = emptyList(),
+    /** Verb drill progress per card (cards themselves live on the server). */
+    val drill: List<DrillProgress> = emptyList(),
 ) {
     companion object {
         const val CURRENT_VERSION = 1

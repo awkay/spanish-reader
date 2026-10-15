@@ -87,3 +87,21 @@ class Converters {
     @TypeConverter
     fun codeToStatus(code: Int): WordStatus = WordStatus.fromCode(code)
 }
+
+/** One verb's drill cards (JSON list of DrillCard), as written once by the AI and shared through the web app. */
+@Entity(tableName = "drill_cards")
+data class DrillCardsEntity(
+    @PrimaryKey val verb: String,
+    val json: String,
+    @ColumnInfo(name = "stored_at") val storedAtMillis: Long,
+)
+
+/** The learner's record for one drill card (mirrors core DrillProgress). */
+@Entity(tableName = "drill_progress")
+data class DrillProgressEntity(
+    @PrimaryKey @ColumnInfo(name = "card_id") val cardId: String,
+    val correct: Int,
+    val misses: Int,
+    @ColumnInfo(name = "last_millis") val lastMillis: Long,
+    val hidden: Boolean,
+)

@@ -77,3 +77,33 @@ func TestSync(t *testing.T) {
 		}
 	}
 }
+
+func TestDrillCards(t *testing.T) {
+	_, ts := testServer(t, "")
+	tok := login(t, ts)
+	if resp, _ := do(t, ts, "GET", "/api/drill/ir", tok, nil); resp.StatusCode != 404 {
+		t.Fatalf("no cards yet: %d", resp.StatusCode)
+	}
+	first := map[string]any{"cards": []any{map[string]any{"id": "ir#1", "answer": "fuimos"}}}
+	resp, out := do(t, ts, "PUT", "/api/drill/ir", tok, first)
+	if resp.StatusCode != 200 || out["verb"] != "ir" {
+		t.Fatalf("put: %d %v", resp.StatusCode, out)
+	}
+	second := map[string]any{"cards": []any{map[string]any{"id": "ir#1", "answer": "vamos"}}}
+	_, out = do(t, ts, "PUT", "/api/drill/ir", tok, second)
+	if c := out["cards"].([]any)[0].(map[string]any); c["answer"] != "fuimos" {
+		t.Fatalf("the first set wins: %v", out)
+	}
+	_, out = do(t, ts, "GET", "/api/drill/ir", tok, nil)
+	if c := out["cards"].([]any)[0].(map[string]any); c["answer"] != "fuimos" {
+		t.Fatalf("get: %v", out)
+	}
+	for _, bad := range []string{"/api/drill/..%2Fx", "/api/drill/IR", "/api/drill/a"} {
+		if resp, _ := do(t, ts, "PUT", bad, tok, first); resp.StatusCode != 404 {
+			t.Errorf("%s: %d", bad, resp.StatusCode)
+		}
+	}
+	if resp, _ := do(t, ts, "PUT", "/api/drill/oír", tok, map[string]any{"cards": []any{map[string]any{"id": "x"}}}); resp.StatusCode != 400 {
+		t.Errorf("a card without an answer is refused: %d", resp.StatusCode)
+	}
+}

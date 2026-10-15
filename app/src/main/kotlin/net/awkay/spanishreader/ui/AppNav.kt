@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import net.awkay.spanishreader.ShareInbox
+import net.awkay.spanishreader.drill.DrillScreen
 import net.awkay.spanishreader.ui.importer.ImportScreen
 import net.awkay.spanishreader.ui.library.LibraryScreen
 import net.awkay.spanishreader.ui.library.SharedLibraryScreen
@@ -26,6 +27,7 @@ object Routes {
     const val SETTINGS = "settings"
     const val SHARED = "shared"
     const val PRACTICE = "practice"
+    const val DRILL = "drill"
     fun reader(id: Long) = "reader/$id"
     fun listen(id: Long) = "listen/$id"
 }
@@ -46,6 +48,7 @@ fun AppNav() {
                 onImport = { nav.navigate(Routes.IMPORT) },
                 onVocabulary = { nav.navigate(Routes.VOCAB) },
                 onPractice = { nav.navigate(Routes.PRACTICE) },
+                onDrill = { nav.navigate(Routes.DRILL) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
                 onGetFromWeb = { nav.navigate(Routes.SHARED) },
             )
@@ -71,6 +74,7 @@ fun AppNav() {
             val id = entry.arguments!!.getLong("id")
             ListenScreen(id, onBack = { nav.popBackStack() }, onRead = { nav.navigate(Routes.reader(id)) { popUpTo(Routes.LIBRARY) } })
         }
+        composable(Routes.DRILL) { DrillScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.PRACTICE) { PracticeScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.VOCAB) { VocabularyScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.SETTINGS) { SettingsScreen(onBack = { nav.popBackStack() }) }

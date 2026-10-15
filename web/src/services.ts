@@ -6,6 +6,9 @@ import {
   glossUserPrompt, pageWindow, parseGlosses, parseSentences, planPreGloss, sentenceUserPrompt,
 } from './core/gloss.ts';
 import { formKey, sentenceHash } from './core/hash.ts';
+import {
+  type CommonVerb, type DrillCard, type DrillProgress, type DrillVerdict, answerWords, checkDrill, filled, isLearned, record, writeCards,
+} from './core/drill.ts';
 import { type PracticeVerb, practiceVerbs } from './core/practice.ts';
 import { type BackupFile, type BackupLesson, type SyncMeta, type SyncState, fingerprint, hasLocalChanges, replacePlan, snapshot } from './core/sync.ts';
 import { type Page, type TokenizedText, cleanImport, paginate, pageWordForms, suggestTitle, tokenize } from './core/text.ts';
@@ -139,6 +142,98 @@ export async function loadPracticeVerbs(): Promise<PracticeVerb[]> {
   const exposed = [...vocab.get().values()].filter((e) => e.status >= Status.LEVEL_1 && e.status <= Status.KNOWN);
   const rows = await db.glossesForForms([...new Set(exposed.map((e) => formKey(e.form)))]);
   return practiceVerbs(exposed, (f) => (rows.get(formKey(f)) ?? []).map((r) => r.gloss));
+}
+
+// ---------- lightning verb drill ----------
+// Cards are written once per verb by the AI and shared through the server; progress is this device's (and synced).
+
+const DRILL_PROGRESS = 'drill:progress';
+const drillCardsKey = (verb: string) => `drill:cards:${verb}`;
+
+export const drillProgress = new Observable<Map<string, DrillProgress>>(new Map());
+/** Card sets loaded so far, by verb. */
+export const drillCards = new Observable<Map<string, DrillCard[]>>(new Map());
+
+export async function loadDrill() {
+  const rows = (await db.get<DrillProgress[]>('settings', DRILL_PROGRESS)) ?? [];
+  drillProgress.set(new Map(rows.map((p) => [p.cardId, p])));
+  const sets = new Map<string, DrillCard[]>();
+  for (const v of await db.getAll<unknown>('settings')) {
+    const o = v as { kind?: string; verb?: string; cards?: DrillCard[] };
+    if (o?.kind === 'drillCards' && o.verb && Array.isArray(o.cards)) sets.set(o.verb, o.cards);
+  }
+  drillCards.set(sets);
+}
+
+async function saveDrillProgress(m: Map<string, DrillProgress>) {
+  drillProgress.set(m);
+  await db.put('settings', [...m.values()], DRILL_PROGRESS);
+}
+
+async function keepCards(verb: string, cards: DrillCard[]) {
+  await db.put('settings', { kind: 'drillCards', verb, cards }, drillCardsKey(verb));
+  drillCards.set(new Map(drillCards.get()).set(verb, cards));
+}
+
+const writing = new Map<string, Promise<DrillCard[]>>();
+
+/** A verb's cards: this device's copy, else the server's shared set, else written by the AI now (and shared). */
+export function cardsFor(verb: CommonVerb): Promise<DrillCard[]> {
+  const have = drillCards.get().get(verb.infinitive);
+  if (have) return Promise.resolve(have);
+  let p = writing.get(verb.infinitive);
+  if (!p) {
+    p = (async () => {
+      let cards: DrillCard[] | null = null;
+      try {
+        cards = (await api.drillGet(verb.infinitive)).cards;
+      } catch (e) {
+        if (!(e instanceof ApiError && e.status === 404)) throw e;
+      }
+      if (!cards) {
+        // Written by the everyday model, checked by the stronger one ("improve"), since the set is shared for good.
+        const written = await writeCards(complete, verb, Math.random, (system, user) => api.ai(system, user, 1, true));
+        cards = await api.drillPut(verb.infinitive, written).then((r) => r.cards, () => written);
+      }
+      await keepCards(verb.infinitive, cards);
+      return cards;
+    })().finally(() => writing.delete(verb.infinitive));
+    writing.set(verb.infinitive, p);
+  }
+  return p;
+}
+
+/**
+ * Records an answer. A card answered right for the TO_LEARN-th time is learned, and its verb words go into the
+ * vocabulary as Known (the learner asked for drilled forms to count as known).
+ */
+export async function answerDrill(card: DrillCard, typed: string): Promise<{ verdict: DrillVerdict; learned: boolean }> {
+  const verdict = checkDrill(card, typed);
+  const m = new Map(drillProgress.get());
+  const before = m.get(card.id);
+  const after = record(before, card.id, verdict === 'correct', Date.now());
+  m.set(card.id, after);
+  await saveDrillProgress(m);
+  const learned = !isLearned(before) && isLearned(after);
+  if (learned) {
+    const sentence = filled(card);
+    const words = answerWords(card);
+    for (const w of words) {
+      const cur = vocab.get().get(w);
+      if (cur?.status === Status.KNOWN || cur?.status === Status.IGNORED) continue;
+      await setWordStatus(w, Status.KNOWN, sentence);
+      const e = vocab.get().get(w);
+      if (e && !e.lemma && w === words[words.length - 1]) await saveEntries([{ ...e, lemma: card.verb }]);
+    }
+  }
+  return { verdict, learned };
+}
+
+/** Sets a bad card aside: it no longer comes up and counts as done. */
+export async function hideDrillCard(card: DrillCard) {
+  const m = new Map(drillProgress.get());
+  m.set(card.id, { ...(m.get(card.id) ?? { cardId: card.id, correct: 0, misses: 0, lastMillis: 0 }), hidden: true });
+  await saveDrillProgress(m);
 }
 
 /** One free-form AI call through the server (verb practice). */
@@ -341,7 +436,7 @@ async function localState(): Promise<BackupFile> {
     title: l.title, text: l.text, createdAtMillis: l.createdAt, currentPage: l.currentPage,
     videoId: l.videoId ?? null, sourceUrl: l.sourceUrl ?? null, sharedId: l.sharedId ?? null,
   }));
-  return snapshot(ls, [...vocab.get().values()], Date.now());
+  return snapshot(ls, [...vocab.get().values()], Date.now(), [...drillProgress.get().values()]);
 }
 
 export interface SyncStatus { state: SyncState | null; server: SyncMeta | null; serverError: string | null; localChanges: boolean }
@@ -411,6 +506,7 @@ export async function syncDown(force = false, onProgress: (text: string) => void
   }));
   await db.clear('vocab');
   await db.putAll('vocab', entries);
+  await saveDrillProgress(new Map((snap.drill ?? []).map((d) => [d.cardId, { ...d, hidden: !!d.hidden }])));
   await loadVocab();
   await loadLessons();
   await saveSyncState(remote.revision, 'down');

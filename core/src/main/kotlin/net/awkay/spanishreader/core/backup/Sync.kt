@@ -2,6 +2,7 @@ package net.awkay.spanishreader.core.backup
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import net.awkay.spanishreader.core.practice.DrillProgress
 import java.security.MessageDigest
 
 /**
@@ -36,15 +37,21 @@ object Sync {
     private val canonical = Json { encodeDefaults = true }
 
     /** The state to push: lessons by creation time then title, vocabulary by form, so equal states encode equally. */
-    fun snapshot(lessons: List<BackupLesson>, vocab: List<BackupVocab>, exportedAtMillis: Long): BackupFile = BackupFile(
+    fun snapshot(
+        lessons: List<BackupLesson>,
+        vocab: List<BackupVocab>,
+        exportedAtMillis: Long,
+        drill: List<DrillProgress> = emptyList(),
+    ): BackupFile = BackupFile(
         exportedAtMillis = exportedAtMillis,
         lessons = lessons.sortedWith(compareBy({ it.createdAtMillis }, { it.title }, { it.text })),
         vocab = vocab.sortedBy { it.form },
+        drill = drill.sortedBy { it.cardId },
     )
 
     /** Identifies a device's state, ignoring when it was exported (sorts first, so row order doesn't matter). */
     fun fingerprint(state: BackupFile): String {
-        val sorted = snapshot(state.lessons, state.vocab, 0)
+        val sorted = snapshot(state.lessons, state.vocab, 0, state.drill)
         val bytes = canonical.encodeToString(BackupFile.serializer(), sorted).toByteArray()
         return MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
     }
@@ -72,5 +79,5 @@ object Sync {
 
     /** Sync down would discard local changes: the state differs from right after the last sync (or never synced). */
     fun hasLocalChanges(state: SyncState?, local: BackupFile): Boolean =
-        if (state == null) local.lessons.isNotEmpty() || local.vocab.isNotEmpty() else fingerprint(local) != state.fingerprint
+        if (state == null) local.lessons.isNotEmpty() || local.vocab.isNotEmpty() || local.drill.isNotEmpty() else fingerprint(local) != state.fingerprint
 }

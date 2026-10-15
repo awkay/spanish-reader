@@ -15,6 +15,7 @@ export function Library() {
   const settings = useObservable(settingsObs);
   const pregloss = useObservable(preGlossStatus);
   const { list: shared, error: sharedError, loading: sharedLoading } = useObservable(sharedObs);
+  const [practiceMenu, setPracticeMenu] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -58,7 +59,16 @@ export function Library() {
       <header class="bar">
         <h1>Spanish Reader</h1>
         <a class="icon-btn" href="#/sync" title="Sync">⇅</a>
-        <a class="icon-btn" href="#/practice" title="Verb practice">✍︎</a>
+        <button class="icon-btn" title="Verb practice" onClick={() => setPracticeMenu(!practiceMenu)}>✍︎</button>
+        {practiceMenu && (
+          <>
+            <div class="menu-backdrop" onClick={() => setPracticeMenu(false)} />
+            <nav class="menu">
+              <a href="#/drill">⚡ Lightning verbs</a>
+              <a href="#/practice">✍︎ Translate sentences</a>
+            </nav>
+          </>
+        )}
         <a class="icon-btn" href="#/vocab" title="Vocabulary">📖</a>
         <a class="icon-btn" href="#/settings" title="Settings">⚙︎</a>
       </header>

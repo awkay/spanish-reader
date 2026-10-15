@@ -303,6 +303,396 @@
     "samplePracticeUser": "Write one exercise:\n{\"verb\":\"ir\",\"verbMeaning\":\"to go\",\"tense\":\"ir (imperfect) a + infinitive\",\"tenseNote\":\"ir in the imperfect + a + infinitive (was/were going to ...)\",\"example\":\"iba a hablar\",\"subject\":\"nosotros (we)\",\"knownWords\":[\"casa\",\"aeropuerto\",\"\\\"día\\\"\"]}",
     "samplePracticeUserNoMeaningRetry": "Write one exercise:\n{\"verb\":\"ir\",\"tense\":\"ir (imperfect) a + infinitive\",\"tenseNote\":\"ir in the imperfect + a + infinitive (was/were going to ...)\",\"example\":\"iba a hablar\",\"subject\":\"nosotros (we)\",\"knownWords\":[\"casa\",\"aeropuerto\",\"\\\"día\\\"\"]}\nYour previous reply could not be parsed. Reply with valid JSON only.",
     "samplePracticeCheck": "Check this answer:\n{\"english\":\"We were going to go to the airport.\",\"verb\":\"ir\",\"tense\":\"ir (imperfect) a + infinitive\",\"subject\":\"nosotros (we)\",\"modelAnswer\":\"Íbamos a ir al aeropuerto.\",\"earlierTries\":[\"Vamos al aeropuerto\",\"Ibamos al aeropuerto\"],\"try\":3,\"answer\":\"Íbamos a ir al aeropuerto\",\"howToHint\":\"none\"}",
+    "drillSystem": "You write fast verb-conjugation drill cards for an English-speaking learner of Latin American Spanish.\nYou get one Spanish verb and a numbered list of situations, each a tense or construction and a subject.\nOnly write sentences where a native speaker would use exactly this verb: for ser, never a sentence that needs\nestar (location, temporary states) or ir (\"fue a la fiesta\" is ir); for estar, never one that needs ser.\nFor each situation write one card:\n- \"english\": a short, natural, everyday English sentence (4 to 12 words) whose Spanish translation needs the verb\n  in exactly that tense or construction with that subject. Make the subject and the time clear in the English\n  (\"Yesterday...\", \"Every day...\", \"Tomorrow...\").\n- \"spanish\": the natural Latin American Spanish translation with the verb form replaced by ___ (three\n  underscores). The blank holds only the verb words, including helper verbs (\"he ___\" is wrong, the blank is\n  \"he comido\"). Object and reflexive pronouns stay outside the blank, before the verb (\"Me ___ temprano.\" for\n  \"levanto\"); avoid forms where pronouns attach to the verb, such as affirmative commands of reflexive verbs.\n- \"answer\": the exact verb words that fill the blank, with correct accents (\"fuimos\", \"he comido\", \"voy a comer\").\n- \"also\": other forms that are equally correct in the blank (e.g. \"hubiese\" for \"hubiera\"), usually [].\nUse ustedes, never vosotros. Keep the rest of each sentence simple and different from the other cards.\nRespond with ONLY a JSON object, no markdown fences and no commentary, shaped exactly like:\n{\"cards\":[{\"n\":1,\"english\":\"...\",\"spanish\":\"...\",\"answer\":\"...\",\"also\":[]}]}\nInclude exactly one card per situation, in order.",
+    "drillReviewSystem": "You check verb drill cards written for an English-speaking learner of Latin American Spanish. Each card has an\nEnglish sentence, the verb, the intended tense or construction and subject, a Spanish sentence with ___ where\nthe verb goes, and the answer that fills the blank.\nA card is right only if all of these hold:\n- the Spanish, with the answer in the blank, is a natural and grammatical Latin American Spanish translation of\n  the English (check every word, agreement and the choice between ser and estar);\n- the answer is the given verb in the intended tense or construction and person, and a native speaker would use\n  this verb here (a sentence that needs estar instead of ser, ir instead of ser, etc. is wrong);\n- the blank holds only the verb words (helper verbs included), with pronouns outside it;\n- the English makes that form the natural choice.\nFix a card that is wrong when you can do it while keeping its verb, tense and subject (edit the English, the\nSpanish, the answer or \"also\"); otherwise set \"ok\" to false. Keep correct cards exactly as they are.\nRespond with ONLY a JSON object, no markdown fences and no commentary, shaped exactly like:\n{\"cards\":[{\"n\":1,\"ok\":true,\"english\":\"...\",\"spanish\":\"...\",\"answer\":\"...\",\"also\":[]}]}\nInclude every card, by its \"n\".",
+    "sampleDrillReview": "Check these cards:\n{\"verb\":\"ser\",\"verbMeaning\":\"to be\",\"cards\":[{\"n\":2,\"tense\":\"preterite\",\"subject\":\"él (he)\",\"english\":\"He was \\\"there\\\".\",\"spanish\":\"Él ___ allí.\",\"answer\":\"fue\",\"also\":[\"x\"]}]}\nYour previous reply could not be parsed. Reply with valid JSON only.",
+    "drillSet": [
+        "present",
+        "present",
+        "present",
+        "preterite",
+        "preterite",
+        "imperfect",
+        "near-future",
+        "present-perfect",
+        "future"
+    ],
+    "drillExtra": [
+        "conditional",
+        "present-subjunctive",
+        "imperative",
+        "past-progressive",
+        "present-progressive"
+    ],
+    "drillToLearn": 6,
+    "drillCardsPerVerb": 10,
+    "commonVerbs": [
+        {
+            "infinitive": "ser",
+            "meaning": "to be"
+        },
+        {
+            "infinitive": "estar",
+            "meaning": "to be (state, location)"
+        },
+        {
+            "infinitive": "tener",
+            "meaning": "to have"
+        },
+        {
+            "infinitive": "hacer",
+            "meaning": "to do, to make"
+        },
+        {
+            "infinitive": "ir",
+            "meaning": "to go"
+        },
+        {
+            "infinitive": "poder",
+            "meaning": "to be able to, can"
+        },
+        {
+            "infinitive": "decir",
+            "meaning": "to say, to tell"
+        },
+        {
+            "infinitive": "querer",
+            "meaning": "to want"
+        },
+        {
+            "infinitive": "ver",
+            "meaning": "to see"
+        },
+        {
+            "infinitive": "dar",
+            "meaning": "to give"
+        },
+        {
+            "infinitive": "saber",
+            "meaning": "to know (facts)"
+        },
+        {
+            "infinitive": "llegar",
+            "meaning": "to arrive"
+        },
+        {
+            "infinitive": "pasar",
+            "meaning": "to pass, to happen"
+        },
+        {
+            "infinitive": "deber",
+            "meaning": "should, to owe"
+        },
+        {
+            "infinitive": "poner",
+            "meaning": "to put"
+        },
+        {
+            "infinitive": "venir",
+            "meaning": "to come"
+        },
+        {
+            "infinitive": "hablar",
+            "meaning": "to speak"
+        },
+        {
+            "infinitive": "comer",
+            "meaning": "to eat"
+        },
+        {
+            "infinitive": "vivir",
+            "meaning": "to live"
+        },
+        {
+            "infinitive": "salir",
+            "meaning": "to leave, to go out"
+        },
+        {
+            "infinitive": "conocer",
+            "meaning": "to know (people, places)"
+        },
+        {
+            "infinitive": "pensar",
+            "meaning": "to think"
+        },
+        {
+            "infinitive": "creer",
+            "meaning": "to believe"
+        },
+        {
+            "infinitive": "llevar",
+            "meaning": "to carry, to wear"
+        },
+        {
+            "infinitive": "dejar",
+            "meaning": "to leave, to let"
+        },
+        {
+            "infinitive": "seguir",
+            "meaning": "to follow, to continue"
+        },
+        {
+            "infinitive": "encontrar",
+            "meaning": "to find"
+        },
+        {
+            "infinitive": "llamar",
+            "meaning": "to call"
+        },
+        {
+            "infinitive": "volver",
+            "meaning": "to return"
+        },
+        {
+            "infinitive": "tomar",
+            "meaning": "to take, to drink"
+        },
+        {
+            "infinitive": "trabajar",
+            "meaning": "to work"
+        },
+        {
+            "infinitive": "sentir",
+            "meaning": "to feel"
+        },
+        {
+            "infinitive": "esperar",
+            "meaning": "to wait, to hope"
+        },
+        {
+            "infinitive": "buscar",
+            "meaning": "to look for"
+        },
+        {
+            "infinitive": "entrar",
+            "meaning": "to enter"
+        },
+        {
+            "infinitive": "escribir",
+            "meaning": "to write"
+        },
+        {
+            "infinitive": "leer",
+            "meaning": "to read"
+        },
+        {
+            "infinitive": "entender",
+            "meaning": "to understand"
+        },
+        {
+            "infinitive": "pedir",
+            "meaning": "to ask for, to order"
+        },
+        {
+            "infinitive": "dormir",
+            "meaning": "to sleep"
+        },
+        {
+            "infinitive": "jugar",
+            "meaning": "to play"
+        },
+        {
+            "infinitive": "empezar",
+            "meaning": "to begin"
+        },
+        {
+            "infinitive": "recordar",
+            "meaning": "to remember"
+        },
+        {
+            "infinitive": "comprar",
+            "meaning": "to buy"
+        },
+        {
+            "infinitive": "beber",
+            "meaning": "to drink"
+        },
+        {
+            "infinitive": "abrir",
+            "meaning": "to open"
+        },
+        {
+            "infinitive": "necesitar",
+            "meaning": "to need"
+        },
+        {
+            "infinitive": "gustar",
+            "meaning": "to please, to like"
+        },
+        {
+            "infinitive": "mirar",
+            "meaning": "to look at"
+        },
+        {
+            "infinitive": "escuchar",
+            "meaning": "to listen"
+        },
+        {
+            "infinitive": "aprender",
+            "meaning": "to learn"
+        },
+        {
+            "infinitive": "ayudar",
+            "meaning": "to help"
+        },
+        {
+            "infinitive": "perder",
+            "meaning": "to lose"
+        },
+        {
+            "infinitive": "traer",
+            "meaning": "to bring"
+        },
+        {
+            "infinitive": "oír",
+            "meaning": "to hear"
+        },
+        {
+            "infinitive": "contar",
+            "meaning": "to count, to tell"
+        },
+        {
+            "infinitive": "terminar",
+            "meaning": "to finish"
+        },
+        {
+            "infinitive": "cambiar",
+            "meaning": "to change"
+        },
+        {
+            "infinitive": "pagar",
+            "meaning": "to pay"
+        },
+        {
+            "infinitive": "viajar",
+            "meaning": "to travel"
+        },
+        {
+            "infinitive": "caer",
+            "meaning": "to fall"
+        },
+        {
+            "infinitive": "morir",
+            "meaning": "to die"
+        },
+        {
+            "infinitive": "abrazar",
+            "meaning": "to hug"
+        },
+        {
+            "infinitive": "correr",
+            "meaning": "to run"
+        },
+        {
+            "infinitive": "estudiar",
+            "meaning": "to study"
+        },
+        {
+            "infinitive": "preguntar",
+            "meaning": "to ask"
+        },
+        {
+            "infinitive": "recibir",
+            "meaning": "to receive"
+        },
+        {
+            "infinitive": "usar",
+            "meaning": "to use"
+        },
+        {
+            "infinitive": "cocinar",
+            "meaning": "to cook"
+        },
+        {
+            "infinitive": "limpiar",
+            "meaning": "to clean"
+        },
+        {
+            "infinitive": "manejar",
+            "meaning": "to drive"
+        },
+        {
+            "infinitive": "caminar",
+            "meaning": "to walk"
+        },
+        {
+            "infinitive": "levantarse",
+            "meaning": "to get up"
+        },
+        {
+            "infinitive": "acostarse",
+            "meaning": "to go to bed"
+        },
+        {
+            "infinitive": "sentarse",
+            "meaning": "to sit down"
+        },
+        {
+            "infinitive": "vestirse",
+            "meaning": "to get dressed"
+        },
+        {
+            "infinitive": "lavar",
+            "meaning": "to wash"
+        },
+        {
+            "infinitive": "conducir",
+            "meaning": "to drive"
+        },
+        {
+            "infinitive": "servir",
+            "meaning": "to serve"
+        },
+        {
+            "infinitive": "repetir",
+            "meaning": "to repeat"
+        },
+        {
+            "infinitive": "cerrar",
+            "meaning": "to close"
+        },
+        {
+            "infinitive": "mostrar",
+            "meaning": "to show"
+        },
+        {
+            "infinitive": "olvidar",
+            "meaning": "to forget"
+        },
+        {
+            "infinitive": "ganar",
+            "meaning": "to win, to earn"
+        },
+        {
+            "infinitive": "nacer",
+            "meaning": "to be born"
+        },
+        {
+            "infinitive": "tocar",
+            "meaning": "to touch, to play (music)"
+        },
+        {
+            "infinitive": "enviar",
+            "meaning": "to send"
+        },
+        {
+            "infinitive": "explicar",
+            "meaning": "to explain"
+        },
+        {
+            "infinitive": "ofrecer",
+            "meaning": "to offer"
+        },
+        {
+            "infinitive": "conseguir",
+            "meaning": "to get, to obtain"
+        },
+        {
+            "infinitive": "elegir",
+            "meaning": "to choose"
+        }
+    ],
+    "sampleDrillUser": "Write the cards:\n{\"verb\":\"ir\",\"verbMeaning\":\"to go\",\"situations\":[{\"n\":1,\"tense\":\"preterite\",\"tenseNote\":\"preterite: a completed past action at a definite time (yesterday, last year, once)\",\"subject\":\"nosotros (we)\"},{\"n\":2,\"tense\":\"affirmative command\",\"tenseNote\":\"affirmative command to the subject\",\"subject\":\"tú (you, informal)\"}]}\nYour previous reply could not be parsed. Reply with valid JSON only.",
     "samplePracticeCheckFirst": "Check this answer:\n{\"english\":\"We were going to go to the airport.\",\"verb\":\"ir\",\"tense\":\"ir (imperfect) a + infinitive\",\"subject\":\"nosotros (we)\",\"modelAnswer\":\"Íbamos a ir al aeropuerto.\",\"modelVerbForm\":\"íbamos a ir\",\"earlierTries\":[],\"try\":1,\"answer\":\"x\",\"howToHint\":\"say where the problem is and which rule applies, without any Spanish words from the model answer\"}",
     "samplePracticeCheckSecond": "Check this answer:\n{\"english\":\"We were going to go to the airport.\",\"verb\":\"ir\",\"tense\":\"ir (imperfect) a + infinitive\",\"subject\":\"nosotros (we)\",\"modelAnswer\":\"Íbamos a ir al aeropuerto.\",\"modelVerbForm\":\"íbamos a ir\",\"earlierTries\":[\"y\"],\"try\":2,\"answer\":\"x\",\"howToHint\":\"give the correct verb form exactly (\\\"íbamos a ir\\\") and explain how the sentence is built, without giving the whole sentence\"}",
     "samplePracticeCheckSecondNoForm": "Check this answer:\n{\"english\":\"We were going to go to the airport.\",\"verb\":\"ir\",\"tense\":\"ir (imperfect) a + infinitive\",\"subject\":\"nosotros (we)\",\"modelAnswer\":\"Íbamos a ir al aeropuerto.\",\"earlierTries\":[\"y\"],\"try\":2,\"answer\":\"x\",\"howToHint\":\"give the correct verb form exactly and explain how the sentence is built, without giving the whole sentence\"}"

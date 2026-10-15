@@ -150,6 +150,29 @@ class GoldenFixtureTest {
             put("samplePracticeUser", p.exerciseUser(spec))
             put("samplePracticeUserNoMeaningRetry", p.exerciseUser(noMeaning, isRetry = true))
             put("samplePracticeCheck", p.checkUser(spec, ex, listOf("Vamos al aeropuerto", "Ibamos al aeropuerto"), "Íbamos a ir al aeropuerto"))
+            val d = net.awkay.spanishreader.core.practice.Drill
+            put("drillSystem", d.SYSTEM)
+            put("drillReviewSystem", d.REVIEW_SYSTEM)
+            put("sampleDrillReview", d.reviewUser(
+                net.awkay.spanishreader.core.practice.CommonVerb("ser", "to be"),
+                listOf(net.awkay.spanishreader.core.practice.DrillCard("ser#2", "ser", "preterite", "EL", "He was \"there\".", "Él ___ allí.", "fue", listOf("x"))),
+                isRetry = true,
+            ))
+            put("drillSet", buildJsonArray { d.SET.forEach { add(JsonPrimitive(it)) } })
+            put("drillExtra", buildJsonArray { d.EXTRA.forEach { add(JsonPrimitive(it)) } })
+            put("drillToLearn", d.TO_LEARN)
+            put("drillCardsPerVerb", d.CARDS_PER_VERB)
+            put("commonVerbs", buildJsonArray {
+                net.awkay.spanishreader.core.practice.CommonVerbs.ALL.forEach { v -> addJsonObject { put("infinitive", v.infinitive); put("meaning", v.meaning) } }
+            })
+            put("sampleDrillUser", d.user(
+                net.awkay.spanishreader.core.practice.CommonVerb("ir", "to go"),
+                listOf(
+                    net.awkay.spanishreader.core.practice.VerbTenses.byId("preterite")!! to net.awkay.spanishreader.core.practice.Subject.NOSOTROS,
+                    net.awkay.spanishreader.core.practice.VerbTenses.byId("imperative")!! to net.awkay.spanishreader.core.practice.Subject.TU,
+                ),
+                isRetry = true,
+            ))
             put("samplePracticeCheckFirst", p.checkUser(spec, ex.copy(verbForm = "íbamos a ir"), emptyList(), "x"))
             put("samplePracticeCheckSecond", p.checkUser(spec, ex.copy(verbForm = "íbamos a ir"), listOf("y"), "x"))
             put("samplePracticeCheckSecondNoForm", p.checkUser(spec, ex, listOf("y"), "x"))

@@ -59,6 +59,7 @@ fun LibraryScreen(
     onImport: () -> Unit,
     onVocabulary: () -> Unit,
     onPractice: () -> Unit,
+    onDrill: () -> Unit,
     onSettings: () -> Unit,
     onGetFromWeb: () -> Unit = {},
 ) {
@@ -81,7 +82,14 @@ fun LibraryScreen(
                 actions = {
                     IconButton(onClick = { syncing = true }) { Icon(Icons.Default.Sync, "Sync") }
                     IconButton(onClick = onGetFromWeb) { Icon(Icons.Default.CloudDownload, "Get from web") }
-                    IconButton(onClick = onPractice) { Icon(Icons.Default.School, "Verb practice") }
+                    Box {
+                        var practiceMenu by remember { mutableStateOf(false) }
+                        IconButton(onClick = { practiceMenu = true }) { Icon(Icons.Default.School, "Verb practice") }
+                        DropdownMenu(practiceMenu, { practiceMenu = false }) {
+                            DropdownMenuItem(text = { Text("⚡ Lightning verbs") }, onClick = { practiceMenu = false; onDrill() })
+                            DropdownMenuItem(text = { Text("Translate sentences") }, onClick = { practiceMenu = false; onPractice() })
+                        }
+                    }
                     IconButton(onClick = onVocabulary) { Icon(Icons.Default.Translate, "Vocabulary") }
                     IconButton(onClick = onSettings) { Icon(Icons.Default.Settings, "Settings") }
                 },

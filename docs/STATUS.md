@@ -1,6 +1,6 @@
 # Status
 
-_Last updated: 2026-10-14 (accounts + manual sync, all three parts)_
+_Last updated: 2026-10-15 (lightning verb drill, all three parts)_
 
 **Android app: all planned features built; Tony uses it daily.** New: a **web app (PWA) for iPhone** plus a small Go
 server, **deployed 2026-10-01 at https://portal.fulcrologic.com** (Linode, build-6, nginx site in
@@ -51,6 +51,47 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
   glosses/translations/idioms under the app's keys (local results win), then pre-glosses only what's missing.
 - **Voice**: Tony chose Piper `es_MX-claude-high` (no es-CO voice exists in Piper; Azure has es-CO neural voices if
   ever wanted). Changing it is one env setting, `SR_PIPER_MODEL`.
+
+## Lightning verb drill (2026-10-15; server + web + Android)
+- **Where**: the practice button (✍︎ web, mortarboard Android) now opens a menu: "⚡ Lightning verbs" (new) or
+  "Translate sentences" (the 2026-10-13 mode, unchanged).
+- **Idea**: type only the verb form that fills the blank, one try, checked on the device (no AI per answer).
+  - The check is exact up to case, spacing and end punctuation. Accent-only differences say "check the accent" and
+    count as a miss.
+  - A card is learned after `Drill.TO_LEARN` = 6 right answers, and a miss takes one back.
+  - Learned cards put their answer words into the vocabulary as **Known**; the last word gets lemma = the verb. This
+    is a new, explicitly requested exception to "never auto-promote".
+  - A verb is mastered when all its cards are learned. The drill walks `CommonVerbs.ALL` (95 verbs, frequency
+    order) and starts at the first verb not yet mastered, but any verb can be picked from the list.
+  - "Bad card" hides a card (counts as done).
+  - Rounds are the open cards, least practiced first; a mastered verb gets a review round.
+- **Cards** (`core/.../practice/VerbDrill.kt`, port `web/src/core/drill.ts`):
+  - 10 per verb. The situations are picked locally: present ×3, preterite ×2, imperfect, ir a + inf, present
+    perfect, future, plus one of conditional, present subjunctive, command or progressive, each with a distinct
+    subject.
+  - The AI writes them in one call: `Drill.SYSTEM` produces `{english, spanish with ___, answer, also}`.
+  - A second call with the "improve" model (`REVIEW_SYSTEM`) checks, fixes or drops each card. A review that never
+    parses keeps the cards as written; fewer than 5 cards fails.
+  - `withHelpers` moves helper verbs into the answer when the model leaves them outside the blank: "He ___" with
+    "sido" becomes "he sido", and "___ a ir" with "vas" becomes "vas a ir". The web version uses no regex lookbehind.
+  - Card ids are `verb#n`.
+- **Shared, written once**: `GET`/`PUT /api/drill/{verb}` (`server/drill.go`, `store/drill/<verb>.json`; the first set
+  stored wins, so card ids stay stable). Both clients look locally first, then at the server, then write and share.
+  - Web stores sets in the IndexedDB `settings` store (`drill:cards:<verb>`, progress under `drill:progress`).
+  - Android stores them in Room **v5** (`drill_cards`, `drill_progress`; AutoMigration 4→5, schema `5.json`). It
+    writes with the primary provider and reviews with `improveGlosser`, and shares when the web app is set up.
+  - Each client fetches the next verb's set in the background.
+- **Sync**: `BackupFile.drill` (progress per card) is part of the sync snapshot and fingerprint. Sync down replaces it.
+- **Verified live**: z.ai through the local server, glm-5.3-flash writing and glm-4.6 reviewing, on ser, estar, ir
+  and tener.
+  - Before the review, wrong cards got through ("Él fue en la reunión", "tú serás estar"). After it, the cards were
+    good; the remaining structural slip ("___ a ir") is now fixed in code.
+  - About 10–20 s per verb, once.
+  - Playwright: menu → drill → a real set → miss and hits → "Round done"; the server stored the set.
+  - Android: Robolectric `DrillServiceTest`: written once, shared, then reused by another device without AI; learned
+    after 6 adds the word as Known with its lemma. MigrationTest 4→5.
+- **Note**: the Linode's `SR_AI_IMPROVE_MODEL` is the reviewer. If it's unset, the writing model reviews its own
+  cards, which catches less.
 
 ## Accounts + manual sync (2026-10-14; server + web + Android)
 - **Accounts**: login takes `{username, code}`. The username is one lowercase word (`^[a-z]{1,32}$`), and the code is

@@ -4,6 +4,7 @@ import { account } from '../services.ts';
 import { Import } from './Import.tsx';
 import { Library } from './Library.tsx';
 import { Login } from './Login.tsx';
+import { Drill } from './Drill.tsx';
 import { Practice } from './Practice.tsx';
 import { Reader } from './Reader.tsx';
 import { Settings } from './Settings.tsx';
@@ -48,6 +49,7 @@ export function App() {
   if (hash === '#/import') return <Import />;
   if (hash === '#/vocab') return <Vocabulary />;
   if (hash === '#/practice') return <Practice />;
+  if (hash === '#/drill') return <Drill />;
   if (hash === '#/sync') return <Sync onSignOut={signOut} />;
   if (hash === '#/settings') return <Settings onSignOut={signOut} />;
   return <Library />;

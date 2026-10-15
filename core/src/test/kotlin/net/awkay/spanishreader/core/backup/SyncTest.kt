@@ -22,6 +22,12 @@ class SyncTest {
         assertEquals(Sync.fingerprint(s1), Sync.fingerprint(BackupFile(exportedAtMillis = 5, lessons = listOf(b, a), vocab = listOf(v1, v2))))
         assertNotEquals(Sync.fingerprint(s1), Sync.fingerprint(Sync.snapshot(listOf(a.copy(currentPage = 3), b), listOf(v1, v2), 10)))
         assertNotEquals(Sync.fingerprint(s1), Sync.fingerprint(Sync.snapshot(listOf(a, b), listOf(v1, v2.copy(status = 2)), 10)))
+        val d1 = net.awkay.spanishreader.core.practice.DrillProgress("ir#1", correct = 2)
+        val d2 = net.awkay.spanishreader.core.practice.DrillProgress("ser#1", correct = 6)
+        val withDrill = Sync.snapshot(listOf(a, b), listOf(v1, v2), 10, listOf(d2, d1))
+        assertEquals(listOf("ir#1", "ser#1"), withDrill.drill.map { it.cardId })
+        assertNotEquals(Sync.fingerprint(s1), Sync.fingerprint(withDrill))
+        assertEquals(withDrill, BackupCodec.decode(BackupCodec.encode(withDrill)))
     }
 
     @Test

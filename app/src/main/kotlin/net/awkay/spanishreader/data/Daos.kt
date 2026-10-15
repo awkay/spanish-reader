@@ -143,3 +143,27 @@ interface PhraseDao {
     @Query("DELETE FROM phrase_scans")
     suspend fun clearScans()
 }
+
+@Dao
+interface DrillDao {
+    @Query("SELECT * FROM drill_cards")
+    suspend fun allCards(): List<DrillCardsEntity>
+
+    @Query("SELECT * FROM drill_cards WHERE verb = :verb")
+    suspend fun cards(verb: String): DrillCardsEntity?
+
+    @Upsert
+    suspend fun upsertCards(cards: DrillCardsEntity)
+
+    @Query("SELECT * FROM drill_progress")
+    suspend fun progress(): List<DrillProgressEntity>
+
+    @Query("SELECT * FROM drill_progress")
+    fun observeProgress(): Flow<List<DrillProgressEntity>>
+
+    @Upsert
+    suspend fun upsertProgress(p: List<DrillProgressEntity>)
+
+    @Query("DELETE FROM drill_progress")
+    suspend fun clearProgress()
+}

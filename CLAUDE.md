@@ -11,8 +11,10 @@ Current state and next steps: `docs/STATUS.md` — read it first.
 - **Read mode**: paged text (~250 words/page). Words colored by status. Tap a word → bottom sheet with meaning
   *in this sentence*, lemma, grammar note (conjugation/clitics), status buttons.
 - **Vocabulary**: every word tapped is auto-added; list filterable by status, with saved context sentence.
-- **Verb practice**: a verb the reader has met + random tense/subject (picked locally); the AI writes an English
-  sentence using known words and grades the Spanish answer in 3 tries with growing hints (`core/.../practice/`).
+- **Verb practice** (menu): *Translate sentences*: a verb the reader has met + random tense/subject (picked locally);
+  the AI writes an English sentence using known words and grades the Spanish answer in 3 tries with growing hints.
+  *Lightning verbs*: common verbs in order, 10 shared AI-written cards each (sentence with the verb blank); type the
+  form, one try, checked locally; 6 right answers learn a card (`core/.../practice/VerbDrill.kt`).
 
 ### Word status model (mirrors LingQ)
 | Status | Highlight |
@@ -27,7 +29,8 @@ Rules:
 - Tapping a NEW word sets it to LEVEL_1 and adds it to the vocabulary.
 - **Finishing a page adds every word still NEW on it to the vocabulary at LEVEL_1** (with its sentence and any AI
   lemma/meaning). Words become KNOWN **only when the reader marks them** (per word, or the explicit
-  "Mark all blue words Known" button on a page). Never auto-promote to KNOWN — except through word families below.
+  "Mark all blue words Known" button on a page). Never auto-promote to KNOWN — except through word families below,
+  and a lightning-drill card learned (6 right answers), whose verb words become KNOWN (Tony's request).
 - Vocabulary is keyed by **lowercased written form** (`hablo` ≠ `hablas`, `sí` ≠ `si`). Lemma is stored for grouping.
 - **Word families** (Tony's request; `core/.../vocab/WordFamilies.kt`, ported in `web/src/core/vocab.ts`): a spelling
   still NEW whose AI lemma (from the cached gloss) matches a word already LEVEL_1..KNOWN (by that word's lemma or own
