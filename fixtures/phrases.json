@@ -1,0 +1,1416 @@
+{
+    "questions": [
+        {
+            "id": "questions#1",
+            "english": "What's your name?",
+            "spanish": "¿___ te llamas?",
+            "answer": "Cómo"
+        },
+        {
+            "id": "questions#2",
+            "english": "How are you?",
+            "spanish": "¿___ estás?",
+            "answer": "Cómo"
+        },
+        {
+            "id": "questions#3",
+            "english": "How do you say \"spoon\" in Spanish?",
+            "spanish": "¿___ se dice \"spoon\" en español?",
+            "answer": "Cómo"
+        },
+        {
+            "id": "questions#4",
+            "english": "How do I get to the bus station?",
+            "spanish": "¿___ llego a la estación de autobuses?",
+            "answer": "Cómo"
+        },
+        {
+            "id": "questions#5",
+            "english": "How do you spell your name?",
+            "spanish": "¿___ se escribe tu nombre?",
+            "answer": "Cómo"
+        },
+        {
+            "id": "questions#6",
+            "english": "How did the trip go?",
+            "spanish": "¿___ te fue en el viaje?",
+            "answer": "Cómo"
+        },
+        {
+            "id": "questions#7",
+            "english": "How was your weekend?",
+            "spanish": "¿___ tu fin de semana?",
+            "answer": "Qué tal",
+            "note": "qué tal = how is / how was, very common"
+        },
+        {
+            "id": "questions#8",
+            "english": "What is this?",
+            "spanish": "¿___ es esto?",
+            "answer": "Qué"
+        },
+        {
+            "id": "questions#9",
+            "english": "What do you want to eat?",
+            "spanish": "¿___ quieres comer?",
+            "answer": "Qué"
+        },
+        {
+            "id": "questions#10",
+            "english": "What time is it?",
+            "spanish": "¿___ hora es?",
+            "answer": "Qué"
+        },
+        {
+            "id": "questions#11",
+            "english": "What are you doing?",
+            "spanish": "¿___ estás haciendo?",
+            "answer": "Qué"
+        },
+        {
+            "id": "questions#12",
+            "english": "What does \"mesero\" mean?",
+            "spanish": "¿___ significa \"mesero\"?",
+            "answer": "Qué"
+        },
+        {
+            "id": "questions#13",
+            "english": "What happened?",
+            "spanish": "¿___ pasó?",
+            "answer": "Qué"
+        },
+        {
+            "id": "questions#14",
+            "english": "What kind of music do you like?",
+            "spanish": "¿___ tipo de música te gusta?",
+            "answer": "Qué"
+        },
+        {
+            "id": "questions#15",
+            "english": "What did you say?",
+            "spanish": "¿___ dijiste?",
+            "answer": "Qué"
+        },
+        {
+            "id": "questions#16",
+            "english": "What are you looking for?",
+            "spanish": "¿___ buscas?",
+            "answer": "Qué"
+        },
+        {
+            "id": "questions#17",
+            "english": "What's the weather like?",
+            "spanish": "¿___ tiempo hace?",
+            "answer": "Qué"
+        },
+        {
+            "id": "questions#18",
+            "english": "Which bus goes downtown?",
+            "spanish": "¿___ autobús va al centro?",
+            "answer": "Qué",
+            "note": "before a noun, \"which\" is usually qué"
+        },
+        {
+            "id": "questions#19",
+            "english": "Which shoes do you like more?",
+            "spanish": "¿___ zapatos te gustan más?",
+            "answer": "Qué",
+            "note": "before a noun, \"which\" is usually qué"
+        },
+        {
+            "id": "questions#20",
+            "english": "What do you do for a living?",
+            "spanish": "¿___ te dedicas?",
+            "answer": "A qué"
+        },
+        {
+            "id": "questions#21",
+            "english": "What are they talking about?",
+            "spanish": "¿___ están hablando?",
+            "answer": "De qué"
+        },
+        {
+            "id": "questions#22",
+            "english": "Who is that man?",
+            "spanish": "¿___ es ese señor?",
+            "answer": "Quién"
+        },
+        {
+            "id": "questions#23",
+            "english": "Who wants coffee?",
+            "spanish": "¿___ quiere café?",
+            "answer": "Quién"
+        },
+        {
+            "id": "questions#24",
+            "english": "Who are your friends?",
+            "spanish": "¿___ son tus amigos?",
+            "answer": "Quiénes",
+            "note": "quiénes when you expect more than one person"
+        },
+        {
+            "id": "questions#25",
+            "english": "Who called you?",
+            "spanish": "¿___ te llamó?",
+            "answer": "Quién"
+        },
+        {
+            "id": "questions#26",
+            "english": "Who is it? (at the door)",
+            "spanish": "¿___ es?",
+            "answer": "Quién"
+        },
+        {
+            "id": "questions#27",
+            "english": "Whose phone is this?",
+            "spanish": "¿___ es este celular?",
+            "answer": "De quién",
+            "note": "whose = de quién"
+        },
+        {
+            "id": "questions#28",
+            "english": "Whose idea was it?",
+            "spanish": "¿___ fue la idea?",
+            "answer": "De quién",
+            "note": "whose = de quién"
+        },
+        {
+            "id": "questions#29",
+            "english": "Who are you going with?",
+            "spanish": "¿___ vas?",
+            "answer": "Con quién"
+        },
+        {
+            "id": "questions#30",
+            "english": "Who did you talk to?",
+            "spanish": "¿___ hablaste?",
+            "answer": "Con quién"
+        },
+        {
+            "id": "questions#31",
+            "english": "Who is this gift for?",
+            "spanish": "¿___ es este regalo?",
+            "answer": "Para quién"
+        },
+        {
+            "id": "questions#32",
+            "english": "Where is the bathroom?",
+            "spanish": "¿___ está el baño?",
+            "answer": "Dónde"
+        },
+        {
+            "id": "questions#33",
+            "english": "Where do you live?",
+            "spanish": "¿___ vives?",
+            "answer": "Dónde"
+        },
+        {
+            "id": "questions#34",
+            "english": "Where can I buy tickets?",
+            "spanish": "¿___ puedo comprar boletos?",
+            "answer": "Dónde"
+        },
+        {
+            "id": "questions#35",
+            "english": "Where did you get that shirt?",
+            "spanish": "¿___ conseguiste esa camisa?",
+            "answer": "Dónde"
+        },
+        {
+            "id": "questions#36",
+            "english": "Where should we meet?",
+            "spanish": "¿___ nos vemos?",
+            "answer": "Dónde"
+        },
+        {
+            "id": "questions#37",
+            "english": "Where are you going?",
+            "spanish": "¿___ vas?",
+            "answer": "Adónde",
+            "note": "going somewhere: adónde (also written a dónde)"
+        },
+        {
+            "id": "questions#38",
+            "english": "Where does this bus go?",
+            "spanish": "¿___ va este autobús?",
+            "answer": "Adónde",
+            "note": "going somewhere: adónde (also written a dónde)"
+        },
+        {
+            "id": "questions#39",
+            "english": "Where are you from?",
+            "spanish": "¿___ eres?",
+            "answer": "De dónde"
+        },
+        {
+            "id": "questions#40",
+            "english": "Where is your family from?",
+            "spanish": "¿___ es tu familia?",
+            "answer": "De dónde"
+        },
+        {
+            "id": "questions#41",
+            "english": "When is your birthday?",
+            "spanish": "¿___ es tu cumpleaños?",
+            "answer": "Cuándo"
+        },
+        {
+            "id": "questions#42",
+            "english": "When did you arrive?",
+            "spanish": "¿___ llegaste?",
+            "answer": "Cuándo"
+        },
+        {
+            "id": "questions#43",
+            "english": "When are we leaving?",
+            "spanish": "¿___ nos vamos?",
+            "answer": "Cuándo"
+        },
+        {
+            "id": "questions#44",
+            "english": "When did you learn Spanish?",
+            "spanish": "¿___ aprendiste español?",
+            "answer": "Cuándo"
+        },
+        {
+            "id": "questions#45",
+            "english": "Since when have you worked here?",
+            "spanish": "¿___ trabajas aquí?",
+            "answer": "Desde cuándo"
+        },
+        {
+            "id": "questions#46",
+            "english": "What time does the movie start?",
+            "spanish": "¿___ empieza la película?",
+            "answer": "A qué hora",
+            "note": "at what time = a qué hora"
+        },
+        {
+            "id": "questions#47",
+            "english": "What time do you get up?",
+            "spanish": "¿___ te levantas?",
+            "answer": "A qué hora",
+            "note": "at what time = a qué hora"
+        },
+        {
+            "id": "questions#48",
+            "english": "What time does the store open?",
+            "spanish": "¿___ abre la tienda?",
+            "answer": "A qué hora",
+            "note": "at what time = a qué hora"
+        },
+        {
+            "id": "questions#49",
+            "english": "How much is it?",
+            "spanish": "¿___ cuesta?",
+            "answer": "Cuánto"
+        },
+        {
+            "id": "questions#50",
+            "english": "How much are the avocados?",
+            "spanish": "¿___ cuestan los aguacates?",
+            "answer": "Cuánto"
+        },
+        {
+            "id": "questions#51",
+            "english": "How much do I owe you?",
+            "spanish": "¿___ le debo?",
+            "answer": "Cuánto"
+        },
+        {
+            "id": "questions#52",
+            "english": "How much milk do you want?",
+            "spanish": "¿___ leche quieres?",
+            "answer": "Cuánta",
+            "note": "cuánto agrees with the noun: cuánta leche"
+        },
+        {
+            "id": "questions#53",
+            "english": "How much water do you drink a day?",
+            "spanish": "¿___ agua tomas al día?",
+            "answer": "Cuánta",
+            "note": "agua is feminine: cuánta agua"
+        },
+        {
+            "id": "questions#54",
+            "english": "How many brothers and sisters do you have?",
+            "spanish": "¿___ hermanos tienes?",
+            "answer": "Cuántos"
+        },
+        {
+            "id": "questions#55",
+            "english": "How many people are coming?",
+            "spanish": "¿___ personas vienen?",
+            "answer": "Cuántas",
+            "note": "cuánto agrees with the noun: cuántas personas"
+        },
+        {
+            "id": "questions#56",
+            "english": "How many times have you been to Mexico?",
+            "spanish": "¿___ veces has ido a México?",
+            "answer": "Cuántas"
+        },
+        {
+            "id": "questions#57",
+            "english": "How old are you?",
+            "spanish": "¿___ años tienes?",
+            "answer": "Cuántos",
+            "note": "age: ¿cuántos años tienes? (literally \"how many years do you have\")"
+        },
+        {
+            "id": "questions#58",
+            "english": "How long have you lived here?",
+            "spanish": "¿___ tiempo llevas viviendo aquí?",
+            "answer": "Cuánto"
+        },
+        {
+            "id": "questions#59",
+            "english": "How long does the trip take?",
+            "spanish": "¿___ dura el viaje?",
+            "answer": "Cuánto"
+        },
+        {
+            "id": "questions#60",
+            "english": "How often do you go to the gym?",
+            "spanish": "¿___ vas al gimnasio?",
+            "answer": "Cada cuánto",
+            "note": "also: con qué frecuencia"
+        },
+        {
+            "id": "questions#61",
+            "english": "How far is the airport?",
+            "spanish": "¿___ está el aeropuerto?",
+            "answer": "Qué tan lejos",
+            "note": "qué tan + adjective = how (far, big, ...)"
+        },
+        {
+            "id": "questions#62",
+            "english": "How big is the house?",
+            "spanish": "¿___ grande es la casa?",
+            "answer": "Qué tan",
+            "note": "qué tan + adjective = how (far, big, ...)"
+        },
+        {
+            "id": "questions#63",
+            "english": "Which one do you want?",
+            "spanish": "¿___ quieres?",
+            "answer": "Cuál"
+        },
+        {
+            "id": "questions#64",
+            "english": "Which ones are yours?",
+            "spanish": "¿___ son los tuyos?",
+            "answer": "Cuáles"
+        },
+        {
+            "id": "questions#65",
+            "english": "What is your phone number?",
+            "spanish": "¿___ es tu número de teléfono?",
+            "answer": "Cuál",
+            "note": "\"what is\" + noun is usually cuál es"
+        },
+        {
+            "id": "questions#66",
+            "english": "What's the difference?",
+            "spanish": "¿___ es la diferencia?",
+            "answer": "Cuál",
+            "note": "\"what is\" + noun is usually cuál es"
+        },
+        {
+            "id": "questions#67",
+            "english": "Why are you sad?",
+            "spanish": "¿___ estás triste?",
+            "answer": "Por qué"
+        },
+        {
+            "id": "questions#68",
+            "english": "Why didn't you come?",
+            "spanish": "¿___ no viniste?",
+            "answer": "Por qué"
+        },
+        {
+            "id": "questions#69",
+            "english": "Why not?",
+            "spanish": "¿___ no?",
+            "answer": "Por qué",
+            "note": "the answer \"because\" is porque, one word"
+        },
+        {
+            "id": "questions#70",
+            "english": "What is this for?",
+            "spanish": "¿___ sirve esto?",
+            "answer": "Para qué",
+            "note": "para qué = what for (purpose)"
+        },
+        {
+            "id": "questions#71",
+            "english": "What do you need the money for?",
+            "spanish": "¿___ necesitas el dinero?",
+            "answer": "Para qué",
+            "note": "para qué = what for (purpose)"
+        }
+    ],
+    "verbs": [
+        {
+            "id": "verbs#1",
+            "english": "What are you doing tonight?",
+            "spanish": "¿Qué ___ esta noche?",
+            "answer": "haces",
+            "verb": "hacer",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#2",
+            "english": "I do my homework after dinner.",
+            "spanish": "___ la tarea después de cenar.",
+            "answer": "Hago",
+            "verb": "hacer",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#3",
+            "english": "We made a cake for her birthday.",
+            "spanish": "___ un pastel para su cumpleaños.",
+            "answer": "Hicimos",
+            "verb": "hacer",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#4",
+            "english": "What did you do yesterday?",
+            "spanish": "¿Qué ___ ayer?",
+            "answer": "hiciste",
+            "verb": "hacer",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#5",
+            "english": "It's very hot today.",
+            "spanish": "Hoy ___ mucho calor.",
+            "answer": "hace",
+            "verb": "hacer",
+            "tense": "present",
+            "note": "weather uses hacer: hace calor, hace frío"
+        },
+        {
+            "id": "verbs#6",
+            "english": "I'm going to make dinner.",
+            "spanish": "___ la cena.",
+            "answer": "Voy a hacer",
+            "verb": "hacer",
+            "tense": "near-future"
+        },
+        {
+            "id": "verbs#7",
+            "english": "Have you done the shopping yet?",
+            "spanish": "¿Ya ___ las compras?",
+            "answer": "has hecho",
+            "verb": "hacer",
+            "tense": "present-perfect",
+            "note": "hecho is irregular"
+        },
+        {
+            "id": "verbs#8",
+            "english": "Do your homework, please. (to a child)",
+            "spanish": "___ la tarea, por favor.",
+            "answer": "Haz",
+            "verb": "hacer",
+            "tense": "imperative",
+            "note": "tú command of hacer: haz"
+        },
+        {
+            "id": "verbs#9",
+            "english": "When I was a kid, I played a lot of sports.",
+            "spanish": "De niño, ___ mucho deporte.",
+            "answer": "hacía",
+            "verb": "hacer",
+            "tense": "imperfect"
+        },
+        {
+            "id": "verbs#10",
+            "english": "I have two kids.",
+            "spanish": "___ dos hijos.",
+            "answer": "Tengo",
+            "verb": "tener",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#11",
+            "english": "Do you have time?",
+            "spanish": "¿___ tiempo?",
+            "answer": "Tienes",
+            "verb": "tener",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#12",
+            "english": "We have to go.",
+            "spanish": "___ que irnos.",
+            "answer": "Tenemos",
+            "verb": "tener",
+            "tense": "present",
+            "note": "tener que + infinitive = have to"
+        },
+        {
+            "id": "verbs#13",
+            "english": "I'm hungry.",
+            "spanish": "___ hambre.",
+            "answer": "Tengo",
+            "verb": "tener",
+            "tense": "present",
+            "note": "hunger, thirst, cold, fear: tener hambre, sed, frío, miedo"
+        },
+        {
+            "id": "verbs#14",
+            "english": "My son is ten years old.",
+            "spanish": "Mi hijo ___ diez años.",
+            "answer": "tiene",
+            "verb": "tener",
+            "tense": "present",
+            "note": "age uses tener"
+        },
+        {
+            "id": "verbs#15",
+            "english": "They're right.",
+            "spanish": "___ razón.",
+            "answer": "Tienen",
+            "verb": "tener",
+            "tense": "present",
+            "note": "to be right = tener razón"
+        },
+        {
+            "id": "verbs#16",
+            "english": "She had a cold last week.",
+            "spanish": "___ un resfriado la semana pasada.",
+            "answer": "Tuvo",
+            "verb": "tener",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#17",
+            "english": "We had a dog when I was little.",
+            "spanish": "___ un perro cuando yo era chico.",
+            "answer": "Teníamos",
+            "verb": "tener",
+            "tense": "imperfect"
+        },
+        {
+            "id": "verbs#18",
+            "english": "You're going to have to wait. (formal)",
+            "spanish": "___ que esperar.",
+            "answer": "Va a tener",
+            "verb": "tener",
+            "tense": "near-future"
+        },
+        {
+            "id": "verbs#19",
+            "english": "I have never been to Spain.",
+            "spanish": "Nunca ___ a España.",
+            "answer": "he ido",
+            "verb": "haber",
+            "tense": "present-perfect",
+            "note": "have + done = haber + participle"
+        },
+        {
+            "id": "verbs#20",
+            "english": "Have you seen my keys?",
+            "spanish": "¿___ mis llaves?",
+            "answer": "Has visto",
+            "verb": "haber",
+            "tense": "present-perfect"
+        },
+        {
+            "id": "verbs#21",
+            "english": "We have finished the work.",
+            "spanish": "___ el trabajo.",
+            "answer": "Hemos terminado",
+            "verb": "haber",
+            "tense": "present-perfect"
+        },
+        {
+            "id": "verbs#22",
+            "english": "She hasn't arrived yet.",
+            "spanish": "Todavía no ___.",
+            "answer": "ha llegado",
+            "verb": "haber",
+            "tense": "present-perfect"
+        },
+        {
+            "id": "verbs#23",
+            "english": "Have you all eaten yet?",
+            "spanish": "¿Ya ___?",
+            "answer": "han comido",
+            "verb": "haber",
+            "tense": "present-perfect"
+        },
+        {
+            "id": "verbs#24",
+            "english": "There is a pharmacy on the corner.",
+            "spanish": "___ una farmacia en la esquina.",
+            "answer": "Hay",
+            "verb": "haber",
+            "tense": "present",
+            "note": "there is / there are = hay"
+        },
+        {
+            "id": "verbs#25",
+            "english": "Is there a bank near here?",
+            "spanish": "¿___ un banco cerca de aquí?",
+            "answer": "Hay",
+            "verb": "haber",
+            "tense": "present",
+            "note": "there is / there are = hay"
+        },
+        {
+            "id": "verbs#26",
+            "english": "There were a lot of people at the party.",
+            "spanish": "___ mucha gente en la fiesta.",
+            "answer": "Había",
+            "verb": "haber",
+            "tense": "imperfect",
+            "note": "there was / there were = había"
+        },
+        {
+            "id": "verbs#27",
+            "english": "There's going to be a lot of traffic.",
+            "spanish": "___ mucho tráfico.",
+            "answer": "Va a haber",
+            "verb": "haber",
+            "tense": "near-future"
+        },
+        {
+            "id": "verbs#28",
+            "english": "I take the bus to work.",
+            "spanish": "___ el autobús para ir al trabajo.",
+            "answer": "Tomo",
+            "verb": "tomar",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#29",
+            "english": "We drink coffee every morning.",
+            "spanish": "___ café todas las mañanas.",
+            "answer": "Tomamos",
+            "verb": "tomar",
+            "tense": "present",
+            "note": "tomar also means to drink"
+        },
+        {
+            "id": "verbs#30",
+            "english": "She took a lot of photos.",
+            "spanish": "___ muchas fotos.",
+            "answer": "Tomó",
+            "verb": "tomar",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#31",
+            "english": "Take the medicine with food. (formal)",
+            "spanish": "___ la medicina con comida.",
+            "answer": "Tome",
+            "verb": "tomar",
+            "tense": "imperative",
+            "note": "usted command: -ar verbs end in -e"
+        },
+        {
+            "id": "verbs#32",
+            "english": "Let's take a taxi.",
+            "spanish": "___ un taxi.",
+            "answer": "Tomemos",
+            "verb": "tomar",
+            "tense": "imperative",
+            "note": "let's = nosotros command"
+        },
+        {
+            "id": "verbs#33",
+            "english": "I'm going to take a nap.",
+            "spanish": "___ una siesta.",
+            "answer": "Voy a tomar",
+            "verb": "tomar",
+            "tense": "near-future"
+        },
+        {
+            "id": "verbs#34",
+            "english": "I'm going to the store.",
+            "spanish": "___ a la tienda.",
+            "answer": "Voy",
+            "verb": "ir",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#35",
+            "english": "Are you going to the party tomorrow?",
+            "spanish": "¿___ a la fiesta mañana?",
+            "answer": "Vas",
+            "verb": "ir",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#36",
+            "english": "We went to the beach on Sunday.",
+            "spanish": "___ a la playa el domingo.",
+            "answer": "Fuimos",
+            "verb": "ir",
+            "tense": "preterite",
+            "note": "ir and ser share the preterite: fui, fuiste, fue..."
+        },
+        {
+            "id": "verbs#37",
+            "english": "Where did you go on vacation?",
+            "spanish": "¿Adónde ___ de vacaciones?",
+            "answer": "fuiste",
+            "verb": "ir",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#38",
+            "english": "They used to go to church every Sunday.",
+            "spanish": "___ a misa todos los domingos.",
+            "answer": "Iban",
+            "verb": "ir",
+            "tense": "imperfect"
+        },
+        {
+            "id": "verbs#39",
+            "english": "Let's go!",
+            "spanish": "¡___!",
+            "answer": "Vamos",
+            "verb": "ir",
+            "tense": "imperative"
+        },
+        {
+            "id": "verbs#40",
+            "english": "Go to the second floor. (formal)",
+            "spanish": "___ al segundo piso.",
+            "answer": "Vaya",
+            "verb": "ir",
+            "tense": "imperative"
+        },
+        {
+            "id": "verbs#41",
+            "english": "I'm leaving now.",
+            "spanish": "Ya me ___.",
+            "answer": "voy",
+            "verb": "irse",
+            "tense": "present",
+            "note": "irse = to leave"
+        },
+        {
+            "id": "verbs#42",
+            "english": "I got a new job.",
+            "spanish": "___ un trabajo nuevo.",
+            "answer": "Conseguí",
+            "verb": "conseguir",
+            "tense": "preterite",
+            "note": "get (obtain) = conseguir"
+        },
+        {
+            "id": "verbs#43",
+            "english": "Did you get the tickets?",
+            "spanish": "¿___ los boletos?",
+            "answer": "Conseguiste",
+            "verb": "conseguir",
+            "tense": "preterite",
+            "note": "get (obtain) = conseguir"
+        },
+        {
+            "id": "verbs#44",
+            "english": "We can't get a taxi.",
+            "spanish": "No ___ taxi.",
+            "answer": "conseguimos",
+            "verb": "conseguir",
+            "tense": "present",
+            "note": "get (obtain) = conseguir"
+        },
+        {
+            "id": "verbs#45",
+            "english": "I got home late.",
+            "spanish": "___ tarde a la casa.",
+            "answer": "Llegué",
+            "verb": "llegar",
+            "tense": "preterite",
+            "note": "get (somewhere) = llegar"
+        },
+        {
+            "id": "verbs#46",
+            "english": "What time do you get to work?",
+            "spanish": "¿A qué hora ___ al trabajo?",
+            "answer": "llegas",
+            "verb": "llegar",
+            "tense": "present",
+            "note": "get (somewhere) = llegar"
+        },
+        {
+            "id": "verbs#47",
+            "english": "I got a message from my boss.",
+            "spanish": "___ un mensaje de mi jefe.",
+            "answer": "Recibí",
+            "verb": "recibir",
+            "tense": "preterite",
+            "note": "get (receive) = recibir"
+        },
+        {
+            "id": "verbs#48",
+            "english": "She got very angry.",
+            "spanish": "Se ___ mucho.",
+            "answer": "enojó",
+            "verb": "enojarse",
+            "tense": "preterite",
+            "note": "get angry = enojarse"
+        },
+        {
+            "id": "verbs#49",
+            "english": "I'm getting tired.",
+            "spanish": "Me ___.",
+            "answer": "estoy cansando",
+            "verb": "cansarse",
+            "tense": "present-progressive",
+            "note": "getting + adjective is often a reflexive verb"
+        },
+        {
+            "id": "verbs#50",
+            "english": "I'll have the chicken. (ordering)",
+            "spanish": "Yo ___ el pollo.",
+            "answer": "pido",
+            "verb": "pedir",
+            "tense": "present",
+            "note": "order (food) = pedir"
+        },
+        {
+            "id": "verbs#51",
+            "english": "What did you order?",
+            "spanish": "¿Qué ___?",
+            "answer": "pediste",
+            "verb": "pedir",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#52",
+            "english": "We're going to order a pizza.",
+            "spanish": "___ una pizza.",
+            "answer": "Vamos a pedir",
+            "verb": "pedir",
+            "tense": "near-future"
+        },
+        {
+            "id": "verbs#53",
+            "english": "She always orders the same thing.",
+            "spanish": "Siempre ___ lo mismo.",
+            "answer": "pide",
+            "verb": "pedir",
+            "tense": "present",
+            "note": "e→i: pido, pides, pide"
+        },
+        {
+            "id": "verbs#54",
+            "english": "Ask for the check, please.",
+            "spanish": "___ la cuenta, por favor.",
+            "answer": "Pide",
+            "verb": "pedir",
+            "tense": "imperative"
+        },
+        {
+            "id": "verbs#55",
+            "english": "I asked him for help.",
+            "spanish": "Le ___ ayuda.",
+            "answer": "pedí",
+            "verb": "pedir",
+            "tense": "preterite",
+            "note": "ask for something = pedir; ask a question = preguntar"
+        },
+        {
+            "id": "verbs#56",
+            "english": "I'm a teacher.",
+            "spanish": "___ maestro.",
+            "answer": "Soy",
+            "verb": "ser",
+            "tense": "present",
+            "note": "ser: who or what you are (profession, origin)"
+        },
+        {
+            "id": "verbs#57",
+            "english": "We're from Texas.",
+            "spanish": "___ de Texas.",
+            "answer": "Somos",
+            "verb": "ser",
+            "tense": "present",
+            "note": "ser: origin"
+        },
+        {
+            "id": "verbs#58",
+            "english": "It's one o'clock.",
+            "spanish": "___ la una.",
+            "answer": "Es",
+            "verb": "ser",
+            "tense": "present",
+            "note": "time of day uses ser: es la una, son las dos"
+        },
+        {
+            "id": "verbs#59",
+            "english": "It's two thirty.",
+            "spanish": "___ las dos y media.",
+            "answer": "Son",
+            "verb": "ser",
+            "tense": "present",
+            "note": "time of day uses ser: es la una, son las dos"
+        },
+        {
+            "id": "verbs#60",
+            "english": "These are my friends.",
+            "spanish": "Estos ___ mis amigos.",
+            "answer": "son",
+            "verb": "ser",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#61",
+            "english": "Are you Mrs. López? (formal)",
+            "spanish": "¿___ la señora López?",
+            "answer": "Es",
+            "verb": "ser",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#62",
+            "english": "The party was on Saturday.",
+            "spanish": "La fiesta ___ el sábado.",
+            "answer": "fue",
+            "verb": "ser",
+            "tense": "preterite",
+            "note": "events (when/where they happen) use ser"
+        },
+        {
+            "id": "verbs#63",
+            "english": "My grandfather was very tall.",
+            "spanish": "Mi abuelo ___ muy alto.",
+            "answer": "era",
+            "verb": "ser",
+            "tense": "imperfect",
+            "note": "describing someone in the past: imperfect"
+        },
+        {
+            "id": "verbs#64",
+            "english": "It's going to be a great day.",
+            "spanish": "___ un gran día.",
+            "answer": "Va a ser",
+            "verb": "ser",
+            "tense": "near-future"
+        },
+        {
+            "id": "verbs#65",
+            "english": "How are you? (formal)",
+            "spanish": "¿Cómo ___?",
+            "answer": "está",
+            "verb": "estar",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#66",
+            "english": "I'm tired.",
+            "spanish": "___ cansado.",
+            "answer": "Estoy",
+            "verb": "estar",
+            "tense": "present",
+            "note": "estar: how you are right now"
+        },
+        {
+            "id": "verbs#67",
+            "english": "Where are my keys?",
+            "spanish": "¿Dónde ___ mis llaves?",
+            "answer": "están",
+            "verb": "estar",
+            "tense": "present",
+            "note": "estar: where something is"
+        },
+        {
+            "id": "verbs#68",
+            "english": "The soup is cold.",
+            "spanish": "La sopa ___ fría.",
+            "answer": "está",
+            "verb": "estar",
+            "tense": "present",
+            "note": "estar: a state, not what it is"
+        },
+        {
+            "id": "verbs#69",
+            "english": "How much are the avocados?",
+            "spanish": "¿A cuánto ___ los aguacates?",
+            "answer": "están",
+            "verb": "estar",
+            "tense": "present",
+            "note": "prices that change: ¿a cuánto está(n)...?"
+        },
+        {
+            "id": "verbs#70",
+            "english": "We were at home all day.",
+            "spanish": "___ en casa todo el día.",
+            "answer": "Estuvimos",
+            "verb": "estar",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#71",
+            "english": "The store was closed.",
+            "spanish": "La tienda ___ cerrada.",
+            "answer": "estaba",
+            "verb": "estar",
+            "tense": "imperfect"
+        },
+        {
+            "id": "verbs#72",
+            "english": "She's talking on the phone.",
+            "spanish": "___ por teléfono.",
+            "answer": "Está hablando",
+            "verb": "estar",
+            "tense": "present-progressive",
+            "note": "estar + -ando/-iendo = right now"
+        },
+        {
+            "id": "verbs#73",
+            "english": "I was sleeping when you called.",
+            "spanish": "___ cuando llamaste.",
+            "answer": "Estaba durmiendo",
+            "verb": "estar",
+            "tense": "past-progressive"
+        },
+        {
+            "id": "verbs#74",
+            "english": "What are you doing?",
+            "spanish": "¿Qué ___?",
+            "answer": "estás haciendo",
+            "verb": "estar",
+            "tense": "present-progressive"
+        },
+        {
+            "id": "verbs#75",
+            "english": "I can't find my phone.",
+            "spanish": "No ___ mi celular.",
+            "answer": "encuentro",
+            "verb": "encontrar",
+            "tense": "present",
+            "note": "o→ue: encuentro, encuentras, encuentra"
+        },
+        {
+            "id": "verbs#76",
+            "english": "We found a good restaurant.",
+            "spanish": "___ un buen restaurante.",
+            "answer": "Encontramos",
+            "verb": "encontrar",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#77",
+            "english": "Did you find what you were looking for?",
+            "spanish": "¿___ lo que buscabas?",
+            "answer": "Encontraste",
+            "verb": "encontrar",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#78",
+            "english": "You'll find it on the second floor. (formal)",
+            "spanish": "Lo ___ en el segundo piso.",
+            "answer": "va a encontrar",
+            "verb": "encontrar",
+            "tense": "near-future"
+        },
+        {
+            "id": "verbs#79",
+            "english": "Can you help me?",
+            "spanish": "¿Me ___ ayudar?",
+            "answer": "puedes",
+            "verb": "poder",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#80",
+            "english": "Can I pay with a card?",
+            "spanish": "¿___ pagar con tarjeta?",
+            "answer": "Puedo",
+            "verb": "poder",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#81",
+            "english": "I couldn't sleep last night.",
+            "spanish": "No ___ dormir anoche.",
+            "answer": "pude",
+            "verb": "poder",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#82",
+            "english": "I want a coffee, please.",
+            "spanish": "___ un café, por favor.",
+            "answer": "Quiero",
+            "verb": "querer",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#83",
+            "english": "Do you want to come with us?",
+            "spanish": "¿___ venir con nosotros?",
+            "answer": "Quieres",
+            "verb": "querer",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#84",
+            "english": "I'd like a table for two.",
+            "spanish": "___ una mesa para dos.",
+            "answer": "Quisiera",
+            "verb": "querer",
+            "tense": "imperfect-subjunctive",
+            "note": "quisiera = I'd like (polite)"
+        },
+        {
+            "id": "verbs#85",
+            "english": "She didn't want to go.",
+            "spanish": "No ___ ir.",
+            "answer": "quería",
+            "verb": "querer",
+            "tense": "imperfect"
+        },
+        {
+            "id": "verbs#86",
+            "english": "I'd like to go with you.",
+            "spanish": "Me ___ ir contigo.",
+            "answer": "gustaría",
+            "verb": "gustar",
+            "tense": "conditional",
+            "note": "me gustaría = I would like"
+        },
+        {
+            "id": "verbs#87",
+            "english": "Do you like the food?",
+            "spanish": "¿Te ___ la comida?",
+            "answer": "gusta",
+            "verb": "gustar",
+            "tense": "present",
+            "note": "gustar agrees with the thing liked"
+        },
+        {
+            "id": "verbs#88",
+            "english": "I really liked the movie.",
+            "spanish": "Me ___ mucho la película.",
+            "answer": "gustó",
+            "verb": "gustar",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#89",
+            "english": "I need to rest.",
+            "spanish": "___ descansar.",
+            "answer": "Necesito",
+            "verb": "necesitar",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#90",
+            "english": "Do you need anything?",
+            "spanish": "¿___ algo?",
+            "answer": "Necesitas",
+            "verb": "necesitar",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#91",
+            "english": "I gave her flowers.",
+            "spanish": "Le ___ flores.",
+            "answer": "di",
+            "verb": "dar",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#92",
+            "english": "What did he say?",
+            "spanish": "¿Qué ___?",
+            "answer": "dijo",
+            "verb": "decir",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#93",
+            "english": "I always tell the truth.",
+            "spanish": "Siempre ___ la verdad.",
+            "answer": "digo",
+            "verb": "decir",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#94",
+            "english": "Where did you put the keys?",
+            "spanish": "¿Dónde ___ las llaves?",
+            "answer": "pusiste",
+            "verb": "poner",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#95",
+            "english": "We leave at seven.",
+            "spanish": "___ a las siete.",
+            "answer": "Salimos",
+            "verb": "salir",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#96",
+            "english": "She went out with her friends last night.",
+            "spanish": "___ con sus amigas anoche.",
+            "answer": "Salió",
+            "verb": "salir",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#97",
+            "english": "Are you coming tomorrow?",
+            "spanish": "¿___ mañana?",
+            "answer": "Vienes",
+            "verb": "venir",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#98",
+            "english": "They came by bus.",
+            "spanish": "___ en autobús.",
+            "answer": "Vinieron",
+            "verb": "venir",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#99",
+            "english": "Come here!",
+            "spanish": "¡___ aquí!",
+            "answer": "Ven",
+            "verb": "venir",
+            "tense": "imperative",
+            "note": "tú command of venir: ven"
+        },
+        {
+            "id": "verbs#100",
+            "english": "Did you see the game?",
+            "spanish": "¿___ el partido?",
+            "answer": "Viste",
+            "verb": "ver",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#101",
+            "english": "We'll see.",
+            "spanish": "Ya ___.",
+            "answer": "veremos",
+            "verb": "ver",
+            "tense": "future"
+        },
+        {
+            "id": "verbs#102",
+            "english": "I don't know.",
+            "spanish": "No ___.",
+            "answer": "sé",
+            "verb": "saber",
+            "tense": "present"
+        },
+        {
+            "id": "verbs#103",
+            "english": "Do you know where the station is?",
+            "spanish": "¿___ dónde está la estación?",
+            "answer": "Sabes",
+            "verb": "saber",
+            "tense": "present",
+            "note": "know a fact = saber; know a person or place = conocer"
+        },
+        {
+            "id": "verbs#104",
+            "english": "I know Ana.",
+            "spanish": "___ a Ana.",
+            "answer": "Conozco",
+            "verb": "conocer",
+            "tense": "present",
+            "note": "know a person or place = conocer"
+        },
+        {
+            "id": "verbs#105",
+            "english": "I'll take it. (buying something)",
+            "spanish": "Me lo ___.",
+            "answer": "llevo",
+            "verb": "llevar",
+            "tense": "present",
+            "note": "llevarse = take (buy) it"
+        },
+        {
+            "id": "verbs#106",
+            "english": "We bought a new car.",
+            "spanish": "___ un carro nuevo.",
+            "answer": "Compramos",
+            "verb": "comprar",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#107",
+            "english": "I'm going to pay in cash.",
+            "spanish": "___ en efectivo.",
+            "answer": "Voy a pagar",
+            "verb": "pagar",
+            "tense": "near-future"
+        },
+        {
+            "id": "verbs#108",
+            "english": "Did you pay already?",
+            "spanish": "¿Ya ___?",
+            "answer": "pagaste",
+            "verb": "pagar",
+            "tense": "preterite"
+        },
+        {
+            "id": "verbs#109",
+            "english": "I'll call you tomorrow.",
+            "spanish": "Te ___ mañana.",
+            "answer": "llamo",
+            "verb": "llamar",
+            "tense": "present",
+            "note": "the present often means a near future"
+        },
+        {
+            "id": "verbs#110",
+            "english": "Wait a moment, please. (formal)",
+            "spanish": "___ un momento, por favor.",
+            "answer": "Espere",
+            "verb": "esperar",
+            "tense": "imperative"
+        },
+        {
+            "id": "verbs#111",
+            "english": "Turn left. (formal)",
+            "spanish": "___ a la izquierda.",
+            "answer": "Doble",
+            "verb": "doblar",
+            "tense": "imperative"
+        },
+        {
+            "id": "verbs#112",
+            "english": "Don't worry.",
+            "spanish": "No te ___.",
+            "answer": "preocupes",
+            "verb": "preocuparse",
+            "tense": "negative-imperative",
+            "note": "negative tú commands use the subjunctive"
+        },
+        {
+            "id": "verbs#113",
+            "english": "Don't touch that!",
+            "spanish": "¡No ___ eso!",
+            "answer": "toques",
+            "verb": "tocar",
+            "tense": "negative-imperative",
+            "note": "negative tú commands use the subjunctive"
+        },
+        {
+            "id": "verbs#114",
+            "english": "Back then I was living in Chicago.",
+            "spanish": "En ese tiempo ___ en Chicago.",
+            "answer": "vivía",
+            "verb": "vivir",
+            "tense": "imperfect"
+        }
+    ]
+}

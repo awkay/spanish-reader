@@ -120,3 +120,8 @@ h2 { font-size: 15px; color: var(--accent); margin: 20px 0 8px; }
 .menu a + a { border-top: 1px solid var(--border); }
 @media (prefers-color-scheme: dark) { .drill .ok, .drill .blank.correct { color: #81c995; border-color: #81c995; } }
 .menu-backdrop { position: fixed; inset: 0; z-index: 29; }
+.phrases .english { font-size: 22px; margin: 16px 0 8px; }
+.phrases .spanish { font-size: 22px; margin: 8px 0 16px; }
+.phrases .blank { border-bottom: 2px solid var(--accent); padding: 0 4px; }
+.phrases .blank.shown { color: var(--accent); font-weight: 600; }
+.phrases .play-big { display: block; margin: 32px auto 24px; width: 120px; height: 120px; border-radius: 50%; border: none; background: var(--accent); color: var(--accent-fg); font-size: 44px; }

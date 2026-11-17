@@ -10,7 +10,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import net.awkay.spanishreader.ShareInbox
+import net.awkay.spanishreader.core.practice.PhraseDeck
+import net.awkay.spanishreader.core.practice.PhraseMode
 import net.awkay.spanishreader.drill.DrillScreen
+import net.awkay.spanishreader.phrases.PhraseScreen
 import net.awkay.spanishreader.ui.importer.ImportScreen
 import net.awkay.spanishreader.ui.library.LibraryScreen
 import net.awkay.spanishreader.ui.library.SharedLibraryScreen
@@ -29,6 +32,7 @@ object Routes {
     const val PRACTICE = "practice"
     const val DRILL = "drill"
     fun reader(id: Long) = "reader/$id"
+    fun phrases(deck: PhraseDeck, mode: PhraseMode) = "phrases/${deck.id}/${mode.id}"
     fun listen(id: Long) = "listen/$id"
 }
 
@@ -49,6 +53,7 @@ fun AppNav() {
                 onVocabulary = { nav.navigate(Routes.VOCAB) },
                 onPractice = { nav.navigate(Routes.PRACTICE) },
                 onDrill = { nav.navigate(Routes.DRILL) },
+                onPhrases = { deck, mode -> nav.navigate(Routes.phrases(deck, mode)) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
                 onGetFromWeb = { nav.navigate(Routes.SHARED) },
             )
@@ -73,6 +78,11 @@ fun AppNav() {
         composable("listen/{id}", lessonArg) { entry ->
             val id = entry.arguments!!.getLong("id")
             ListenScreen(id, onBack = { nav.popBackStack() }, onRead = { nav.navigate(Routes.reader(id)) { popUpTo(Routes.LIBRARY) } })
+        }
+        composable("phrases/{deck}/{mode}") { entry ->
+            val deck = PhraseDeck.byId(entry.arguments?.getString("deck").orEmpty()) ?: PhraseDeck.QUESTIONS
+            val mode = PhraseMode.byId(entry.arguments?.getString("mode").orEmpty()) ?: PhraseMode.SAY
+            PhraseScreen(deck, mode, onExit = { nav.popBackStack() })
         }
         composable(Routes.DRILL) { DrillScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.PRACTICE) { PracticeScreen(onBack = { nav.popBackStack() }) }

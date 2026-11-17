@@ -1,6 +1,6 @@
 # Status
 
-_Last updated: 2026-10-15 (lightning verb drill, all three parts)_
+_Last updated: 2026-11-17 (say-it / listen practice, both apps)_
 
 **Android app: all planned features built; Tony uses it daily.** New: a **web app (PWA) for iPhone** plus a small Go
 server, **deployed 2026-10-01 at https://portal.fulcrologic.com** (Linode, build-6, nginx site in
@@ -51,6 +51,41 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
   glosses/translations/idioms under the app's keys (local results win), then pre-glosses only what's missing.
 - **Voice**: Tony chose Piper `es_MX-claude-high` (no es-CO voice exists in Piper; Azure has es-CO neural voices if
   ever wanted). Changing it is one env setting, `SR_PIPER_MODEL`.
+
+## Say-it / listen practice (2026-11-17; web + Android)
+- **Where**: four new entries in the practice menu (✍︎ web, mortarboard Android): "Say it: question words", "Say it:
+  everyday verbs", "Listen: question words", "Listen: everyday verbs".
+- **Say it**: the English sentence, then the Spanish one with the target words blank. The verb deck also shows a
+  hint such as "tener · present". The learner says the answer out loud, then "Show me" fills the blank (highlighted)
+  plus a short tip where there is one, and "Continue" moves on.
+- **Listen**: a big play button speaks the Spanish sentence. "Show answer" shows the Spanish (target highlighted), the
+  English and the hint; "Next" moves on (also available before showing).
+- **Common to both**: ✕ stops at any time. A session is the whole deck shuffled, with "Go again" at the end. Nothing
+  is graded or recorded.
+- **Content** (`core/.../practice/PhraseDecks.kt`, exported to `fixtures/phrases.json` by `GoldenFixtureTest`, read by
+  `web/src/core/phrases.ts`): hand-written and checked, not AI-generated.
+  - 71 question-word sentences: qué, quién/quiénes, de/con/para quién, dónde/adónde/de dónde, cuándo/desde cuándo, a
+    qué hora, cuánto/-a/-os/-as, cuál/cuáles, por qué, para qué, cómo, qué tal, qué tan, cada cuánto.
+  - 114 everyday-verb sentences: hacer, tener (+ tener que), haber (helper + hay), tomar, ir, conseguir/llegar/recibir
+    for "get", pedir for "order", ser vs estar, encontrar, poder, querer, gustar, and others.
+  - The verb sentences are in everyday tenses: present, preterite, imperfect, ir a + inf, present perfect, commands,
+    progressives, plus quisiera and me gustaría.
+  - The blank holds the whole verb form, helpers included.
+  - `PhraseDecksTest` checks each card: one blank, the capitalized answer only at the start of a sentence, known
+    tenses, and the requested verbs present.
+- **Audio**:
+  - Web: `pageAudio([sentence])` (server Piper, cached in IndexedDB). It reuses one `<audio>` element and plays
+    already-fetched audio straight from the tap, as iOS requires.
+  - Android: `audioCache.ensure(synthesizer(settings))` with the voice and speed from Settings, played by MediaPlayer.
+    Concurrent requests for a sentence are shared because the cache writes one temp file per sentence.
+  - Both prefetch the current and next sentence in listen mode.
+- **Verified**:
+  - Core tests, web tests, and Robolectric `PhraseScreenTest`: menu → reveal → continue → stop; listen hides the
+    sentence until "Show answer".
+  - `PhraseScreenshotTest` renders the Android screens when `SCREENSHOT_DIR` is set.
+  - Playwright against a local server, with `/api/tts` stubbed because Piper isn't in this container: menu, reveal,
+    counter, exit, verb hint; the listen sentence shown matches the one spoken.
+- **Not yet tried** with real Piper audio or on the phones.
 
 ## Lightning verb drill (2026-10-15; server + web + Android)
 - **Where**: the practice button (✍︎ web, mortarboard Android) now opens a menu: "⚡ Lightning verbs" (new) or

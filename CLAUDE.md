@@ -15,6 +15,8 @@ Current state and next steps: `docs/STATUS.md` — read it first.
   the AI writes an English sentence using known words and grades the Spanish answer in 3 tries with growing hints.
   *Lightning verbs*: common verbs in order, 10 shared AI-written cards each (sentence with the verb blank); type the
   form, one try, checked locally; 6 right answers learn a card (`core/.../practice/VerbDrill.kt`).
+  *Say it* / *Listen* (question words, everyday verbs): fixed hand-written sentences (`core/.../practice/PhraseDecks.kt`);
+  say the blank aloud then "Show me", or hear the sentence and translate it in your head.
 
 ### Word status model (mirrors LingQ)
 | Status | Highlight |

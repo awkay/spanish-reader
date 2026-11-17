@@ -180,6 +180,31 @@ class GoldenFixtureTest {
         return Json { prettyPrint = true }.encodeToString(JsonElement.serializer(), root) + "\n"
     }
 
+    /** The say-it / listen decks, so the web app shows exactly the same sentences. */
+    private fun phrases(): String {
+        val root = buildJsonObject {
+            for (deck in net.awkay.spanishreader.core.practice.PhraseDeck.entries) {
+                putJsonArray(deck.id) {
+                    for (c in deck.cards) addJsonObject {
+                        put("id", c.id); put("english", c.english); put("spanish", c.spanish); put("answer", c.answer)
+                        c.verb?.let { put("verb", it) }
+                        c.tense?.let { put("tense", it) }
+                        c.note?.let { put("note", it) }
+                    }
+                }
+            }
+        }
+        return Json { prettyPrint = true }.encodeToString(JsonElement.serializer(), root) + "\n"
+    }
+
+    @Test
+    fun `phrases fixture is current`() {
+        val file = File("../fixtures/phrases.json")
+        val expected = phrases()
+        if (System.getenv("UPDATE_GOLDEN") == "1" || !file.exists()) file.writeText(expected)
+        assertEquals(expected, file.readText(), "fixtures/phrases.json is stale; regenerate with UPDATE_GOLDEN=1")
+    }
+
     @Test
     fun `prompts fixture is current`() {
         val file = File("../fixtures/prompts.json")

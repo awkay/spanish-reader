@@ -47,6 +47,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import net.awkay.spanishreader.core.practice.PhraseDeck
+import net.awkay.spanishreader.core.practice.PhraseMode
 import net.awkay.spanishreader.ui.appViewModel
 import net.awkay.spanishreader.ui.sync.SyncDialog
 import kotlin.math.roundToInt
@@ -60,6 +62,7 @@ fun LibraryScreen(
     onVocabulary: () -> Unit,
     onPractice: () -> Unit,
     onDrill: () -> Unit,
+    onPhrases: (PhraseDeck, PhraseMode) -> Unit,
     onSettings: () -> Unit,
     onGetFromWeb: () -> Unit = {},
 ) {
@@ -87,6 +90,10 @@ fun LibraryScreen(
                         IconButton(onClick = { practiceMenu = true }) { Icon(Icons.Default.School, "Verb practice") }
                         DropdownMenu(practiceMenu, { practiceMenu = false }) {
                             DropdownMenuItem(text = { Text("⚡ Lightning verbs") }, onClick = { practiceMenu = false; onDrill() })
+                            for (mode in PhraseMode.entries) for (deck in PhraseDeck.entries) {
+                                val label = (if (mode == PhraseMode.SAY) "🗣 Say it: " else "🎧 Listen: ") + deck.title.lowercase()
+                                DropdownMenuItem(text = { Text(label) }, onClick = { practiceMenu = false; onPhrases(deck, mode) })
+                            }
                             DropdownMenuItem(text = { Text("Translate sentences") }, onClick = { practiceMenu = false; onPractice() })
                         }
                     }

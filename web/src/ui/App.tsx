@@ -5,6 +5,7 @@ import { Import } from './Import.tsx';
 import { Library } from './Library.tsx';
 import { Login } from './Login.tsx';
 import { Drill } from './Drill.tsx';
+import { Phrases } from './Phrases.tsx';
 import { Practice } from './Practice.tsx';
 import { Reader } from './Reader.tsx';
 import { Settings } from './Settings.tsx';
@@ -50,6 +51,8 @@ export function App() {
   if (hash === '#/vocab') return <Vocabulary />;
   if (hash === '#/practice') return <Practice />;
   if (hash === '#/drill') return <Drill />;
+  const phrase = hash.match(/^#\/phrases\/(questions|verbs)\/(say|listen)$/);
+  if (phrase) return <Phrases key={hash} deck={phrase[1] as 'questions' | 'verbs'} mode={phrase[2] as 'say' | 'listen'} />;
   if (hash === '#/sync') return <Sync onSignOut={signOut} />;
   if (hash === '#/settings') return <Settings onSignOut={signOut} />;
   return <Library />;

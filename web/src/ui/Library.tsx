@@ -65,6 +65,10 @@ export function Library() {
             <div class="menu-backdrop" onClick={() => setPracticeMenu(false)} />
             <nav class="menu">
               <a href="#/drill">⚡ Lightning verbs</a>
+              <a href="#/phrases/questions/say">🗣 Say it: question words</a>
+              <a href="#/phrases/verbs/say">🗣 Say it: everyday verbs</a>
+              <a href="#/phrases/questions/listen">🎧 Listen: question words</a>
+              <a href="#/phrases/verbs/listen">🎧 Listen: everyday verbs</a>
               <a href="#/practice">✍︎ Translate sentences</a>
             </nav>
           </>
