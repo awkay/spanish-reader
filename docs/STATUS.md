@@ -52,6 +52,29 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
 - **Voice**: Tony chose Piper `es_MX-claude-high` (no es-CO voice exists in Piper; Azure has es-CO neural voices if
   ever wanted). Changing it is one env setting, `SR_PIPER_MODEL`.
 
+## Conversation mode (2026-11-17; Android + server; not yet tried with the real recognizer or on the phone)
+- **Where**: "💬 Conversation" in the mortarboard practice menu. Android only (Tony's request).
+- **Flow**: name a topic (or pick a chip), then speak first: type, or tap 🎤 (tap again to stop, ✕ cancel, auto-stop
+  at 60 s). The recognized text lands in the box to fix before sending. The partner (primary AI provider, temperature
+  0.7) answers in 1-3 short Spanish sentences at a natural conversational level (no vocabulary limit: Tony's choice).
+  Its reply is **heard first** (sentence by sentence, voice from Settings); "Tap to show text" reveals the Spanish, and
+  only then the translate icon shows the English. The AI never opens the conversation.
+- **Corrections**: every learner turn is checked in the background (improve model when set, else primary): the
+  translate icon on the learner's bubble (amber dot = changes) opens the English meaning, "Better: …" (smallest
+  learner-plausible fix: conjugation, agreement, articles, word order, English words, accents; never restyled) and one
+  line per change. Voice turns may also fix likely mis-hearings. Earlier turns are sent to the partner corrected.
+- **Saved as a lesson** on Finish (opens it in the reader), on leaving, and whenever the app goes to the background
+  (later saves update the same lesson): title "Conversación: {topic} · 17 nov", one paragraph per turn (learner turns
+  corrected), no speaker names. The AI's sentence translations are stored for the reader, and the reply audio is in
+  the sentence audio cache, so listen mode reuses it. Conversations themselves are not kept (no new tables).
+- **Speech recognition**: through the server (`POST /api/speech`, raw m4a body, answer `{"text"}`), reusing
+  `SR_ASR_*` (optionally `SR_ASR_SPEECH_MODEL`); `language=es` plus a Spanglish example prompt so English words stay
+  English. Needs the web app address/code in Settings (as for sync). How well Whisper keeps mixed English words is
+  untested: if it translates or Hispanicizes them, try another model in `SR_ASR_SPEECH_MODEL`.
+- **Code**: `core/.../chat/Chat.kt` (prompts, parser, `ChatAi`, `ChatTranscript`), `server/speech.go`,
+  `app/.../chat/` (`VoiceRecorder`, `ChatViewModel` with a swappable `ChatBackend`, `ChatScreen`). Tests: `ChatTest`,
+  `speech_test.go`, `ChatScreenTest` (fake AI/voice/recognizer), `ChatScreenshotTest` (SCREENSHOT_DIR only).
+
 ## Say-it / listen practice (2026-11-17; web + Android)
 - **Where**: four new entries in the practice menu (✍︎ web, mortarboard Android): "Say it: question words", "Say it:
   everyday verbs", "Listen: question words", "Listen: everyday verbs".

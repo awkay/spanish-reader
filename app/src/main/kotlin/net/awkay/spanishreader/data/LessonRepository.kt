@@ -28,6 +28,13 @@ class LessonRepository(
         return dao.insert(LessonEntity(title = finalTitle, text = text, createdAtMillis = clock()))
     }
 
+    /** Replaces a lesson's text (cleaned as on import); a saved conversation that went on. */
+    suspend fun replaceText(id: Long, rawText: String, joinWrappedLines: Boolean = false) {
+        val text = ImportCleaner.clean(rawText, joinWrappedLines)
+        require(text.isNotBlank()) { "The text is empty" }
+        dao.get(id)?.let { dao.update(it.copy(text = text)) }
+    }
+
     suspend fun setCurrentPage(id: Long, page: Int) = dao.setCurrentPage(id, page)
 
     suspend fun setVideo(id: Long, videoId: String?, sourceUrl: String?) = dao.setVideo(id, videoId, sourceUrl)

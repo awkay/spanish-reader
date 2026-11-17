@@ -41,10 +41,11 @@ func (s *Server) routes() http.Handler {
 	})
 	mux.HandleFunc("GET /api/session", s.requireAuth(func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, map[string]any{"ok": true, "tts": s.tts.Enabled(), "voice": s.tts.Voice(), "youtube": s.yt.Enabled(),
-			"youtubeUpload": s.yt.UploadEnabled(), "user": userOf(r)})
+			"youtubeUpload": s.yt.UploadEnabled(), "speech": s.speechASR().Enabled(), "user": userOf(r)})
 	}))
 	mux.HandleFunc("POST /api/ai", s.requireAuth(s.handleAI))
 	mux.HandleFunc("POST /api/tts", s.requireAuth(s.handleTTS))
+	mux.HandleFunc("POST /api/speech", s.requireAuth(s.handleSpeech))
 	mux.HandleFunc("GET /api/audio/{file}", s.requireAuth(s.handleAudio))
 	mux.HandleFunc("GET /api/lessons", s.requireAuth(s.handleListLessons))
 	mux.HandleFunc("POST /api/lessons", s.requireAuth(s.handlePutLesson))

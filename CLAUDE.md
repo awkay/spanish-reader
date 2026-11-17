@@ -17,6 +17,9 @@ Current state and next steps: `docs/STATUS.md` — read it first.
   form, one try, checked locally; 6 right answers learn a card (`core/.../practice/VerbDrill.kt`).
   *Say it* / *Listen* (question words, everyday verbs): fixed hand-written sentences (`core/.../practice/PhraseDecks.kt`);
   say the blank aloud then "Show me", or hear the sentence and translate it in your head.
+- **Conversation** (Android only, practice menu): chat about a chosen topic by typing or speaking (server speech
+  recognition, `/api/speech`); replies are heard first, then read, then translated; each learner turn gets a minimal
+  correction in the background; the corrected transcript is saved as a lesson (`core/.../chat/Chat.kt`).
 
 ### Word status model (mirrors LingQ)
 | Status | Highlight |

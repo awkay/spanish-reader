@@ -38,6 +38,7 @@ type Config struct {
 	ASRBaseURL      string // SR_ASR_BASE_URL, default https://openrouter.ai/api/v1
 	ASRKey          string // SR_ASR_API_KEY
 	ASRModel        string // SR_ASR_MODEL, e.g. openai/whisper-large-v3
+	ASRSpeechModel  string // SR_ASR_SPEECH_MODEL: model for the Android conversation's speech input (default: SR_ASR_MODEL)
 	YTMaxMinutes    int    // SR_YT_MAX_MINUTES: longest video accepted, default 60
 	ASRDailyMinutes int    // SR_ASR_DAILY_MINUTES: transcription budget per UTC day, default 180
 }
@@ -82,6 +83,7 @@ func loadConfig() (*Config, error) {
 		ASRBaseURL:     env("SR_ASR_BASE_URL", "https://openrouter.ai/api/v1"),
 		ASRKey:         env("SR_ASR_API_KEY", ""),
 		ASRModel:       env("SR_ASR_MODEL", ""),
+		ASRSpeechModel: env("SR_ASR_SPEECH_MODEL", ""),
 	}
 	var err error
 	if c.YTMaxMinutes, err = envInt("SR_YT_MAX_MINUTES", 60); err != nil {
@@ -100,6 +102,9 @@ func loadConfig() (*Config, error) {
 	}
 	if c.AIImproveModel == "" {
 		c.AIImproveModel = c.AIModel
+	}
+	if c.ASRSpeechModel == "" {
+		c.ASRSpeechModel = c.ASRModel
 	}
 	if c.VisionModel == "" {
 		c.VisionModel = c.AIModel

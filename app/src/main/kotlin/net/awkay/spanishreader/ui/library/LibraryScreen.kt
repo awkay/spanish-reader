@@ -62,6 +62,7 @@ fun LibraryScreen(
     onVocabulary: () -> Unit,
     onPractice: () -> Unit,
     onDrill: () -> Unit,
+    onChat: () -> Unit,
     onPhrases: (PhraseDeck, PhraseMode) -> Unit,
     onSettings: () -> Unit,
     onGetFromWeb: () -> Unit = {},
@@ -95,6 +96,7 @@ fun LibraryScreen(
                                 DropdownMenuItem(text = { Text(label) }, onClick = { practiceMenu = false; onPhrases(deck, mode) })
                             }
                             DropdownMenuItem(text = { Text("Translate sentences") }, onClick = { practiceMenu = false; onPractice() })
+                            DropdownMenuItem(text = { Text("💬 Conversation") }, onClick = { practiceMenu = false; onChat() })
                         }
                     }
                     IconButton(onClick = onVocabulary) { Icon(Icons.Default.Translate, "Vocabulary") }

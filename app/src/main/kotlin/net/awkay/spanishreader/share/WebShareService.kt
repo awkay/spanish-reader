@@ -311,6 +311,12 @@ class WebShareService(
 
     internal fun errorMessage(text: String): String? = errorOf(text)
 
+    /** Conversation mode's speech input: the server's speech recognizer turns one recorded clip (m4a) into text. */
+    suspend fun transcribe(audio: File): String = withContext(Dispatchers.IO) {
+        val text = call("/api/speech", audio.asRequestBody("audio/mp4".toMediaType()), "Speech recognition")
+        (Json.parseToJsonElement(text) as JsonObject).str("text").orEmpty().trim()
+    }
+
     /** POSTs [body] (or GETs when null) to [path] with the Bearer token, logging in when there is none or it expired. */
     private suspend fun call(path: String, body: okhttp3.RequestBody?, what: String): String =
         callBytes(path, what, body).toString(Charsets.UTF_8)

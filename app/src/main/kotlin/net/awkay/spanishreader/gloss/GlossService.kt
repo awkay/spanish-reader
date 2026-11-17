@@ -8,6 +8,7 @@ import net.awkay.spanishreader.core.gloss.GlossCache
 import net.awkay.spanishreader.core.gloss.GlossRequest
 import net.awkay.spanishreader.core.gloss.GlossResult
 import net.awkay.spanishreader.core.gloss.Glosser
+import net.awkay.spanishreader.core.gloss.GlossOptions
 import net.awkay.spanishreader.core.gloss.GlosserFactory
 import net.awkay.spanishreader.core.gloss.GlosserConfig
 import net.awkay.spanishreader.core.gloss.SentenceAnalyzer
@@ -41,6 +42,18 @@ class GlossService(
     suspend fun completer(): TextCompleter? {
         val primary = settings.current().primaryGlosser
         return if (primary.isComplete) GlosserFactory.createCompleter(primary, sharedHttp) else null
+    }
+
+    /**
+     * Conversation mode: the partner (primary provider, livelier temperature) and the checker of the learner's turns
+     * (the improve model when set, as for drill cards), or null when glossing isn't configured.
+     */
+    suspend fun chatCompleters(): Pair<TextCompleter, TextCompleter>? {
+        val s = settings.current()
+        if (!s.primaryGlosser.isComplete) return null
+        val partner = GlosserFactory.createCompleter(s.primaryGlosser, sharedHttp, GlossOptions(temperature = 0.7))
+        val checker = s.improveGlosser.takeIf { it.isComplete } ?: s.primaryGlosser
+        return partner to GlosserFactory.createCompleter(checker, sharedHttp)
     }
 
     /**

@@ -13,6 +13,7 @@ import net.awkay.spanishreader.ShareInbox
 import net.awkay.spanishreader.core.practice.PhraseDeck
 import net.awkay.spanishreader.core.practice.PhraseMode
 import net.awkay.spanishreader.drill.DrillScreen
+import net.awkay.spanishreader.chat.ChatScreen
 import net.awkay.spanishreader.phrases.PhraseScreen
 import net.awkay.spanishreader.ui.importer.ImportScreen
 import net.awkay.spanishreader.ui.library.LibraryScreen
@@ -31,6 +32,7 @@ object Routes {
     const val SHARED = "shared"
     const val PRACTICE = "practice"
     const val DRILL = "drill"
+    const val CHAT = "chat"
     fun reader(id: Long) = "reader/$id"
     fun phrases(deck: PhraseDeck, mode: PhraseMode) = "phrases/${deck.id}/${mode.id}"
     fun listen(id: Long) = "listen/$id"
@@ -53,6 +55,7 @@ fun AppNav() {
                 onVocabulary = { nav.navigate(Routes.VOCAB) },
                 onPractice = { nav.navigate(Routes.PRACTICE) },
                 onDrill = { nav.navigate(Routes.DRILL) },
+                onChat = { nav.navigate(Routes.CHAT) },
                 onPhrases = { deck, mode -> nav.navigate(Routes.phrases(deck, mode)) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
                 onGetFromWeb = { nav.navigate(Routes.SHARED) },
@@ -83,6 +86,9 @@ fun AppNav() {
             val deck = PhraseDeck.byId(entry.arguments?.getString("deck").orEmpty()) ?: PhraseDeck.QUESTIONS
             val mode = PhraseMode.byId(entry.arguments?.getString("mode").orEmpty()) ?: PhraseMode.SAY
             PhraseScreen(deck, mode, onExit = { nav.popBackStack() })
+        }
+        composable(Routes.CHAT) {
+            ChatScreen(onExit = { nav.popBackStack() }, onOpenLesson = { id -> nav.navigate(Routes.reader(id)) { popUpTo(Routes.LIBRARY) } })
         }
         composable(Routes.DRILL) { DrillScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.PRACTICE) { PracticeScreen(onBack = { nav.popBackStack() }) }
