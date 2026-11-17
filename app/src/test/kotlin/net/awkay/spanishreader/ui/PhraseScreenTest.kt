@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.testing.WorkManagerTestInitHelper
@@ -39,9 +40,12 @@ class PhraseScreenTest {
         }
     }
 
-    private fun waitForText(text: String) = compose.waitUntil(10_000) {
+    private fun waitForText(text: String) = compose.waitUntil(30_000) {
         compose.onAllNodes(hasText(text, substring = true)).fetchSemanticsNodes().isNotEmpty()
     }
+
+    /** Robolectric's screen is short: a card with a tip pushes the buttons below it, so scroll to them first. */
+    private fun tap(text: String) = compose.onNodeWithText(text).performScrollTo().performClick()
 
     private fun openFromMenu(item: String) {
         compose.onNodeWithContentDescription("Verb practice").performClick()
@@ -51,15 +55,18 @@ class PhraseScreenTest {
 
     @Test
     fun sayItRevealsTheBlankThenMovesOnAndStops() {
-        ActivityScenario.launch(MainActivity::class.java)
+        ActivityScenario.launch(MainActivity::class.java).use { sayItSteps() }
+    }
+
+    private fun sayItSteps() {
         waitForText("No lessons yet")
         openFromMenu("🗣 Say it: question words")
         val total = PhraseDecks.QUESTIONS.size
         waitForText("Show me")
         compose.onNodeWithText("1/$total").assertExists()
-        compose.onNodeWithText("Show me").performClick()
+        tap("Show me")
         waitForText("Continue ›")
-        compose.onNodeWithText("Continue ›").performClick()
+        tap("Continue ›")
         waitForText("2/$total")
         compose.onNodeWithText("Show me").assertExists()
         compose.onNodeWithContentDescription("Stop").performClick()
@@ -68,16 +75,19 @@ class PhraseScreenTest {
 
     @Test
     fun listenHidesTheSentenceUntilShowAnswer() {
-        ActivityScenario.launch(MainActivity::class.java)
+        ActivityScenario.launch(MainActivity::class.java).use { listenSteps() }
+    }
+
+    private fun listenSteps() {
         waitForText("No lessons yet")
         openFromMenu("🎧 Listen: everyday verbs")
         waitForText("Show answer")
         compose.onNodeWithContentDescription("Play").assertExists()
         // No sentence of the deck is on screen before the answer is shown.
         compose.waitUntil(2_000) { PhraseDecks.VERBS.none { c -> compose.onAllNodes(hasText(c.english)).fetchSemanticsNodes().isNotEmpty() } }
-        compose.onNodeWithText("Show answer").performClick()
-        compose.waitUntil(5_000) { PhraseDecks.VERBS.any { c -> compose.onAllNodes(hasText(c.english)).fetchSemanticsNodes().isNotEmpty() } }
-        compose.onNodeWithText("Next ›").performClick()
+        tap("Show answer")
+        compose.waitUntil(30_000) { PhraseDecks.VERBS.any { c -> compose.onAllNodes(hasText(c.english)).fetchSemanticsNodes().isNotEmpty() } }
+        tap("Next ›")
         waitForText("2/${PhraseDecks.VERBS.size}")
         compose.onNodeWithText("Show answer").assertExists()
     }

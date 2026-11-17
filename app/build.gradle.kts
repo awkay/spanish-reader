@@ -64,6 +64,8 @@ android {
         unitTests.all {
             // Robolectric's SDK 36 FileDescriptor shim reflects into JDK internals.
             it.jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED", "--add-exports=java.base/jdk.internal.access=ALL-UNNAMED")
+            // Full stack traces in the build log, so a CI-only failure names its line.
+            it.testLogging { exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
         }
     }
 }
