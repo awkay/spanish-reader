@@ -52,7 +52,7 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
 - **Voice**: Tony chose Piper `es_MX-claude-high` (no es-CO voice exists in Piper; Azure has es-CO neural voices if
   ever wanted). Changing it is one env setting, `SR_PIPER_MODEL`.
 
-## Conversation mode (2026-11-17; Android + server; not yet tried with the real recognizer or on the phone)
+## Conversation mode (2026-11-17; Android + server; tried by Tony on his Pixel 9a: works)
 - **Where**: "💬 Conversation" in the mortarboard practice menu. Android only (Tony's request).
 - **Flow**: name a topic (or pick a chip), then speak first: type, or tap 🎤 (tap again to stop, ✕ cancel, auto-stop
   at 60 s). The recognized text lands in the box to fix before sending. The partner (primary AI provider, temperature
@@ -69,8 +69,8 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
   the sentence audio cache, so listen mode reuses it. Conversations themselves are not kept (no new tables).
 - **Speech recognition**: through the server (`POST /api/speech`, raw m4a body, answer `{"text"}`), reusing
   `SR_ASR_*` (optionally `SR_ASR_SPEECH_MODEL`); `language=es` plus a Spanglish example prompt so English words stay
-  English. Needs the web app address/code in Settings (as for sync). How well Whisper keeps mixed English words is
-  untested: if it translates or Hispanicizes them, try another model in `SR_ASR_SPEECH_MODEL`.
+  English. Needs the web app address/code in Settings (as for sync). Tony (2026-11-18): it handles mixed
+  English/Spanish fine with the Linode's current ASR model, and typing fixes the rest.
 - **Code**: `core/.../chat/Chat.kt` (prompts, parser, `ChatAi`, `ChatTranscript`), `server/speech.go`,
   `app/.../chat/` (`VoiceRecorder`, `ChatViewModel` with a swappable `ChatBackend`, `ChatScreen`). Tests: `ChatTest`,
   `speech_test.go`, `ChatScreenTest` (fake AI/voice/recognizer), `ChatScreenshotTest` (SCREENSHOT_DIR only).
