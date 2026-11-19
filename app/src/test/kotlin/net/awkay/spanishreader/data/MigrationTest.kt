@@ -46,5 +46,10 @@ class MigrationTest {
         v5.execSQL("INSERT INTO drill_cards (verb, json, stored_at) VALUES ('ir', '[]', 1)")
         v5.execSQL("INSERT INTO drill_progress (card_id, correct, misses, last_millis, hidden) VALUES ('ir#1', 2, 0, 1, 0)")
         v5.close()
+        val v6 = helper.runMigrationsAndValidate("m.db", 6, true)
+        v6.query("SELECT COUNT(*) FROM drill_progress").use { it.moveToFirst(); assertEquals(1, it.getInt(0)) }
+        v6.execSQL("INSERT INTO practice_phrases (deck, json, stored_at) VALUES ('questions', '[]', 1)")
+        v6.execSQL("INSERT INTO practice_scores (mode, card_id, score, right, wrong, last_millis) VALUES ('say', 'questions#1', 1, 1, 0, 1)")
+        v6.close()
     }
 }

@@ -1,6 +1,7 @@
 // Calls to the Go server (same origin; the session is an HttpOnly cookie).
 import type { FoundPhrase, Gloss } from './core/gloss.ts';
 import type { DrillCard } from './core/drill.ts';
+import type { PhraseCard } from './core/phrases.ts';
 import type { BackupFile, SyncMeta } from './core/sync.ts';
 
 export class ApiError extends Error {
@@ -78,6 +79,9 @@ export const api = {
   cacheGet: (hashes: string[]) => call<Record<string, SentenceData>>('POST', '/api/cache/get', { hashes }),
   drillGet: (verb: string) => call<{ verb: string; cards: DrillCard[] }>('GET', `/api/drill/${encodeURIComponent(verb)}`),
   drillPut: (verb: string, cards: DrillCard[]) => call<{ verb: string; cards: DrillCard[] }>('PUT', `/api/drill/${encodeURIComponent(verb)}`, { cards }),
+  phrasesGet: (deck: string) => call<{ deck: string; cards: PhraseCard[] }>('GET', `/api/phrases/${deck}`),
+  phrasesPut: (deck: string, after: number, cards: PhraseCard[]) =>
+    call<{ deck: string; cards: PhraseCard[] }>('PUT', `/api/phrases/${deck}`, { after, cards }),
   syncMeta: () => call<SyncMeta>('GET', '/api/sync/meta'),
   syncGet: () => call<SyncMeta & { snapshot: BackupFile | null }>('GET', '/api/sync'),
   syncPut: (body: { baseRevision: number; force: boolean; device: string; snapshot: BackupFile }) => call<SyncMeta>('PUT', '/api/sync', body),

@@ -167,3 +167,21 @@ interface DrillDao {
     @Query("DELETE FROM drill_progress")
     suspend fun clearProgress()
 }
+
+@Dao
+interface PracticeDao {
+    @Query("SELECT * FROM practice_phrases WHERE deck = :deck")
+    suspend fun phrases(deck: String): PracticePhrasesEntity?
+
+    @Upsert
+    suspend fun upsertPhrases(p: PracticePhrasesEntity)
+
+    @Query("SELECT * FROM practice_scores")
+    suspend fun scores(): List<PracticeScoreEntity>
+
+    @Upsert
+    suspend fun upsertScores(s: List<PracticeScoreEntity>)
+
+    @Query("DELETE FROM practice_scores")
+    suspend fun clearScores()
+}

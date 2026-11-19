@@ -10,6 +10,9 @@ import {
   type CommonVerb, type DrillCard, type DrillProgress, type DrillVerdict, answerWords, checkDrill, filled, isLearned, record, writeCards,
 } from './core/drill.ts';
 import { type PracticeVerb, practiceVerbs } from './core/practice.ts';
+import {
+  type DeckId, type PhraseCard, type PhraseMode, type PhraseProgress, DECKS, pool, recordPhrase, retired, scoreKey, shortfall, writePhrases,
+} from './core/phrases.ts';
 import { type BackupFile, type BackupLesson, type SyncMeta, type SyncState, fingerprint, hasLocalChanges, replacePlan, snapshot } from './core/sync.ts';
 import { type Page, type TokenizedText, cleanImport, paginate, pageWordForms, suggestTitle, tokenize } from './core/text.ts';
 import {
@@ -236,6 +239,74 @@ export async function hideDrillCard(card: DrillCard) {
   await saveDrillProgress(m);
 }
 
+// ---------- say-it / listen pool ----------
+// Scores are this device's (and synced); AI-written sentences are shared through the server (core/phrases.ts).
+
+const PHRASE_SCORES = 'phrases:scores';
+const phraseCardsKey = (deck: DeckId) => `phrases:cards:${deck}`;
+export const phraseScores = new Observable<Map<string, PhraseProgress>>(new Map());
+const phraseCards = new Map<DeckId, PhraseCard[]>();
+
+export async function loadPhrases() {
+  const rows = (await db.get<PhraseProgress[]>('settings', PHRASE_SCORES)) ?? [];
+  phraseScores.set(new Map(rows.map((p) => [scoreKey(p.mode, p.cardId), p])));
+  for (const deck of Object.keys(DECKS) as DeckId[]) {
+    const cards = await db.get<PhraseCard[]>('settings', phraseCardsKey(deck));
+    if (Array.isArray(cards)) phraseCards.set(deck, cards);
+  }
+}
+
+async function savePhraseScores(m: Map<string, PhraseProgress>) {
+  phraseScores.set(m);
+  await db.put('settings', [...m.values()], PHRASE_SCORES);
+}
+
+async function keepPhrases(deck: DeckId, cards: PhraseCard[]) {
+  phraseCards.set(deck, cards);
+  await db.put('settings', cards, phraseCardsKey(deck));
+}
+
+/** The sentences in play for [deck] and [mode]. */
+export const phrasePool = (deck: DeckId, mode: PhraseMode) => pool(deck, mode, phraseCards.get(deck) ?? [], phraseScores.get());
+
+/** "Got it" / "Missed it": the sentence's new score, and whether that retired it. */
+export async function answerPhrase(mode: PhraseMode, card: PhraseCard, right: boolean): Promise<{ progress: PhraseProgress; retired: boolean }> {
+  const m = new Map(phraseScores.get());
+  const key = scoreKey(mode, card.id);
+  const before = m.get(key);
+  const after = recordPhrase(before, mode, card.id, right, Date.now());
+  m.set(key, after);
+  await savePhraseScores(m);
+  return { progress: after, retired: !retired(before) && retired(after) };
+}
+
+const toppingUp = new Map<DeckId, Promise<number>>();
+
+/**
+ * Brings the deck's AI-written sentences up to what the pool needs: the server's first, then new ones written now
+ * (the everyday model writes, the stronger one reviews) and shared. Resolves to how many the deck has.
+ */
+export function topUpPhrases(deck: DeckId): Promise<number> {
+  let p = toppingUp.get(deck);
+  if (!p) {
+    p = (async () => {
+      let cards = phraseCards.get(deck) ?? [];
+      if (shortfall(deck, cards, phraseScores.get()) === 0) return cards.length;
+      const shared = (await api.phrasesGet(deck)).cards;
+      if (shared.length > cards.length) await keepPhrases(deck, (cards = shared));
+      for (let batch = 0; batch < 5 && shortfall(deck, cards, phraseScores.get()) > 0; batch++) {
+        const avoid = [...DECKS[deck].cards, ...cards].map((c) => c.english);
+        const written = await writePhrases(complete, deck, avoid, cards.length, Math.random, (system, user) => api.ai(system, user, 1, true));
+        cards = await api.phrasesPut(deck, cards.length, written).then((r) => r.cards, () => [...cards, ...written]);
+        await keepPhrases(deck, cards);
+      }
+      return cards.length;
+    })().finally(() => toppingUp.delete(deck));
+    toppingUp.set(deck, p);
+  }
+  return p;
+}
+
 /** One free-form AI call through the server (verb practice). */
 export const complete = (system: string, user: string) => api.ai(system, user, 1);
 
@@ -436,7 +507,7 @@ async function localState(): Promise<BackupFile> {
     title: l.title, text: l.text, createdAtMillis: l.createdAt, currentPage: l.currentPage,
     videoId: l.videoId ?? null, sourceUrl: l.sourceUrl ?? null, sharedId: l.sharedId ?? null,
   }));
-  return snapshot(ls, [...vocab.get().values()], Date.now(), [...drillProgress.get().values()]);
+  return snapshot(ls, [...vocab.get().values()], Date.now(), [...drillProgress.get().values()], [...phraseScores.get().values()]);
 }
 
 export interface SyncStatus { state: SyncState | null; server: SyncMeta | null; serverError: string | null; localChanges: boolean }
@@ -507,6 +578,7 @@ export async function syncDown(force = false, onProgress: (text: string) => void
   await db.clear('vocab');
   await db.putAll('vocab', entries);
   await saveDrillProgress(new Map((snap.drill ?? []).map((d) => [d.cardId, { ...d, hidden: !!d.hidden }])));
+  await savePhraseScores(new Map((snap.phrases ?? []).map((p) => [scoreKey(p.mode, p.cardId), p])));
   await loadVocab();
   await loadLessons();
   await saveSyncState(remote.revision, 'down');

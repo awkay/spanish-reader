@@ -63,6 +63,8 @@ func (s *Server) routes() http.Handler {
 	mux.HandleFunc("PUT /api/sync", s.requireAuth(s.handleSyncPut))
 	mux.HandleFunc("GET /api/drill/{verb}", s.requireAuth(s.handleDrillGet))
 	mux.HandleFunc("PUT /api/drill/{verb}", s.requireAuth(s.handleDrillPut))
+	mux.HandleFunc("GET /api/phrases/{deck}", s.requireAuth(s.handlePhrasesGet))
+	mux.HandleFunc("PUT /api/phrases/{deck}", s.requireAuth(s.handlePhrasesPut))
 	if s.cfg.WebDir != "" {
 		mux.Handle("/", http.FileServer(http.Dir(s.cfg.WebDir)))
 	}

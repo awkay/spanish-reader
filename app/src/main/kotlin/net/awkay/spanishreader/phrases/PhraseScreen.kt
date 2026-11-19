@@ -3,6 +3,7 @@ package net.awkay.spanishreader.phrases
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,6 +23,7 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -41,11 +43,13 @@ import net.awkay.spanishreader.core.practice.Drill
 import net.awkay.spanishreader.core.practice.PhraseCard
 import net.awkay.spanishreader.core.practice.PhraseDeck
 import net.awkay.spanishreader.core.practice.PhraseMode
+import net.awkay.spanishreader.core.practice.PhrasePool
 import net.awkay.spanishreader.ui.appViewModel
 
 /**
  * Say it: English, then Spanish with the target words blank; say them out loud, then "Show me".
  * Listen: play the Spanish sentence, translate it in your head, then "Show answer".
+ * Then "Got it" / "Missed it" scores the sentence (see core PhrasePool).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,8 +73,14 @@ fun PhraseScreen(deck: PhraseDeck, mode: PhraseMode, onExit: () -> Unit) {
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            if (ui.loading) {
+                Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                return@Column
+            }
+            ui.flash?.let { Text(it, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium) }
             if (card == null) {
                 Text("That's all ${ui.cards.size}. ¡Muy bien!", style = MaterialTheme.typography.headlineSmall)
+                Text("Got it: ${ui.right} · Missed: ${ui.wrong} · Retired: ${ui.retired}", style = MaterialTheme.typography.bodyLarge)
                 Button(vm::again, Modifier.fillMaxWidth()) { Text("Go again ›") }
                 TextButton(onExit) { Text("Done") }
                 return@Column
@@ -101,13 +111,25 @@ fun PhraseScreen(deck: PhraseDeck, mode: PhraseMode, onExit: () -> Unit) {
             ui.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             if (!ui.shown) {
                 Button(vm::show, Modifier.fillMaxWidth()) { Text(if (mode == PhraseMode.SAY) "Show me" else "Show answer") }
-                if (mode == PhraseMode.LISTEN) TextButton(vm::next) { Text("Next ›") }
+                TextButton(vm::next) { Text("Skip ›") }
             } else {
-                Button(vm::next, Modifier.fillMaxWidth()) { Text(if (mode == PhraseMode.SAY) "Continue ›" else "Next ›") }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Did you get it?", style = MaterialTheme.typography.titleMedium)
+                    Text(scoreDots(ui.score), Modifier.padding(start = 10.dp), color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.titleLarge)
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedButton({ vm.answer(false) }, Modifier.weight(1f)) { Text("✗ Missed it") }
+                    Button({ vm.answer(true) }, Modifier.weight(1f)) { Text("✓ Got it") }
+                }
+                Hint("Got it adds one, missed it takes one off; at ${PhrasePool.TO_RETIRE} the sentence retires and a new one replaces it.")
             }
         }
     }
 }
+
+/** "●●○" for a score of 2 out of the 3 that retire a sentence. */
+private fun scoreDots(score: Int) = "●".repeat(score.coerceIn(0, PhrasePool.TO_RETIRE)) + "○".repeat((PhrasePool.TO_RETIRE - score).coerceAtLeast(0))
 
 @Composable
 private fun Hint(text: String) =

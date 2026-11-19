@@ -14,6 +14,8 @@ import kotlinx.coroutines.runBlocking
 import net.awkay.spanishreader.MainActivity
 import net.awkay.spanishreader.SpanishReaderApp
 import net.awkay.spanishreader.core.practice.PhraseDecks
+import net.awkay.spanishreader.core.practice.PhrasePool
+import org.junit.Assert.assertEquals
 import net.awkay.spanishreader.data.AppSettings
 import org.junit.Before
 import org.junit.Rule
@@ -61,14 +63,17 @@ class PhraseScreenTest {
     private fun sayItSteps() {
         waitForText("No lessons yet")
         openFromMenu("🗣 Say it: question words")
-        val total = PhraseDecks.QUESTIONS.size
+        val total = PhrasePool.SIZE
         waitForText("Show me")
         compose.onNodeWithText("1/$total").assertExists()
         tap("Show me")
-        waitForText("Continue ›")
-        tap("Continue ›")
+        waitForText("Did you get it?")
+        tap("✓ Got it")
         waitForText("2/$total")
         compose.onNodeWithText("Show me").assertExists()
+        val scores = runBlocking(Dispatchers.IO) { app.phraseService.progress().values.toList() }
+        assertEquals(1, scores.size)
+        assertEquals("say" to 1, scores.single().mode to scores.single().score)
         compose.onNodeWithContentDescription("Stop").performClick()
         waitForText("No lessons yet")
     }
@@ -87,8 +92,10 @@ class PhraseScreenTest {
         compose.waitUntil(2_000) { PhraseDecks.VERBS.none { c -> compose.onAllNodes(hasText(c.english)).fetchSemanticsNodes().isNotEmpty() } }
         tap("Show answer")
         compose.waitUntil(30_000) { PhraseDecks.VERBS.any { c -> compose.onAllNodes(hasText(c.english)).fetchSemanticsNodes().isNotEmpty() } }
-        tap("Next ›")
-        waitForText("2/${PhraseDecks.VERBS.size}")
+        tap("✗ Missed it")
+        waitForText("2/${PhrasePool.SIZE}")
+        val scores = runBlocking(Dispatchers.IO) { app.phraseService.progress().values.toList() }
+        assertEquals(listOf(1), scores.map { it.wrong })
         compose.onNodeWithText("Show answer").assertExists()
     }
 }

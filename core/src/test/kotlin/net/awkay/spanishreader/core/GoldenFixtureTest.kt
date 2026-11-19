@@ -11,6 +11,7 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 import net.awkay.spanishreader.core.gloss.GlossCache
 import net.awkay.spanishreader.core.gloss.PreGlossPlanner
 import net.awkay.spanishreader.core.text.ImportCleaner
@@ -192,6 +193,35 @@ class GoldenFixtureTest {
                         c.note?.let { put("note", it) }
                     }
                 }
+            }
+            val w = net.awkay.spanishreader.core.practice.PhraseWriting
+            val pool = net.awkay.spanishreader.core.practice.PhrasePool
+            val q = net.awkay.spanishreader.core.practice.PhraseDeck.QUESTIONS
+            val v = net.awkay.spanishreader.core.practice.PhraseDeck.VERBS
+            putJsonObject("pool") {
+                put("size", pool.SIZE)
+                put("toRetire", pool.TO_RETIRE)
+                put("batch", pool.BATCH)
+                put("verbCount", w.VERB_COUNT)
+                put("questionWords", buildJsonArray { w.QUESTION_WORDS.forEach { add(JsonPrimitive(it)) } })
+                put("verbTenses", buildJsonArray { w.VERB_TENSES.forEach { add(JsonPrimitive(it)) } })
+                put("system", w.SYSTEM)
+                put("reviewSystem", w.REVIEW_SYSTEM)
+                // Checks for the port: the fixed order of the hand-written cards and sample prompts.
+                for (deck in net.awkay.spanishreader.core.practice.PhraseDeck.entries) {
+                    put("order_${deck.id}", buildJsonArray { pool.builtInOrder(deck).forEach { add(JsonPrimitive(it.id)) } })
+                }
+                val targets = listOf(
+                    net.awkay.spanishreader.core.practice.PhraseWriting.Target.Verb("tener", "present"),
+                    net.awkay.spanishreader.core.practice.PhraseWriting.Target.Verb("ir", "near-future"),
+                    net.awkay.spanishreader.core.practice.PhraseWriting.Target.Verb("salir", "odd-tense"),
+                )
+                put("sampleUserVerbs", w.user(v, targets, listOf("I'm hungry.", "Say \"hi\"."), isRetry = true))
+                put("sampleUserQuestions", w.user(q, listOf(net.awkay.spanishreader.core.practice.PhraseWriting.Target.Question("De dónde")), emptyList()))
+                put("sampleReviewVerbs", w.reviewUser(v, targets, listOf(
+                    net.awkay.spanishreader.core.practice.PhraseWriting.Draft(1, "I have two cats.", "___ dos gatos.", "Tengo", "a tip"),
+                    net.awkay.spanishreader.core.practice.PhraseWriting.Draft(3, "We leave.", "___.", "Salimos", null),
+                ), isRetry = false))
             }
         }
         return Json { prettyPrint = true }.encodeToString(JsonElement.serializer(), root) + "\n"

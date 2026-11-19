@@ -36,3 +36,14 @@ test('local changes are those since the last sync', async () => {
   assert.equal(await hasLocalChanges(null, s), true);
   assert.equal(await hasLocalChanges(null, snapshot([], [], 1)), false);
 });
+
+test('say-it / listen scores travel with sync; states without them keep their fingerprint', async () => {
+  const plain = snapshot([a], [v1], 1);
+  assert.ok(!('phrases' in plain));
+  const p = { mode: 'listen', cardId: 'verbs~3', score: 2, right: 4, wrong: 2, lastMillis: 9 };
+  const withScores = snapshot([a], [v1], 1, [], [p]);
+  assert.deepEqual(withScores.phrases, [p]);
+  assert.notEqual(await fingerprint(withScores), await fingerprint(plain));
+  assert.equal(await fingerprint(plain), await fingerprint({ ...plain, phrases: [] }));
+  assert.equal(await hasLocalChanges(null, snapshot([], [], 1, [], [p])), true);
+});

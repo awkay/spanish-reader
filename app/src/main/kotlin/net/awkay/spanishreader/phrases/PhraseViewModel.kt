@@ -14,36 +14,101 @@ import kotlinx.coroutines.launch
 import net.awkay.spanishreader.SpanishReaderApp
 import net.awkay.spanishreader.core.practice.PhraseCard
 import net.awkay.spanishreader.core.practice.PhraseDeck
-import net.awkay.spanishreader.core.practice.PhraseDecks
+import net.awkay.spanishreader.core.practice.PhrasePool
+import net.awkay.spanishreader.core.practice.PhraseProgress
 import net.awkay.spanishreader.core.practice.PhraseMode
 import java.io.File
 
 enum class PhraseAudio { IDLE, LOADING, PLAYING }
 
 data class PhraseUi(
-    val cards: List<PhraseCard>,
+    val cards: List<PhraseCard> = emptyList(),
     val index: Int = 0,
+    /** The pool is still being read. */
+    val loading: Boolean = true,
     /** The answer is showing ("Show me" / "Show answer" was pressed). */
     val shown: Boolean = false,
     val audio: PhraseAudio = PhraseAudio.IDLE,
     val error: String? = null,
+    /** Scores in this mode, by card id. */
+    val scores: Map<String, PhraseProgress> = emptyMap(),
+    val right: Int = 0,
+    val wrong: Int = 0,
+    val retired: Int = 0,
+    /** Shown once after a sentence retires. */
+    val flash: String? = null,
 ) {
-    val card: PhraseCard? get() = cards.getOrNull(index)
+    val card: PhraseCard? get() = if (loading) null else cards.getOrNull(index)
+    val score: Int get() = card?.let { scores[it.id]?.score } ?: 0
 }
 
-/** Say it / listen practice over a fixed deck (core PhraseDecks). Listening plays the sentence with the voice from Settings. */
+/**
+ * Say it / listen practice over the deck's pool (core PhrasePool): after the answer the learner says whether they got
+ * it; three more rights than misses retire a sentence and a new one takes its place. Listening plays the sentence with
+ * the voice from Settings.
+ */
 class PhraseViewModel(private val app: SpanishReaderApp, val deck: PhraseDeck, val mode: PhraseMode) : ViewModel() {
-    private val _ui = MutableStateFlow(PhraseUi(PhraseDecks.session(deck)))
+    private val _ui = MutableStateFlow(PhraseUi())
     val ui: StateFlow<PhraseUi> = _ui
     private var player: MediaPlayer? = null
+    private val service get() = app.phraseService
 
     init {
-        prefetch()
+        load()
+    }
+
+    private fun load() {
+        viewModelScope.launch {
+            val progress = service.progress()
+            val cards = PhrasePool.session(service.pool(deck, mode), mode, progress)
+            val scores = progress.values.filter { it.mode == mode.id }.associateBy { it.cardId }
+            _ui.value = PhraseUi(cards, loading = false, scores = scores)
+            prefetch()
+            topUp()
+        }
+    }
+
+    /** Has the AI write more sentences in the background when retirements left the deck short. */
+    private fun topUp() {
+        viewModelScope.launch {
+            try {
+                service.topUp(deck)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // The hand-written reserve fills in; the next session tries again.
+            }
+        }
     }
 
     fun show() = _ui.update { it.copy(shown = true) }
 
+    /** "Got it" / "Missed it": scores the sentence, then moves on. */
+    fun answer(right: Boolean) {
+        val card = _ui.value.card ?: return
+        viewModelScope.launch {
+            val a = service.answer(mode, card, right)
+            _ui.update {
+                it.copy(
+                    scores = it.scores + (card.id to a.progress),
+                    right = it.right + if (right) 1 else 0,
+                    wrong = it.wrong + if (right) 0 else 1,
+                    retired = it.retired + if (a.retired) 1 else 0,
+                    flash = if (a.retired) "Retired ✓ A new sentence will take its place." else null,
+                )
+            }
+            advance()
+            if (a.retired) topUp()
+        }
+    }
+
+    /** Skips the sentence without scoring it. */
     fun next() {
+        _ui.update { it.copy(flash = null) }
+        advance()
+    }
+
+    private fun advance() {
         stop()
         _ui.update { it.copy(index = it.index + 1, shown = false, error = null, audio = PhraseAudio.IDLE) }
         prefetch()
@@ -51,8 +116,7 @@ class PhraseViewModel(private val app: SpanishReaderApp, val deck: PhraseDeck, v
 
     fun again() {
         stop()
-        _ui.value = PhraseUi(PhraseDecks.session(deck))
-        prefetch()
+        load()
     }
 
     fun play() {

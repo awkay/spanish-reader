@@ -75,16 +75,41 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
   `app/.../chat/` (`VoiceRecorder`, `ChatViewModel` with a swappable `ChatBackend`, `ChatScreen`). Tests: `ChatTest`,
   `speech_test.go`, `ChatScreenTest` (fake AI/voice/recognizer), `ChatScreenshotTest` (SCREENSHOT_DIR only).
 
+## Say-it / listen scores and new sentences (2026-11-19; server + web + Android)
+- **Tony's request**: the decks always showed the same sentences. Now, after "Show me" / "Show answer", the learner
+  taps "✓ Got it" or "✗ Missed it". Got it counts one up, missed it one down (never below 0; same rule as the
+  lightning drill); at 3 (`PhrasePool.TO_RETIRE`) the sentence retires in that mode and the next one takes its place,
+  so each deck and mode (4 pools) keeps 50 (`PhrasePool.SIZE`) in play. "Skip ›" moves on without scoring. Dots
+  (●●○) show the sentence's score; the end of a session shows got / missed / retired.
+- **Where sentences come from** (`core/.../practice/PhrasePool.kt`, ported in `web/src/core/phrases.ts`): the first 50
+  hand-written ones in a fixed mixed order (FNV-1a of the id, identical on both clients), then AI-written ones in
+  order, then the remaining hand-written ones as a reserve (used only while no AI sentences are available: offline,
+  no AI configured, or writing failed).
+- **AI-written sentences**: when retirements leave a deck short, the device writes a batch of 10
+  (`PhraseWriter`: question-word targets from a weighted list, or verb + everyday tense, half from the hand-written
+  pairs; the "avoid" list holds every existing English sentence), the improve model reviews them as for drill cards,
+  and local checks drop cards with no single blank, a question-word answer that isn't the target, or a repeated
+  English sentence (verb helpers go inside the blank via `Drill.withHelpers`). Batches are shared:
+  `GET/PUT /api/phrases/{deck}` (`server/phrases.go`), an append-only list per deck where a PUT carries the count it
+  saw (`after`); a stale batch is dropped and the stored list returned, so ids (`deck~n`) stay stable.
+- **Scores** are per device and mode, in sync snapshots (`BackupFile.phrases`, left out when empty so earlier
+  fingerprints are unchanged). Android stores them in Room v6 (`practice_scores`, plus `practice_phrases` for the
+  AI-written list); the web app in IndexedDB settings.
+- **Verified**: core/web/server/Robolectric tests (`PhrasePoolTest`, `phrases.test.ts`, `phrases_test.go`,
+  `PhraseServiceTest`, `PhraseScreenTest`, `MigrationTest` 5→6); the web port matches the Kotlin order and prompts via
+  `fixtures/phrases.json`; Playwright against a local server (rate, counter, scores kept). Not yet tried with a real
+  AI writing a batch, or on the phones.
+
 ## Say-it / listen practice (2026-11-17; web + Android)
 - **Where**: four new entries in the practice menu (✍︎ web, mortarboard Android): "Say it: question words", "Say it:
   everyday verbs", "Listen: question words", "Listen: everyday verbs".
 - **Say it**: the English sentence, then the Spanish one with the target words blank. The verb deck also shows a
   hint such as "tener · present". The learner says the answer out loud, then "Show me" fills the blank (highlighted)
-  plus a short tip where there is one, and "Continue" moves on.
+  plus a short tip where there is one. (Since 2026-11-19: then "Got it" / "Missed it", see above.)
 - **Listen**: a big play button speaks the Spanish sentence. "Show answer" shows the Spanish (target highlighted), the
   English and the hint; "Next" moves on (also available before showing).
-- **Common to both**: ✕ stops at any time. A session is the whole deck shuffled, with "Go again" at the end. Nothing
-  is graded or recorded.
+- **Common to both**: ✕ stops at any time; "Go again" at the end. (Since 2026-11-19 a session is the pool of 50,
+  least practiced first, and answers are scored.)
 - **Content** (`core/.../practice/PhraseDecks.kt`, exported to `fixtures/phrases.json` by `GoldenFixtureTest`, read by
   `web/src/core/phrases.ts`): hand-written and checked, not AI-generated.
   - 71 question-word sentences: qué, quién/quiénes, de/con/para quién, dónde/adónde/de dónde, cuándo/desde cuándo, a

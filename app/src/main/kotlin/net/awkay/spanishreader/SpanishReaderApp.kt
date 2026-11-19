@@ -37,6 +37,7 @@ class SpanishReaderApp : Application() {
     val audio: LessonAudio by lazy { LessonAudio(this) }
     val webShare: WebShareService by lazy { WebShareService(settings, glossCache, phrases, GlossService.sharedHttp) }
     val drill: DrillService by lazy { DrillService(database, settings, vocab, webShare) }
+    val phraseService: net.awkay.spanishreader.phrases.PhraseService by lazy { net.awkay.spanishreader.phrases.PhraseService(database, settings, webShare) }
     val sync: SyncService by lazy { SyncService(database, settings, webShare, "Android (${android.os.Build.MODEL})") }
 
     private var lemmasBackfilled = false

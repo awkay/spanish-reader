@@ -105,3 +105,22 @@ data class DrillProgressEntity(
     @ColumnInfo(name = "last_millis") val lastMillis: Long,
     val hidden: Boolean,
 )
+
+/** A say-it / listen deck's AI-written sentences (JSON list of PhraseCard, ids `deck~n`), as shared by the web server. */
+@Entity(tableName = "practice_phrases")
+data class PracticePhrasesEntity(
+    @PrimaryKey val deck: String,
+    val json: String,
+    @ColumnInfo(name = "stored_at") val storedAtMillis: Long,
+)
+
+/** The learner's score for one say-it / listen sentence in one mode (mirrors core PhraseProgress). */
+@Entity(tableName = "practice_scores", primaryKeys = ["mode", "card_id"])
+data class PracticeScoreEntity(
+    val mode: String,
+    @ColumnInfo(name = "card_id") val cardId: String,
+    val score: Int,
+    val right: Int,
+    val wrong: Int,
+    @ColumnInfo(name = "last_millis") val lastMillis: Long,
+)

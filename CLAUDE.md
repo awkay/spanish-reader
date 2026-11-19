@@ -16,7 +16,9 @@ Current state and next steps: `docs/STATUS.md` — read it first.
   *Lightning verbs*: common verbs in order, 10 shared AI-written cards each (sentence with the verb blank); type the
   form, one try, checked locally; 6 right answers learn a card (`core/.../practice/VerbDrill.kt`).
   *Say it* / *Listen* (question words, everyday verbs): fixed hand-written sentences (`core/.../practice/PhraseDecks.kt`);
-  say the blank aloud then "Show me", or hear the sentence and translate it in your head.
+  say the blank aloud then "Show me", or hear the sentence and translate it in your head; then "Got it" / "Missed it"
+  (+1 / -1); 3 retires a sentence, and a pool of 50 per deck and mode is kept topped up with AI-written sentences
+  shared through the server (`core/.../practice/PhrasePool.kt`, `/api/phrases/{deck}`).
 - **Conversation** (Android only, practice menu): chat about a chosen topic by typing or speaking (server speech
   recognition, `/api/speech`); replies are heard first, then read, then translated; each learner turn gets a minimal
   correction in the background; the corrected transcript is saved as a lesson (`core/.../chat/Chat.kt`).

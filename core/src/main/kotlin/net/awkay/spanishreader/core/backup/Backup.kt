@@ -1,9 +1,12 @@
 package net.awkay.spanishreader.core.backup
 
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import net.awkay.spanishreader.core.practice.DrillProgress
+import net.awkay.spanishreader.core.practice.PhraseProgress
 import net.awkay.spanishreader.core.vocab.VocabEntry
 import net.awkay.spanishreader.core.vocab.WordStatus
 
@@ -43,6 +46,7 @@ data class BackupVocab(
 }
 
 /** Everything worth keeping. The gloss cache is left out: it can be regenerated. */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class BackupFile(
     val version: Int = CURRENT_VERSION,
@@ -51,6 +55,12 @@ data class BackupFile(
     val vocab: List<BackupVocab> = emptyList(),
     /** Verb drill progress per card (cards themselves live on the server). */
     val drill: List<DrillProgress> = emptyList(),
+    /**
+     * Say-it / listen scores per mode and sentence (AI-written sentences live on the server). Left out when empty, so
+     * fingerprints of states from before it existed don't change.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    val phrases: List<PhraseProgress> = emptyList(),
 ) {
     companion object {
         const val CURRENT_VERSION = 1

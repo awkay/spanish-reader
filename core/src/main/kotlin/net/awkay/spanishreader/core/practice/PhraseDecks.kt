@@ -1,15 +1,18 @@
 package net.awkay.spanishreader.core.practice
 
+import kotlinx.serialization.Serializable
 import kotlin.random.Random
 
 /*
  * Say-it / listen practice with fixed, hand-checked sentences (exported to fixtures/phrases.json for the web app).
  * "Say it": the English sentence, then the Spanish one with the target words blank; the learner says the answer out
  * loud, then "Show me" fills it in. "Listen": the Spanish sentence is played; the learner translates it in their head,
- * then "Show answer" shows both sentences. Nothing is graded or recorded.
+ * then "Show answer" shows both sentences. The learner then says whether they got it; see PhrasePool.kt for the
+ * scores, the pool of sentences in play and the AI-written ones.
  */
 
 /** One sentence. [spanish] has [Drill.BLANK] where [answer] goes; [verb]/[tense] only in the verb deck. */
+@Serializable
 data class PhraseCard(
     val id: String,
     val english: String,

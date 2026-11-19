@@ -124,4 +124,9 @@ h2 { font-size: 15px; color: var(--accent); margin: 20px 0 8px; }
 .phrases .spanish { font-size: 22px; margin: 8px 0 16px; }
 .phrases .blank { border-bottom: 2px solid var(--accent); padding: 0 4px; }
 .phrases .blank.shown { color: var(--accent); font-weight: 600; }
+.phrases .accent { color: var(--accent); }
+.phrases .rate-title { font-weight: 600; margin: 12px 0 8px; }
+.phrases .rate-title .dots { color: var(--accent); letter-spacing: 2px; margin-left: 6px; }
+.phrases .rate { display: flex; gap: 12px; }
+.phrases .rate button { flex: 1; }
 .phrases .play-big { display: block; margin: 32px auto 24px; width: 120px; height: 120px; border-radius: 50%; border: none; background: var(--accent); color: var(--accent-fg); font-size: 44px; }

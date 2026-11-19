@@ -13,8 +13,10 @@ import net.awkay.spanishreader.core.backup.Sync
 import net.awkay.spanishreader.core.backup.SyncMeta
 import net.awkay.spanishreader.core.backup.SyncState
 import net.awkay.spanishreader.core.practice.DrillProgress
+import net.awkay.spanishreader.core.practice.PhraseProgress
 import net.awkay.spanishreader.data.AppDatabase
 import net.awkay.spanishreader.data.DrillProgressEntity
+import net.awkay.spanishreader.data.PracticeScoreEntity
 import net.awkay.spanishreader.data.LessonEntity
 import net.awkay.spanishreader.data.SettingsRepository
 import net.awkay.spanishreader.data.VocabEntity
@@ -106,6 +108,8 @@ class SyncService(
             db.vocab().upsertAll(snap.vocab.map { VocabEntity.from(it.toEntry()) })
             db.drill().clearProgress()
             db.drill().upsertProgress(snap.drill.map { DrillProgressEntity(it.cardId, it.correct, it.misses, it.lastMillis, it.hidden) })
+            db.practice().clearScores()
+            db.practice().upsertScores(snap.phrases.map { PracticeScoreEntity(it.mode, it.cardId, it.score, it.right, it.wrong, it.lastMillis) })
         }
         saveState(meta.revision, "down")
         progress("Fetching word meanings…")
@@ -138,6 +142,7 @@ class SyncService(
         db.vocab().getAllOnce().map { BackupVocab.from(it.toEntry()) },
         clock(),
         db.drill().progress().map { DrillProgress(it.cardId, it.correct, it.misses, it.lastMillis, it.hidden) },
+        db.practice().scores().map { PhraseProgress(it.mode, it.cardId, it.score, it.right, it.wrong, it.lastMillis) },
     )
 
     private suspend fun state(): SyncState? {
