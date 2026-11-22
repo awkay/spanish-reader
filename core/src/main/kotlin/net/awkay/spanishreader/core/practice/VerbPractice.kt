@@ -51,6 +51,14 @@ data class VerbTense(
     val subjects: List<Subject> = Subject.entries,
 )
 
+/**
+ * Models otherwise write "Espero que yo esté…", where Spanish needs the infinitive ("Espero estar…"), whenever a
+ * subjunctive card has the subject yo.
+ */
+private const val SAME_SUBJECT_RULE = "The subjunctive verb's subject must differ from the main verb's (\"Quiero que tú estés\", " +
+    "\"Mi mamá espera que yo esté\"); with the same subject Spanish uses the infinitive (\"Espero estar\"), so never write " +
+    "\"Espero que yo...\". For yo, use another person's wish or a conjunction (cuando, para que, antes de que)."
+
 object VerbTenses {
     private val imperative = listOf(Subject.TU, Subject.USTED, Subject.USTEDES, Subject.NOSOTROS)
 
@@ -63,8 +71,10 @@ object VerbTenses {
         VerbTense("present-perfect", "present perfect", "he hablado", "present perfect with haber (have/has done)"),
         VerbTense("pluperfect", "pluperfect", "había hablado", "pluperfect with haber in the imperfect (had done)"),
         VerbTense("conditional-perfect", "conditional perfect", "habría hablado", "conditional perfect (would have done)"),
-        VerbTense("present-subjunctive", "present subjunctive", "hable", "present subjunctive, triggered by a wish, request, doubt, emotion or a conjunction like para que / cuando (future)"),
-        VerbTense("imperfect-subjunctive", "imperfect subjunctive", "hablara", "imperfect subjunctive (-ra form), e.g. after si in a hypothetical (if I had...) or a past wish/request"),
+        VerbTense("present-subjunctive", "present subjunctive", "hable", "present subjunctive, triggered by a wish, request, doubt, emotion or a conjunction like para que / cuando (future). " +
+            SAME_SUBJECT_RULE),
+        VerbTense("imperfect-subjunctive", "imperfect subjunctive", "hablara", "imperfect subjunctive (-ra form), e.g. after si in a hypothetical (if I had...) or a past wish/request. " +
+            SAME_SUBJECT_RULE),
         VerbTense("imperative", "affirmative command", "habla / hable", "affirmative command to the subject", imperative),
         VerbTense("negative-imperative", "negative command", "no hables", "negative command (don't ...) to the subject", imperative),
         VerbTense("near-future", "ir a + infinitive", "voy a hablar", "near future with ir a + infinitive (going to ...)"),

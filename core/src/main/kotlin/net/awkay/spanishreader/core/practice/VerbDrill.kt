@@ -161,7 +161,10 @@ object Drill {
         - the answer is the given verb in the intended tense or construction and person, and a native speaker would use
           this verb here (a sentence that needs estar instead of ser, ir instead of ser, etc. is wrong);
         - the blank holds only the verb words (helper verbs included), with pronouns outside it;
-        - the English makes that form the natural choice.
+        - the English makes that form the natural choice;
+        - a subjunctive has a different subject from the verb that triggers it (with the same subject Spanish uses the
+          infinitive: "Espero estar listo", never "Espero que yo esté listo"; rewrite such a card with another person's
+          wish or a conjunction like cuando or para que).
         Fix a card that is wrong when you can do it while keeping its verb, tense and subject (edit the English, the
         Spanish, the answer or "also"); otherwise set "ok" to false. Keep correct cards exactly as they are.
         Respond with ONLY a JSON object, no markdown fences and no commentary, shaped exactly like:

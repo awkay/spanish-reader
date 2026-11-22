@@ -144,6 +144,9 @@ object PhraseWriting {
         - "answer": the exact words that fill the blank, with correct accents.
         - "note": a short tip in English when it helps the learner (e.g. "before a noun, \"which\" is usually qué",
           "negative tú commands use the subjunctive"); otherwise leave it out.
+        For a Cuál or Cuáles target, never put it directly before a noun (that is qué: "¿Qué sabores tienen?"). Use
+        "¿Cuál es...?", "¿Cuáles son...?" or "¿Cuál de / Cuáles de + noun...?" with the verb agreeing with it: "¿Cuál
+        de estos platillos es el más picante?", "¿Cuáles de estos libros son tuyos?".
         Use ustedes, never vosotros, and common Mexican/US Spanish vocabulary. Make every sentence different from the
         others and from the sentences in "avoid", in situation as well as in wording.
         Respond with ONLY a JSON object, no markdown fences and no commentary, shaped exactly like:
@@ -161,7 +164,9 @@ object PhraseWriting {
         - the answer is the target: those question words, or that verb in that tense or construction, in the person the
           English needs, and a native speaker would say it that way here;
         - the blank holds only the target words (helper verbs included), with pronouns outside it;
-        - the note, if any, is true and fits this sentence.
+        - the note, if any, is true and fits this sentence;
+        - cuál or cuáles is not directly before a noun (that needs qué), and after "Cuál de" the verb is singular, after
+          "Cuáles de" plural ("¿Cuál de estos platillos es...?", never "¿Cuáles de estos platillos es...?").
         Fix a card that is wrong when you can while keeping its target (edit the English, the Spanish, the answer or the
         note, or drop the note); otherwise set "ok" to false. Keep correct cards exactly as they are.
         Respond with ONLY a JSON object, no markdown fences and no commentary, shaped exactly like:

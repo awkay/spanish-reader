@@ -94,10 +94,15 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
 - **Not verified here:** the `:app` Robolectric suite. Maven Central kept answering 429 for one Robolectric jar in
   this container. The app module compiles, its unit tests compile and the debug APK builds; CI runs the suite on
   push.
-- **Next (prompt content, not settings):**
-  - The same-subject subjunctive drill situation ("Espero que yo esté").
-  - *echar de menos* called the Latin American norm.
-  - *cuáles* + noun.
+- **Prompt fixes for the three mistakes every setting made** (`VerbPractice.kt` subjunctive tense hints,
+  drill review, `GlossPrompt` grammarNote, say-it writing/review; web via `fixtures/prompts.json`):
+  - The subjunctive needs a subject different from its trigger. Never "Espero que yo esté".
+  - Latin America is the reference for regional notes. *echar de menos* is mostly Spain; LatAm says *extrañar*.
+  - Cuál/Cuáles never goes directly before a noun, and the verb agrees after "Cuál de" / "Cuáles de".
+  - Checked with 3 live runs at low: all three mistakes gone (drill: "Mi mamá espera que yo esté…"; every
+    *echar* note names *extrañar*; no Cuáles + noun).
+  - One run's writer filled in the answer on 5 of 10 verb cards (no blank), so only 5 were usable. That part
+    of the prompt is unchanged, and earlier runs never did it.
 
 ## Model bake-off (2026-11-22; experiment only, no code change)
 Eight models ran the app's real prompts via OpenRouter: glosses, sentences, drill cards, say-it cards and chat. Results,
