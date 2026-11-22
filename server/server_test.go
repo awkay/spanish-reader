@@ -426,6 +426,7 @@ func TestLessonsAndSentenceCache(t *testing.T) {
 
 func TestAIMaxOutputTokensSetting(t *testing.T) {
 	t.Setenv("SR_ACCESS_CODE", "482913")
+	t.Setenv("SR_DATA_DIR", t.TempDir()) // loadConfig writes a secret there
 	for v, want := range map[string]int{"": 16000, "8000": 8000, "0": 0} {
 		t.Setenv("SR_AI_MAX_OUTPUT_TOKENS", v)
 		c, err := loadConfig()
