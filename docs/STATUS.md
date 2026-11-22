@@ -52,6 +52,25 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
 - **Voice**: Tony chose Piper `es_MX-claude-high` (no es-CO voice exists in Piper; Azure has es-CO neural voices if
   ever wanted). Changing it is one env setting, `SR_PIPER_MODEL`.
 
+## AI accounts and models (2026-11-22; Android)
+- **Tony's request**: keep any number of AI setups and switch between them without retyping keys. Settings → "AI
+  accounts and models" lists saved profiles (`AiProfile` in `app/.../data/SettingsRepository.kt`: name, service, base
+  URL, key, model). The radio button picks the one used for word meanings, translations, practice and conversation;
+  each row can be edited, copied (same key, try another model) or deleted. Two dropdowns choose the profile for
+  "Improve answer" / card reviews (default: the selected one) and a fallback when the selected one fails (default:
+  none). The editor is inline on the page (text fields in a dialog never went idle under Robolectric, and the inline
+  form also suits the keyboard better).
+- **New service preset "OpenRouter"** (`GlossProvider.OPENROUTER`, base URL https://openrouter.ai/api/v1, OpenAI-compatible
+  client, model ids like `deepseek/deepseek-v4.1-flash`).
+- **Upgrade**: when no profiles are stored yet, the old settings become profiles (`migrate`): every provider that
+  had anything typed in (ids `legacy-<PROVIDER>`), the chosen provider active; a non-blank "improve model" becomes a
+  copy of the active profile with that model; the old implicit "Claude for Improve if set up" and the "fall back to
+  Claude" switch become explicit choices. The old keys are left in place. `AppSettings.primaryGlosser`,
+  `improveGlosser` and `fallbackGlosser` keep their meaning, so nothing else changed.
+- **Tests**: `SettingsMigrationTest` (old settings → profiles, stable before and after the first save; fresh install),
+  `GlossServiceTest` (switch, copy, delete, improve/fallback choices), `SettingsProfilesTest` (Robolectric: radio
+  switches the profile in use, copy keeps the key; renders `settings-ai.png` with `SCREENSHOT_DIR`).
+
 ## Known words: likely meanings, lookup on request (2026-11-22; Android + web)
 - **Tony's request**: tapping a word already marked **KNOWN** shouldn't cost an AI call. When its sentence has no
   cached gloss, the sheet opens at once with **"Likely meanings (not from this sentence)"** and makes no network call

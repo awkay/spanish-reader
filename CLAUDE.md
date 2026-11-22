@@ -70,7 +70,8 @@ Rules:
   - Offline fallback (later): Spanish→English dictionary from Wiktionary (kaikki.org extract).
 - **TTS**: cloud neural voice (Google Chirp HD or Azure Neural, es-MX/es-US) generated once per lesson and cached as
   MP3 with sentence timings; on-device Android TTS as fallback. Playback via Media3 `MediaSessionService`.
-- API keys live in app settings (personal-only app; acceptable because it's never published).
+- API keys live in app settings (personal-only app; acceptable because it's never published), as any number of
+  saved **AI profiles** (service, URL, key, model); one is active, others can serve "Improve answer" and fallback.
 
 ## Build & test
 - Gradle wrapper, Kotlin DSL, version catalog `gradle/libs.versions.toml`.

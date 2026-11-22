@@ -26,6 +26,9 @@ enum class GlossProvider(
     /** Pay-as-you-go z.ai balance; Coding Plan keys get HTTP 429 "Insufficient balance" here. */
     ZAI("z.ai GLM (pay-as-you-go)", "https://api.z.ai/api/paas/v4", true, null),
     ANTHROPIC("Anthropic Claude", "https://api.anthropic.com", true, "claude-haiku-4-5"),
+
+    /** Many providers' models behind one key, through the OpenAI-compatible client; model ids look like vendor/model. */
+    OPENROUTER("OpenRouter", "https://openrouter.ai/api/v1", true, null),
     OPENAI_COMPATIBLE("Other OpenAI-compatible", null, false, null),
     ;
 

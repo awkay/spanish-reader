@@ -107,14 +107,13 @@ class PreGlossWorkerTest {
     fun tearDown() = runBlocking(Dispatchers.IO) {
         server.close()
         app.database.clearAllTables()
-        app.settings.updateProvider(GlosserConfig(GlossProvider.OPENAI_COMPATIBLE))
         app.settings.update { AppSettings() }
     }
 
     @Test
     fun glossesOnlyTheRequestedPagesAndSkipsCachedAndKnownWords() = runBlocking {
-        app.settings.update { it.copy(provider = GlossProvider.OPENAI_COMPATIBLE, wordsPerPage = 50) }
-        app.settings.updateProvider(GlosserConfig(GlossProvider.OPENAI_COMPATIBLE, server.url("/v1").toString(), model = "m"))
+        app.settings.update { it.copy(wordsPerPage = 50) }
+        app.settings.useConfig(GlosserConfig(GlossProvider.OPENAI_COMPATIBLE, server.url("/v1").toString(), model = "m"))
         // 4 pages of 50 words: page N uses words "pN_w0" … so we can tell pages apart.
         val text = (0 until 4).joinToString("\n") { p -> (0 until 10).joinToString(" ") { s -> (0 until 5).joinToString(" ") { w -> "p${'a' + p}s${'a' + s}w${'a' + w}" } } + "." }
         val id = app.lessons.import("T", text)

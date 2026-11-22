@@ -10,6 +10,7 @@ import net.awkay.spanishreader.core.gloss.GlossResult
 import net.awkay.spanishreader.core.gloss.Glosser
 import net.awkay.spanishreader.core.gloss.GlosserConfig
 import net.awkay.spanishreader.core.gloss.InMemoryGlossCache
+import net.awkay.spanishreader.data.AiProfile
 import net.awkay.spanishreader.data.SettingsRepository
 import org.junit.Rule
 import org.junit.Test
@@ -49,8 +50,7 @@ class GlossServiceTest {
     @Test
     fun liveLookupIsCachedAndFallsBackToOtherSentence() = runTest {
         val s = settings()
-        s.update { it.copy(provider = GlossProvider.ZAI) }
-        s.updateProvider(configured)
+        s.useConfig(configured)
         val cache = InMemoryGlossCache()
         val live = Fake(false)
         val service = GlossService(s, cache, factory = { _, _ -> live })
@@ -67,8 +67,9 @@ class GlossServiceTest {
     @Test
     fun improveUsesTheImproveModelSendsThePreviousAnswerAndReplacesTheCache() = runTest {
         val s = settings()
-        s.update { it.copy(provider = GlossProvider.ZAI, improveModel = "glm-5.3") }
-        s.updateProvider(configured)
+        s.useConfig(configured)
+        s.saveProfile(AiProfile("better", provider = GlossProvider.ZAI.name, apiKey = "k", model = "glm-5.3"))
+        s.update { it.copy(improveProfileId = "better") }
         val cache = InMemoryGlossCache()
         val seen = mutableListOf<Pair<GlosserConfig, GlossRequest>>()
         val service = GlossService(s, cache, factory = { p, _ ->
@@ -89,20 +90,20 @@ class GlossServiceTest {
     }
 
     @Test
-    fun improveFallsBackToClaudeWhenConfigured() = runTest {
+    fun improveUsesTheActiveProfileUnlessAnotherIsChosen() = runTest {
         val s = settings()
-        s.update { it.copy(provider = GlossProvider.ZAI) }
-        s.updateProvider(configured)
+        s.useConfig(configured)
         assertEquals(configured, s.current().improveGlosser)
-        s.updateProvider(GlosserConfig(GlossProvider.ANTHROPIC, apiKey = "a"))
+        s.saveProfile(AiProfile("claude", provider = GlossProvider.ANTHROPIC.name, apiKey = "a"))
+        assertEquals(configured, s.current().improveGlosser) // saving another profile doesn't change what's used
+        s.update { it.copy(improveProfileId = "claude") }
         assertEquals(GlossProvider.ANTHROPIC, s.current().improveGlosser.provider)
     }
 
     @Test
     fun translateUsesTheStoredTranslationOrFetchesAndStoresIt() = runTest {
         val s = settings()
-        s.update { it.copy(provider = GlossProvider.ZAI) }
-        s.updateProvider(configured)
+        s.useConfig(configured)
         val db = androidx.room.Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), net.awkay.spanishreader.data.AppDatabase::class.java)
             .allowMainThreadQueries().build()
         val store = net.awkay.spanishreader.data.PhraseStore(db.phrases())
@@ -122,35 +123,29 @@ class GlossServiceTest {
     }
 
     @Test
-    fun selectingAProviderFillsDefaultsOnlyWhenEmpty() = runTest {
+    fun profilesAreKeptSwitchedAndDeleted() = runTest {
         val s = settings()
-        s.selectProvider(GlossProvider.ZAI_RESPONSES)
-        assertEquals("https://api.z.ai/api/v1", s.current().primaryGlosser.baseUrl)
-        assertEquals("", s.current().primaryGlosser.model) // no default model for z.ai
-
-        s.updateProvider(GlosserConfig(GlossProvider.ZAI, baseUrl = "https://my.proxy/v4", model = "glm-4.6"))
-        s.selectProvider(GlossProvider.ZAI)
-        assertEquals(GlosserConfig(GlossProvider.ZAI, baseUrl = "https://my.proxy/v4", model = "glm-4.6"), s.current().primaryGlosser)
-
-        s.selectProvider(GlossProvider.ANTHROPIC)
-        assertEquals("https://api.anthropic.com", s.current().primaryGlosser.baseUrl)
-        assertEquals("claude-haiku-4-5", s.current().primaryGlosser.model)
-
-        s.selectProvider(GlossProvider.OLLAMA_LOCAL) // no default URL: stays empty for the user to fill in
-        assertEquals("", s.current().primaryGlosser.baseUrl)
-        assertEquals(GlossProvider.OLLAMA_LOCAL, s.current().provider)
-    }
-
-    @Test
-    fun settingsPersistPerProvider() = runTest {
-        val s = settings()
-        s.updateProvider(configured)
-        s.updateProvider(GlosserConfig(GlossProvider.ANTHROPIC, apiKey = "a"))
-        s.update { it.copy(provider = GlossProvider.ZAI, fallbackToAnthropic = true) }
+        val router = AiProfile("r", provider = GlossProvider.OPENROUTER.name, apiKey = "or", model = "deepseek/deepseek-v4.1-flash")
+        val glm = AiProfile("g", provider = GlossProvider.ZAI_RESPONSES.name, apiKey = "z", model = "glm-5.3")
+        s.saveProfile(router)
+        s.saveProfile(glm)
+        s.saveProfile(router.copy(id = "r2", model = "google/gemini-3.8-flash")) // same key, another model
+        assertEquals("r", s.current().activeProfileId) // the first one saved is used until another is chosen
+        assertEquals("https://openrouter.ai/api/v1", s.current().primaryGlosser.effectiveBaseUrl)
+        s.activate("g")
+        assertEquals(GlosserConfig(GlossProvider.ZAI_RESPONSES, apiKey = "z", model = "glm-5.3"), s.current().primaryGlosser)
+        s.update { it.copy(fallbackProfileId = "r2", improveProfileId = "r2") }
+        assertEquals("google/gemini-3.8-flash", s.current().fallbackGlosser?.model)
+        assertEquals("or", s.current().fallbackGlosser?.apiKey)
+        s.activate("r2")
+        assertEquals(null, s.current().fallbackGlosser) // never falls back to itself
+        s.deleteProfile("r2")
         val cur = s.current()
-        assertEquals(configured, cur.primaryGlosser)
-        assertEquals("a", cur.fallbackGlosser?.apiKey)
-        s.update { it.copy(provider = GlossProvider.ANTHROPIC) }
-        assertEquals(null, s.current().fallbackGlosser)
+        assertEquals(listOf("r", "g"), cur.aiProfiles.map { it.id })
+        assertEquals("r", cur.activeProfileId)
+        assertEquals("" to "", cur.improveProfileId to cur.fallbackProfileId)
+        assertEquals("openrouter.ai · deepseek/deepseek-v4.1-flash", AiProfile("x", provider = GlossProvider.OPENAI_COMPATIBLE.name,
+            baseUrl = "https://openrouter.ai/api/v1", model = "deepseek/deepseek-v4.1-flash").label)
+        assertEquals("OpenRouter · deepseek/deepseek-v4.1-flash", router.label)
     }
 }

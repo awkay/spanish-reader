@@ -12,19 +12,77 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import net.awkay.spanishreader.core.gloss.GlossProvider
 import net.awkay.spanishreader.core.gloss.GlosserConfig
 import net.awkay.spanishreader.core.text.Paginator
 
 enum class TtsEngine(val label: String) { DEVICE("On-device (Android TTS)"), GOOGLE_CLOUD("Google Cloud TTS") }
 
+/**
+ * One saved AI account + model ("OpenRouter · deepseek", "z.ai plan · glm-5.3"). Any number can be kept; one is used
+ * for word meanings and the rest of the app, others can serve "Improve answer" and as a fallback.
+ */
+data class AiProfile(
+    val id: String,
+    val name: String = "",
+    /** [GlossProvider] name; an unknown one reads as "Other OpenAI-compatible". */
+    val provider: String = GlossProvider.OPENAI_COMPATIBLE.name,
+    val baseUrl: String = "",
+    val apiKey: String = "",
+    val model: String = "",
+) {
+    val glossProvider: GlossProvider get() = runCatching { GlossProvider.valueOf(provider) }.getOrDefault(GlossProvider.OPENAI_COMPATIBLE)
+
+    val config: GlosserConfig get() = GlosserConfig(glossProvider, baseUrl.trim(), apiKey.trim(), model.trim())
+
+    /** [name], or one made from the service and model. */
+    val label: String
+        get() = name.trim().ifEmpty {
+            val host = config.effectiveBaseUrl.substringAfter("://").substringBefore('/').removePrefix("api.")
+            val service = if (glossProvider == GlossProvider.OPENAI_COMPATIBLE && host.isNotEmpty()) host else glossProvider.label
+            listOf(service, config.effectiveModel).filter { it.isNotEmpty() }.joinToString(" · ")
+        }
+
+    companion object {
+        fun of(config: GlosserConfig, id: String = newId(), name: String = "") =
+            AiProfile(id, name, config.provider.name, config.baseUrl, config.apiKey, config.model)
+
+        fun newId(): String = java.util.UUID.randomUUID().toString()
+
+        /** Stored as a JSON array (by hand: the app module doesn't use the serialization plugin). */
+        fun encode(list: List<AiProfile>): String = buildJsonArray {
+            for (a in list) add(buildJsonObject {
+                put("id", a.id); put("name", a.name); put("provider", a.provider)
+                put("baseUrl", a.baseUrl); put("apiKey", a.apiKey); put("model", a.model)
+            })
+        }.toString()
+
+        fun decode(text: String): List<AiProfile> = runCatching {
+            (Json.parseToJsonElement(text) as JsonArray).mapNotNull { e ->
+                val o = e as? JsonObject ?: return@mapNotNull null
+                fun str(k: String) = (o[k] as? JsonPrimitive)?.content.orEmpty()
+                str("id").takeIf { it.isNotEmpty() }?.let { AiProfile(it, str("name"), str("provider"), str("baseUrl"), str("apiKey"), str("model")) }
+            }
+        }.getOrDefault(emptyList())
+    }
+}
+
 data class AppSettings(
-    val provider: GlossProvider = GlossProvider.OLLAMA_CLOUD,
-    /** Stored per provider so switching back and forth keeps keys and model names. */
-    val providerConfigs: Map<GlossProvider, GlosserConfig> = emptyMap(),
-    val fallbackToAnthropic: Boolean = false,
-    /** Model (same provider) for "Improve answer"; blank = Claude if an Anthropic key is set, else the usual model. */
-    val improveModel: String = "",
+    /** Saved AI accounts and models (see [AiProfile]). */
+    val aiProfiles: List<AiProfile> = emptyList(),
+    /** The profile used for word meanings, translations, practice and conversation. */
+    val activeProfileId: String = "",
+    /** Profile for "Improve answer" and for reviewing AI-written cards; blank = the active one. */
+    val improveProfileId: String = "",
+    /** Profile asked when the active one fails; blank = none. */
+    val fallbackProfileId: String = "",
     val preGlossOnImport: Boolean = true,
     val preGlossSentencesPerWord: Int = 3,
     /** Pages glossed ahead of the one being read; 0 = the whole lesson at import. */
@@ -50,21 +108,19 @@ data class AppSettings(
     /** JSON of the last sync ({user, state}), see SyncService. */
     val syncState: String = "",
 ) {
-    fun config(p: GlossProvider): GlosserConfig = providerConfigs[p] ?: GlosserConfig(p)
+    fun profile(id: String): AiProfile? = aiProfiles.firstOrNull { it.id == id }
 
-    val primaryGlosser: GlosserConfig get() = config(provider)
+    val activeProfile: AiProfile? get() = profile(activeProfileId)
 
-    /** The Anthropic config to fall back to, when enabled and different from the primary. */
+    /** What word meanings use: the active profile (an empty Ollama Cloud config, i.e. "not set up", when there is none). */
+    val primaryGlosser: GlosserConfig get() = activeProfile?.config ?: GlosserConfig(GlossProvider.OLLAMA_CLOUD)
+
+    /** The fallback profile's config, when one is chosen and it isn't the active one. */
     val fallbackGlosser: GlosserConfig?
-        get() = if (fallbackToAnthropic && provider != GlossProvider.ANTHROPIC) config(GlossProvider.ANTHROPIC) else null
+        get() = profile(fallbackProfileId)?.takeIf { it.id != activeProfileId }?.config
 
-    /** What "Improve answer" asks: the improve model, else Claude when configured, else the primary. */
-    val improveGlosser: GlosserConfig
-        get() = when {
-            improveModel.isNotBlank() -> primaryGlosser.copy(model = improveModel.trim())
-            provider != GlossProvider.ANTHROPIC && config(GlossProvider.ANTHROPIC).isComplete -> config(GlossProvider.ANTHROPIC)
-            else -> primaryGlosser
-        }
+    /** What "Improve answer" (and the review of AI-written cards) asks: the chosen profile, else the active one. */
+    val improveGlosser: GlosserConfig get() = profile(improveProfileId)?.config ?: primaryGlosser
 }
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -78,18 +134,15 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
 
     private fun read(p: Preferences): AppSettings {
         val d = AppSettings()
+        val ai = p[PROFILES]?.let { raw ->
+            val list = AiProfile.decode(raw)
+            AiChoice(list, p[ACTIVE_PROFILE].orEmpty(), p[IMPROVE_PROFILE].orEmpty(), p[FALLBACK_PROFILE].orEmpty())
+        } ?: migrate(p)
         return AppSettings(
-            provider = p[PROVIDER]?.let { runCatching { GlossProvider.valueOf(it) }.getOrNull() } ?: d.provider,
-            providerConfigs = GlossProvider.entries.associateWith { gp ->
-                GlosserConfig(
-                    provider = gp,
-                    baseUrl = p[providerKey(gp, "baseUrl")].orEmpty(),
-                    apiKey = p[providerKey(gp, "apiKey")].orEmpty(),
-                    model = p[providerKey(gp, "model")].orEmpty(),
-                )
-            },
-            fallbackToAnthropic = p[FALLBACK] ?: d.fallbackToAnthropic,
-            improveModel = p[IMPROVE_MODEL] ?: d.improveModel,
+            aiProfiles = ai.profiles,
+            activeProfileId = ai.active,
+            improveProfileId = ai.improve,
+            fallbackProfileId = ai.fallback,
             preGlossOnImport = p[PREGLOSS] ?: d.preGlossOnImport,
             preGlossSentencesPerWord = p[PREGLOSS_SENTENCES] ?: d.preGlossSentencesPerWord,
             preGlossPagesAhead = p[PREGLOSS_AHEAD] ?: d.preGlossPagesAhead,
@@ -115,14 +168,11 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     suspend fun update(transform: (AppSettings) -> AppSettings) {
         store.edit { p ->
             val s = transform(read(p))
-            p[PROVIDER] = s.provider.name
-            for ((gp, c) in s.providerConfigs) {
-                p[providerKey(gp, "baseUrl")] = c.baseUrl
-                p[providerKey(gp, "apiKey")] = c.apiKey
-                p[providerKey(gp, "model")] = c.model
-            }
-            p[FALLBACK] = s.fallbackToAnthropic
-            p[IMPROVE_MODEL] = s.improveModel
+            // The old per-provider keys are left as they were (an older build still finds its settings).
+            p[PROFILES] = AiProfile.encode(s.aiProfiles)
+            p[ACTIVE_PROFILE] = s.activeProfileId
+            p[IMPROVE_PROFILE] = s.improveProfileId
+            p[FALLBACK_PROFILE] = s.fallbackProfileId
             p[PREGLOSS] = s.preGlossOnImport
             p[PREGLOSS_SENTENCES] = s.preGlossSentencesPerWord.coerceIn(1, 10)
             p[PREGLOSS_AHEAD] = s.preGlossPagesAhead.coerceIn(0, 50)
@@ -144,24 +194,73 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         }
     }
 
-    /**
-     * Switches the glossing provider. Its base URL (and model, for providers with a default) is filled in from the
-     * provider's defaults only when still empty, so anything the user typed is kept.
-     */
-    suspend fun selectProvider(provider: GlossProvider) = update { s ->
-        val c = s.config(provider)
-        val filled = c.copy(
-            baseUrl = c.baseUrl.ifBlank { provider.defaultBaseUrl.orEmpty() },
-            model = c.model.ifBlank { provider.defaultModel.orEmpty() },
-        )
-        s.copy(provider = provider, providerConfigs = s.providerConfigs + (provider to filled))
+    /** Adds [profile], or replaces the one with its id. */
+    suspend fun saveProfile(profile: AiProfile) = update { s ->
+        val list = if (s.aiProfiles.any { it.id == profile.id }) s.aiProfiles.map { if (it.id == profile.id) profile else it } else s.aiProfiles + profile
+        s.copy(aiProfiles = list, activeProfileId = s.activeProfileId.ifEmpty { profile.id })
     }
 
-    /** Replaces the stored config for [config]'s provider. */
-    suspend fun updateProvider(config: GlosserConfig) =
-        update { it.copy(providerConfigs = it.providerConfigs + (config.provider to config)) }
+    /** Removes a profile; if it was in use, the first remaining one becomes active, and "improve"/fallback reset. */
+    suspend fun deleteProfile(id: String) = update { s ->
+        val list = s.aiProfiles.filter { it.id != id }
+        s.copy(
+            aiProfiles = list,
+            activeProfileId = if (s.activeProfileId == id) list.firstOrNull()?.id.orEmpty() else s.activeProfileId,
+            improveProfileId = if (s.improveProfileId == id) "" else s.improveProfileId,
+            fallbackProfileId = if (s.fallbackProfileId == id) "" else s.fallbackProfileId,
+        )
+    }
+
+    suspend fun activate(id: String) = update { s -> if (s.profile(id) != null) s.copy(activeProfileId = id) else s }
+
+    /** Saves [config] as a profile (replacing one with the same provider, URL and model) and makes it the active one. */
+    suspend fun useConfig(config: GlosserConfig, name: String = "") = update { s ->
+        val same = s.aiProfiles.firstOrNull { it.config.let { c -> c.provider == config.provider && c.baseUrl == config.baseUrl && c.model == config.model } }
+        val profile = AiProfile.of(config, id = same?.id ?: AiProfile.newId(), name = name.ifEmpty { same?.name.orEmpty() })
+        val list = if (same != null) s.aiProfiles.map { if (it.id == same.id) profile else it } else s.aiProfiles + profile
+        s.copy(aiProfiles = list, activeProfileId = profile.id)
+    }
+
+    private data class AiChoice(val profiles: List<AiProfile>, val active: String, val improve: String, val fallback: String)
+
+    /**
+     * Profiles from the settings of earlier versions (one config per provider, a chosen provider, an "improve" model
+     * name and a Claude fallback switch), so an upgrade keeps everything: every provider that had anything typed in
+     * becomes a profile; the improve model becomes a copy of the active profile with that model; the implicit
+     * "Claude if set up" for improve and the Claude fallback become explicit choices. Ids are fixed, so reading
+     * twice before the first save gives the same profiles.
+     */
+    private fun migrate(p: Preferences): AiChoice {
+        fun legacy(gp: GlossProvider) = GlosserConfig(gp, p[providerKey(gp, "baseUrl")].orEmpty(), p[providerKey(gp, "apiKey")].orEmpty(), p[providerKey(gp, "model")].orEmpty())
+        val chosen = p[PROVIDER]?.let { runCatching { GlossProvider.valueOf(it) }.getOrNull() }
+        val profiles = GlossProvider.entries.mapNotNull { gp ->
+            val c = legacy(gp)
+            val used = c.baseUrl.isNotBlank() || c.apiKey.isNotBlank() || c.model.isNotBlank() || gp == chosen
+            if (used) AiProfile.of(c, id = "legacy-${gp.name}") else null
+        }.toMutableList()
+        val active = chosen?.let { "legacy-${it.name}" } ?: profiles.firstOrNull()?.id.orEmpty()
+        val anthropic = profiles.firstOrNull { it.glossProvider == GlossProvider.ANTHROPIC && it.config.isComplete }
+        val improveModel = p[IMPROVE_MODEL].orEmpty().trim()
+        val activeProfile = profiles.firstOrNull { it.id == active }
+        val improve = when {
+            improveModel.isNotEmpty() && activeProfile != null -> {
+                profiles += activeProfile.copy(id = "legacy-improve", model = improveModel)
+                "legacy-improve"
+            }
+            anthropic != null && anthropic.id != active -> anthropic.id
+            else -> ""
+        }
+        val fallback = if (p[FALLBACK] == true && anthropic != null && anthropic.id != active) anthropic.id else ""
+        return AiChoice(profiles, active, improve, fallback)
+    }
 
     private companion object {
+        val PROFILES = stringPreferencesKey("ai.profiles")
+        val ACTIVE_PROFILE = stringPreferencesKey("ai.active")
+        val IMPROVE_PROFILE = stringPreferencesKey("ai.improve")
+        val FALLBACK_PROFILE = stringPreferencesKey("ai.fallback")
+
+        // Settings of earlier versions, read once to make the first profiles.
         val PROVIDER = stringPreferencesKey("gloss.provider")
         val FALLBACK = booleanPreferencesKey("gloss.fallbackToAnthropic")
         val IMPROVE_MODEL = stringPreferencesKey("gloss.improveModel")

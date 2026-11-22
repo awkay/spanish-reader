@@ -109,8 +109,8 @@ class KnownWordSheetTest {
         server.start()
         runBlocking(Dispatchers.IO) {
             app.database.clearAllTables()
-            app.settings.update { AppSettings(provider = GlossProvider.OPENAI_COMPATIBLE, preGlossOnImport = false) }
-            app.settings.updateProvider(GlosserConfig(GlossProvider.OPENAI_COMPATIBLE, server.url("/v1").toString(), model = "m"))
+            app.settings.update { AppSettings(preGlossOnImport = false) }
+            app.settings.useConfig(GlosserConfig(GlossProvider.OPENAI_COMPATIBLE, server.url("/v1").toString(), model = "m"))
         }
     }
 
@@ -119,7 +119,6 @@ class KnownWordSheetTest {
     fun tearDown() = runBlocking(Dispatchers.IO) {
         server.close()
         app.database.clearAllTables()
-        app.settings.updateProvider(GlosserConfig(GlossProvider.OPENAI_COMPATIBLE))
         app.settings.update { AppSettings() }
     }
 

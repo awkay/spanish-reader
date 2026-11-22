@@ -12,7 +12,18 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -35,12 +46,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.awkay.spanishreader.core.gloss.GlossProvider
+import net.awkay.spanishreader.data.AiProfile
 import net.awkay.spanishreader.data.AppSettings
 import net.awkay.spanishreader.data.TtsEngine
 import net.awkay.spanishreader.ui.BackButton
@@ -66,19 +80,8 @@ fun SettingsScreen(onBack: () -> Unit) {
             Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Section("Word meanings (LLM)")
-            Dropdown("Provider", s.provider.label, GlossProvider.entries.map { it.label }) { i ->
-                vm.selectProvider(GlossProvider.entries[i])
-            }
-            ProviderFields(s, s.provider, vm)
-            OutlinedButton(onClick = { vm.test(s.primaryGlosser) }, enabled = !vm.testing) { Text(if (vm.testing) "Testing…" else "Test connection") }
-            if (s.provider != GlossProvider.ANTHROPIC) {
-                Toggle("Fall back to Claude when this provider fails", s.fallbackToAnthropic) { v -> vm.update { it.copy(fallbackToAnthropic = v) } }
-                if (s.fallbackToAnthropic) ProviderFields(s, GlossProvider.ANTHROPIC, vm)
-            }
-            TextSetting("Model for “Improve answer” (optional)", s.improveModel, placeholder = "e.g. glm-5.3 — blank: Claude if set up, else same model") { v ->
-                vm.update { it.copy(improveModel = v) }
-            }
+            Section("AI accounts and models")
+            AiProfiles(s, vm)
             Toggle("Pre-gloss in the background as you read", s.preGlossOnImport) { v -> vm.update { it.copy(preGlossOnImport = v) } }
             NumberSlider("Pages pre-glossed ahead (0 = whole lesson)", s.preGlossPagesAhead, 0..20) { v -> vm.update { it.copy(preGlossPagesAhead = v) } }
             NumberSlider("Sentences pre-glossed per word", s.preGlossSentencesPerWord, 1..10) { v -> vm.update { it.copy(preGlossSentencesPerWord = v) } }
@@ -150,25 +153,115 @@ fun SettingsScreen(onBack: () -> Unit) {
     }
 }
 
+/**
+ * Saved AI accounts and models: pick the one in use with its radio button; edit, copy (same key, another model) or
+ * delete each; choose which one "Improve answer" uses and which one is tried when the selected one fails.
+ */
 @Composable
-private fun ProviderFields(s: AppSettings, provider: GlossProvider, vm: SettingsViewModel) {
-    val c = s.config(provider)
-    if (provider != s.provider) Text(provider.label, style = MaterialTheme.typography.labelLarge)
-    // Keyed by provider so switching providers shows that provider's values, not the previous one's text.
-    TextSetting("Base URL", c.baseUrl, key = provider, placeholder = provider.defaultBaseUrl ?: "http://192.168.1.x:11434/v1", keyboard = KeyboardType.Uri) {
-        vm.updateProvider(s.config(provider).copy(baseUrl = it))
+private fun AiProfiles(s: AppSettings, vm: SettingsViewModel) {
+    var editing by remember { mutableStateOf<AiProfile?>(null) }
+    var deleting by remember { mutableStateOf<AiProfile?>(null) }
+    Text(
+        "The selected one is used for word meanings, translations, practice and conversation. Keep as many as you like " +
+            "and switch at any time; copy one to try another model with the same key.",
+        style = MaterialTheme.typography.bodySmall,
+    )
+    if (s.aiProfiles.isEmpty()) Text("None yet. Add one to get word meanings.", style = MaterialTheme.typography.bodyMedium)
+    for (p in s.aiProfiles) {
+        Card(Modifier.fillMaxWidth()) {
+            Row(Modifier.fillMaxWidth().padding(end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(p.id == s.activeProfileId, onClick = { vm.activate(p.id) }, Modifier.semantics { contentDescription = "Use ${p.label}" })
+                Column(Modifier.weight(1f).clickable { vm.activate(p.id) }) {
+                    Text(p.label, style = MaterialTheme.typography.bodyLarge)
+                    // An unnamed profile's label already is the service and model.
+                    val detail = listOfNotNull(
+                        p.glossProvider.label.takeIf { p.name.isNotBlank() },
+                        p.config.effectiveModel.takeIf { it.isNotEmpty() && p.name.isNotBlank() },
+                        if (p.config.isComplete) null else "not complete",
+                    ).joinToString(" · ")
+                    if (detail.isNotEmpty()) Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                IconButton({ editing = p }) { Icon(Icons.Default.Edit, "Edit ${p.label}") }
+                IconButton({ editing = p.copy(id = AiProfile.newId(), name = p.label + " (copy)") }) { Icon(Icons.Default.ContentCopy, "Copy ${p.label}") }
+                IconButton({ deleting = p }) { Icon(Icons.Default.Delete, "Delete ${p.label}") }
+            }
+        }
     }
-    TextSetting("Model", c.model, key = provider, placeholder = provider.defaultModel ?: modelHint(provider)) {
-        vm.updateProvider(s.config(provider).copy(model = it))
+    val e = editing
+    if (e != null) {
+        ProfileEditor(e, vm, onDone = { editing = null })
+    } else {
+        OutlinedButton({ editing = AiProfile(AiProfile.newId(), provider = GlossProvider.OPENROUTER.name, baseUrl = GlossProvider.OPENROUTER.defaultBaseUrl.orEmpty()) }) {
+            Icon(Icons.Default.Add, null)
+            Text(" Add account / model")
+        }
     }
-    TextSetting("API key${if (provider.requiresApiKey) "" else " (optional)"}", c.apiKey, key = provider, secret = true) {
-        vm.updateProvider(s.config(provider).copy(apiKey = it))
+    if (s.aiProfiles.size > 1) {
+        val others = s.aiProfiles
+        Dropdown("“Improve answer” and card reviews use", s.profile(s.improveProfileId)?.label ?: "The selected one", listOf("The selected one") + others.map { it.label }) { i ->
+            vm.update { it.copy(improveProfileId = if (i == 0) "" else others[i - 1].id) }
+        }
+        Dropdown("If the selected one fails, try", s.profile(s.fallbackProfileId)?.label ?: "Nothing", listOf("Nothing") + others.map { it.label }) { i ->
+            vm.update { it.copy(fallbackProfileId = if (i == 0) "" else others[i - 1].id) }
+        }
+    }
+    deleting?.let { p ->
+        AlertDialog(
+            onDismissRequest = { deleting = null },
+            text = { Text("Delete “${p.label}”? Its API key is deleted with it.") },
+            confirmButton = { TextButton({ vm.deleteProfile(p.id); deleting = null }) { Text("Delete") } },
+            dismissButton = { TextButton({ deleting = null }) { Text("Cancel") } },
+        )
     }
 }
+
+/** Inline editor (the page scrolls and the keyboard pushes it up, which a dialog handles poorly). */
+@Composable
+private fun ProfileEditor(start: AiProfile, vm: SettingsViewModel, onDone: () -> Unit) {
+    var p by remember(start.id) { mutableStateOf(start) }
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("AI account / model", style = MaterialTheme.typography.titleSmall)
+            Dropdown("Service", p.glossProvider.label, GlossProvider.entries.map { it.label }) { i ->
+                val old = p.glossProvider
+                val new = GlossProvider.entries[i]
+                // A URL or model still at the old service's default follows the new service's default.
+                fun follow(cur: String, oldDefault: String?, newDefault: String?) =
+                    if (cur.isBlank() || cur == oldDefault) newDefault.orEmpty() else cur
+                p = p.copy(
+                    provider = new.name,
+                    baseUrl = follow(p.baseUrl, old.defaultBaseUrl, new.defaultBaseUrl),
+                    model = follow(p.model, old.defaultModel, new.defaultModel),
+                )
+            }
+            Field("Base URL", p.baseUrl, placeholder = p.glossProvider.defaultBaseUrl ?: "http://192.168.1.x:11434/v1", keyboard = KeyboardType.Uri) { p = p.copy(baseUrl = it) }
+            Field("Model", p.model, placeholder = p.glossProvider.defaultModel ?: modelHint(p.glossProvider)) { p = p.copy(model = it) }
+            Field("API key${if (p.glossProvider.requiresApiKey) "" else " (optional)"}", p.apiKey, secret = true) { p = p.copy(apiKey = it) }
+            Field("Name (optional)", p.name, placeholder = p.copy(name = "").label) { p = p.copy(name = it) }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedButton({ vm.test(p.config) }, enabled = !vm.testing) { Text(if (vm.testing) "Testing…" else "Test") }
+                TextButton(onDone) { Text("Cancel") }
+                Button({ vm.saveProfile(p); onDone() }) { Text("Save") }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Field(label: String, value: String, placeholder: String? = null, secret: Boolean = false, keyboard: KeyboardType = KeyboardType.Text, onChange: (String) -> Unit) =
+    OutlinedTextField(
+        value, onChange, Modifier.fillMaxWidth(),
+        label = { Text(label) },
+        placeholder = placeholder?.let { { Text(it, maxLines = 1) } },
+        singleLine = true,
+        visualTransformation = if (secret) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
+        keyboardOptions = KeyboardOptions(keyboardType = if (secret) KeyboardType.Password else keyboard),
+    )
 
 private fun modelHint(p: GlossProvider) = when (p) {
     GlossProvider.OLLAMA_CLOUD -> "e.g. a Kimi model from ollama.com/search?c=cloud"
     GlossProvider.ZAI, GlossProvider.ZAI_CODING, GlossProvider.ZAI_RESPONSES -> "e.g. glm-5.3-flash or glm-4.6"
+    GlossProvider.OPENROUTER -> "e.g. deepseek/deepseek-v4.1-flash"
     else -> "model name"
 }
 

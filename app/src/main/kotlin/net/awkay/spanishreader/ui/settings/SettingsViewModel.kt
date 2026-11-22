@@ -14,11 +14,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.awkay.spanishreader.SpanishReaderApp
-import net.awkay.spanishreader.core.gloss.GlossProvider
 import net.awkay.spanishreader.core.gloss.GlossRequest
 import net.awkay.spanishreader.core.gloss.GlossResult
 import net.awkay.spanishreader.core.gloss.GlosserFactory
 import net.awkay.spanishreader.core.gloss.GlosserConfig
+import net.awkay.spanishreader.data.AiProfile
 import net.awkay.spanishreader.data.AppSettings
 import net.awkay.spanishreader.gloss.GlossService
 
@@ -37,9 +37,11 @@ class SettingsViewModel(private val app: SpanishReaderApp) : ViewModel() {
 
     fun update(transform: (AppSettings) -> AppSettings) = viewModelScope.launch { app.settings.update(transform) }
 
-    fun updateProvider(config: GlosserConfig) = viewModelScope.launch { app.settings.updateProvider(config) }
+    fun saveProfile(profile: AiProfile) = viewModelScope.launch { app.settings.saveProfile(profile) }
 
-    fun selectProvider(provider: GlossProvider) = viewModelScope.launch { app.settings.selectProvider(provider) }
+    fun deleteProfile(id: String) = viewModelScope.launch { app.settings.deleteProfile(id) }
+
+    fun activate(id: String) = viewModelScope.launch { app.settings.activate(id) }
 
     /** Glosses one word with [config] alone (no cache, no fallback) and reports the result. */
     fun test(config: GlosserConfig) {
