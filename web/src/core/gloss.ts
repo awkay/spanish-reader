@@ -204,6 +204,8 @@ export function tidyGloss(g: Gloss): Gloss {
 }
 
 /** Valid glosses for [requests] by id; throws MalformedResponse if the text has no usable JSON. */
+const foldForm = (s: string) => s.trim().toLowerCase().normalize('NFD').replace(/\p{M}+/gu, '');
+
 export function parseGlosses(text: string, requests: GlossRequest[]): Map<string, Gloss> {
   let items: Record<string, unknown>[] | null = null;
   for (const c of jsonCandidates(text)) {
@@ -218,6 +220,8 @@ export function parseGlosses(text: string, requests: GlossRequest[]): Map<string
     const id = typeof o.id === 'string' ? o.id : typeof o.id === 'number' ? String(o.id) : null;
     let req = id !== null ? byId.get(id) : undefined;
     if (req && !unmatched.includes(req)) req = undefined;
+    // An id whose item names another word is a mislabel (seen: encaja's id on quedé's gloss); trust the form then.
+    if (req && typeof o.form === 'string' && o.form.trim() && foldForm(o.form) !== foldForm(req.form)) req = undefined;
     if (!req && typeof o.form === 'string') {
       const same = unmatched.filter((r) => r.form.toLowerCase() === (o.form as string).toLowerCase());
       if (same.length === 1) req = same[0];

@@ -69,6 +69,19 @@ class JsonParsingTest {
     }
 
     @Test
+    fun `an id on another word's gloss is not trusted`() {
+        // Seen live: the id of "encaja" on the gloss of "quedé", so encaja would have shown "I stayed".
+        val reqs = listOf(GlossRequest("encaja", "Esa pieza no encaja.", "12"), GlossRequest("quedé", "Me quedé en casa.", "13"))
+        val text = """{"glosses":[{"id":"12","form":"quedé","lemma":"quedar","partOfSpeech":"verb","meaningInContext":"I stayed"},
+            {"id":"12","form":"Encaja","lemma":"encajar","partOfSpeech":"verb","meaningInContext":"fits"}]}"""
+        val parsed = GlossParser.parse(text, reqs)
+        assertEquals("I stayed", parsed.getValue("13").meaningInContext) // went to the word it names
+        assertEquals("fits", parsed.getValue("12").meaningInContext) // case and accents aside, the form agrees
+        val alone = GlossParser.parse("""{"glosses":[{"id":"12","form":"quedé","lemma":"quedar","partOfSpeech":"verb","meaningInContext":"I stayed"}]}""", reqs.take(1))
+        assertEquals(emptyMap(), alone) // names no word asked for: left out, so the retry asks again
+    }
+
+    @Test
     fun `parser throws on unusable output`() {
         assertFailsWith<MalformedGlossResponseException> {
             GlossParser.parse("I'm sorry, I can't help with that.", listOf(GlossRequest("a", "b")))

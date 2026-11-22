@@ -38,7 +38,7 @@ test('rich gloss parsing, fenced and with prose around it', () => {
 });
 
 test('a malformed verb object only drops the verb', () => {
-  const g = parseGlosses('{"glosses":[{"id":"1","form":"x","lemma":"x","partOfSpeech":"verb","meaningInContext":"m","verb":"gerund","clitics":[{"pronoun":"me","role":"direct object"}]}]}', [req]).get('1')!;
+  const g = parseGlosses('{"glosses":[{"id":"1","form":"observándome","lemma":"observar","partOfSpeech":"verb","meaningInContext":"m","verb":"gerund","clitics":[{"pronoun":"me","role":"direct object"}]}]}', [req]).get('1')!;
   assert.equal(g.verb, null);
   assert.equal(g.clitics!.length, 1);
 });
@@ -118,4 +118,16 @@ test('word families: a new spelling inherits; own status wins; tap and page rule
   assert.equal(onTap(fam('hablamos', Status.NEW), 'hablamos', 5, null, Status.RECOGNIZED).status, Status.RECOGNIZED);
   const added = applyPageFinished(['hablaban', 'comí', 'hablaban'], new Map(), 9, new Map(), new Map([['hablaban', Status.KNOWN as number]]));
   assert.deepEqual(added.map((e) => [e.form, e.status]), [['hablaban', Status.KNOWN], ['comí', Status.LEVEL_1]]);
+});
+
+test("an id on another word's gloss is not trusted (as in :core)", () => {
+  const reqs = [{ id: '12', form: 'encaja', sentence: 'Esa pieza no encaja.' }, { id: '13', form: 'quedé', sentence: 'Me quedé en casa.' }];
+  const text = JSON.stringify({ glosses: [
+    { id: '12', form: 'quedé', lemma: 'quedar', partOfSpeech: 'verb', meaningInContext: 'I stayed' },
+    { id: '12', form: 'Encaja', lemma: 'encajar', partOfSpeech: 'verb', meaningInContext: 'fits' },
+  ] });
+  const parsed = parseGlosses(text, reqs);
+  assert.equal(parsed.get('13')!.meaningInContext, 'I stayed');
+  assert.equal(parsed.get('12')!.meaningInContext, 'fits');
+  assert.equal(parseGlosses(JSON.stringify({ glosses: [{ id: '12', form: 'quedé', lemma: 'quedar', partOfSpeech: 'verb', meaningInContext: 'I stayed' }] }), reqs.slice(0, 1)).size, 0);
 });

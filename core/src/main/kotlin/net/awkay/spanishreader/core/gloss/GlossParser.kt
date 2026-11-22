@@ -32,7 +32,9 @@ object GlossParser {
         val out = LinkedHashMap<String, Gloss>()
         for (obj in items) {
             val id = (obj["id"] as? JsonPrimitive)?.content
-            val request = byId[id]?.takeIf { it in unmatched }
+            // An id whose item names another word (seen: the id of "encaja" on the gloss of "quedé") is a mislabel;
+            // trust the form then, so a word never gets another word's meaning.
+            val request = byId[id]?.takeIf { it in unmatched && formAgrees(obj, it) }
                 ?: matchByForm(obj, unmatched)
                 ?: unmatched.singleOrNull()?.takeIf { id == null }
                 ?: continue
@@ -55,6 +57,15 @@ object GlossParser {
         }
         else -> emptyList()
     }
+
+    /** True unless the item's "form" is a different word from [request]'s (case and accents aside). */
+    private fun formAgrees(obj: JsonObject, request: GlossRequest): Boolean {
+        val form = (obj["form"] as? JsonPrimitive)?.content?.trim()?.takeIf { it.isNotEmpty() } ?: return true
+        return fold(form) == fold(request.form)
+    }
+
+    private fun fold(s: String) =
+        java.text.Normalizer.normalize(s.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("\\p{M}+"), "")
 
     private fun matchByForm(obj: JsonObject, candidates: List<GlossRequest>): GlossRequest? {
         val form = (obj["form"] as? JsonPrimitive)?.content ?: return null
