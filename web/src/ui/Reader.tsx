@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { Gloss } from '../core/gloss.ts';
+import type { LikelyMeanings } from '../core/meanings.ts';
 import { type Page, type Token, locatePhrase, paginate, pageWordForms, tokenize } from '../core/text.ts';
 import { Status, nextHighlighted } from '../core/vocab.ts';
 import * as db from '../db.ts';
@@ -7,7 +8,8 @@ import type { Lesson } from '../db.ts';
 import { Player } from '../player.ts';
 import {
   type Lookup, finishPage, improve, lookup, markPageKnown, phraseVersion, preGloss, saveLesson, sentenceRows, settings as settingsObs,
-  annotate, inheritedFor, lessonLemmas, loadLessonLemmas, shownStatus, tapWord, translation, updateSettings, vocab as vocabObs,
+  annotate, cachedGloss, inheritedFor, lessonLemmas, loadLessonLemmas, onHandMeanings, shownStatus, statusOf, storedTranslation, tapWord,
+  translation, updateSettings, vocab as vocabObs,
 } from '../services.ts';
 import { statusBackground } from './colors.ts';
 import { navigate, useObservable } from './hooks.ts';
@@ -26,6 +28,13 @@ export interface Selection {
   translation: string | { error: string } | null;
   /** When the word was first met already colored by its word family: that family's lemma. */
   familyLemma?: string | null;
+  /**
+   * A KNOWN word with no gloss for this sentence: what the device already holds, shown without any network call
+   * until "Look up in this sentence".
+   */
+  onHand?: LikelyMeanings | null;
+  /** No stored translation and none fetched yet (KNOWN words): the sheet offers "Translate sentence". */
+  translationOffered?: boolean;
 }
 
 export function Reader({ id }: { id: string }) {
@@ -178,11 +187,41 @@ export function Reader({ id }: { id: string }) {
     const familyLemma = inheritedFor(token.normalized) !== null ? lemmas.get(token.normalized) ?? null : null;
     const sel: Selection = { token, sentence, result: null, improving: false, improveError: null, translation: null, familyLemma };
     setSelection(sel);
+    // Known words cost nothing: unless this sentence's gloss is cached, no server or AI call until the learner asks.
+    if (statusOf(token.normalized) === Status.KNOWN && !(await cachedGloss(token.text, sentence))) {
+      const [onHand, tr] = await Promise.all([onHandMeanings(token.text), storedTranslation(sentence)]);
+      setSelection((cur) => (cur?.token === token ? { ...cur, onHand, translation: tr, translationOffered: tr === null } : cur));
+      return;
+    }
     await tapWord(token.normalized, sentence);
+    fetchTranslation(token, sentence);
+    await runLookup(token, sentence);
+  };
+
+  const fetchTranslation = (token: Token, sentence: string) => {
     translation(sentence).then((tr) => setSelection((cur) => (cur?.token === token ? { ...cur, translation: tr } : cur)));
+  };
+
+  const runLookup = async (token: Token, sentence: string) => {
     const result = await lookup(token.text, sentence);
-    if ('gloss' in result && !result.fromOtherSentence) annotate(token.normalized, result.gloss);
+    if ('gloss' in result && !result.fromOtherSentence) annotate(token.normalized!, result.gloss);
     setSelection((cur) => (cur?.token === token ? { ...cur, result } : cur));
+  };
+
+  /** A KNOWN word's "Look up in this sentence": the usual lookup (server cache, then AI), and the translation. */
+  const onLookUp = () => {
+    if (!selection) return;
+    const { token, sentence } = selection;
+    const needTranslation = typeof selection.translation !== 'string';
+    setSelection({ ...selection, onHand: null, result: null, translationOffered: false, translation: needTranslation ? null : selection.translation });
+    if (needTranslation) fetchTranslation(token, sentence);
+    runLookup(token, sentence);
+  };
+
+  const onTranslate = () => {
+    if (!selection) return;
+    setSelection({ ...selection, translationOffered: false, translation: null });
+    fetchTranslation(selection.token, selection.sentence);
   };
 
   // Next/Prev in the sheet: the nearest still-highlighted word on this page; never turns the page.
@@ -263,7 +302,8 @@ export function Reader({ id }: { id: string }) {
       {toast && <div class="toast">{toast}</div>}
       {selection && (
         <WordSheet selection={selection} status={shownStatus(selection.token.normalized!)}
-          phrases={spans.get(selection.token.index) ?? []} onImprove={onImprove} onClose={() => setSelection(null)}
+          phrases={spans.get(selection.token.index) ?? []} onImprove={onImprove} onLookUp={onLookUp} onTranslate={onTranslate}
+          onClose={() => setSelection(null)}
           onPrev={stepTo(-1)} onNext={stepTo(1)} onHeight={setSheetHeight} />
       )}
     </div>

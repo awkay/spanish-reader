@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { CLITIC_LABEL, type Gloss, cliticRole, lacksDetail, splitClitics, tidyGloss, verbSummary } from '../core/gloss.ts';
+import { type LikelyMeaning, type LikelyMeanings, isEmptyMeanings } from '../core/meanings.ts';
 import { STATUS_LABEL, Status } from '../core/vocab.ts';
 import { setWordStatus } from '../services.ts';
 import { CLITIC_COLOR, statusSwatch } from './colors.ts';
@@ -20,8 +21,10 @@ function speak(text: string) {
   speechSynthesis.speak(u);
 }
 
-export function WordSheet({ selection, status, phrases, onImprove, onClose, onPrev, onNext, onHeight }: {
+export function WordSheet({ selection, status, phrases, onImprove, onLookUp, onTranslate, onClose, onPrev, onNext, onHeight }: {
   selection: Selection; status: number; phrases: PhraseSpan[]; onImprove: () => void; onClose: () => void;
+  /** A KNOWN word's "Look up in this sentence", and "Translate sentence" when no translation is stored. */
+  onLookUp: () => void; onTranslate: () => void;
   /** Null at the page edge (no highlighted word that way). */
   onPrev: (() => void) | null; onNext: (() => void) | null;
   /** Reports the sheet's height so the reader can keep the current word above it. */
@@ -70,7 +73,8 @@ export function WordSheet({ selection, status, phrases, onImprove, onClose, onPr
         {selection.familyLemma && <p class="small muted family">Same word family as “{selection.familyLemma}”, so it starts at that status.</p>}
       </div>
       <div class="sheet-body" ref={body}>
-        {!result && <p class="muted">Looking up…</p>}
+        {!result && !selection.onHand && <p class="muted">Looking up…</p>}
+        {!result && selection.onHand && <OnHand meanings={selection.onHand} written={token.text} onLookUp={onLookUp} />}
         {result && 'error' in result && <p class="error">{result.error}</p>}
         {gloss && <GlossDetails gloss={gloss} written={token.text} fromOther={result !== null && 'gloss' in result && result.fromOtherSentence} />}
         {result && (
@@ -83,11 +87,47 @@ export function WordSheet({ selection, status, phrases, onImprove, onClose, onPr
           <div class="section" key={p}><div class="label">Expression</div><div><b>{p}</b>{m && ` — ${m}`}</div></div>
         ))}
         <p class="sentence">“{sentence}”</p>
-        {selection.translation === null && <p class="muted small">Translating…</p>}
+        {selection.translation === null && !selection.translationOffered && <p class="muted small">Translating…</p>}
+        {selection.translation === null && selection.translationOffered && <button class="link small" onClick={onTranslate}>Translate sentence</button>}
         {typeof selection.translation === 'string' && <p class="translation">{selection.translation}</p>}
         {selection.translation && typeof selection.translation === 'object' && <p class="error small">{selection.translation.error}</p>}
       </div>
     </section>
+  );
+}
+
+/** A KNOWN word without a gloss for this sentence: stored meanings, most frequent first, then the real lookup. */
+function OnHand({ meanings: m, written, onLookUp }: { meanings: LikelyMeanings; written: string; onLookUp: () => void }) {
+  const sub = [
+    m.lemma && m.lemma.toLowerCase() !== written.toLowerCase() ? `from ${m.lemma}` : null,
+    m.partsOfSpeech.join(', ') || null, m.lemmaMeaning || null,
+  ].filter(Boolean).join(' · ');
+  const own = m.meanings.filter((x) => x.forms.length === 0);
+  const related = m.meanings.filter((x) => x.forms.length > 0);
+  const relatedForms = [...new Set(related.flatMap((x) => x.forms))];
+  return (
+    <>
+      <div class="section on-hand">
+        <div class="label">Likely meanings (not from this sentence)</div>
+        {sub && <div class="muted">{sub}</div>}
+        {isEmptyMeanings(m) && <div class="muted">No meaning stored for this word yet</div>}
+        {own.map((x, i) => <MeaningLine key={'o' + i} m={x} cls={i === 0 ? 'first' : ''} />)}
+        {related.length > 0 && <div class="small muted">From related forms ({relatedForms.join(', ')}):</div>}
+        {related.map((x, i) => <MeaningLine key={'r' + i} m={x} cls="small" />)}
+        {m.otherMeanings.length > 0 && <div class="small">Other meanings: {m.otherMeanings.join(', ')}</div>}
+      </div>
+      <button class="primary look-up" onClick={onLookUp}>🔎 Look up in this sentence</button>
+    </>
+  );
+}
+
+function MeaningLine({ m, cls }: { m: LikelyMeaning; cls: string }) {
+  return (
+    <div class={cls}>
+      {m.text}
+      {m.count > 1 && <span class="muted"> ×{m.count}</span>}
+      {m.forms.length > 0 && <span class="muted"> · {m.forms.join(', ')}</span>}
+    </div>
   );
 }
 

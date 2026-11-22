@@ -111,6 +111,12 @@ class GlossService(
         Result.success(glosser)
     }
 
+    /** The gloss cached for [form] in exactly this [sentence], if any. Local only. */
+    suspend fun cached(form: String, sentence: String): Gloss? = cache.get(form, sentence)
+
+    /** The stored English translation of [sentence], if any. Local only: never asks the model. */
+    suspend fun storedTranslation(sentence: String): String? = sentences?.translation(sentence)
+
     suspend fun lookup(form: String, sentence: String): LookupResult {
         cache.get(form, sentence)?.let { return LookupResult.Found(it) }
         val error = cachingGlosser().fold(

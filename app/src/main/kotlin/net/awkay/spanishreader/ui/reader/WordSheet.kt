@@ -22,9 +22,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -56,6 +58,8 @@ import kotlinx.coroutines.launch
 import net.awkay.spanishreader.core.gloss.Clitic
 import net.awkay.spanishreader.core.gloss.CliticRole
 import net.awkay.spanishreader.core.gloss.CliticSplit
+import net.awkay.spanishreader.core.gloss.LikelyMeaning
+import net.awkay.spanishreader.core.gloss.LikelyMeanings
 import net.awkay.spanishreader.core.vocab.WordStatus
 import net.awkay.spanishreader.gloss.LookupResult
 import net.awkay.spanishreader.ui.StatusColors
@@ -91,6 +95,8 @@ fun WordSheet(
     onNext: () -> Unit,
     onStatus: (WordStatus) -> Unit,
     onRetry: () -> Unit,
+    /** A KNOWN word's "Look up in this sentence". */
+    onLookUp: () -> Unit,
     onImprove: () -> Unit,
     onTranslate: () -> Unit,
     onSpeak: () -> Unit,
@@ -182,7 +188,7 @@ fun WordSheet(
                 Modifier.fillMaxWidth().weight(1f).verticalScroll(details).padding(horizontal = 20.dp).padding(top = 6.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                WordDetails(selection, phrases, onRetry, onImprove, onTranslate)
+                WordDetails(selection, phrases, onRetry, onLookUp, onImprove, onTranslate)
             }
         }
     }
@@ -194,6 +200,7 @@ private fun WordDetails(
     selection: WordSelection,
     phrases: List<PhraseSpan>,
     onRetry: () -> Unit,
+    onLookUp: () -> Unit,
     onImprove: () -> Unit,
     onTranslate: () -> Unit,
 ) {
@@ -214,6 +221,10 @@ private fun WordDetails(
                 CircularProgressIndicator(Modifier.padding(4.dp))
                 Text("Looking up…")
             }
+            expressions.forEach { (phrase, meaning) -> PhraseCard(phrase, meaning) }
+        }
+        is GlossState.OnHand -> {
+            OnHandDetails(g.meanings, selection.token.text, onLookUp)
             expressions.forEach { (phrase, meaning) -> PhraseCard(phrase, meaning) }
         }
         is GlossState.Done -> when (val r = g.result) {
@@ -241,7 +252,9 @@ private fun WordDetails(
     selection.improveError?.let { Text("Improve failed: $it", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
     Text("“${selection.sentence}”", style = MaterialTheme.typography.bodyMedium, fontStyle = FontStyle.Italic)
     when (val t = selection.translation) {
-        TranslationState.Hidden -> Unit
+        TranslationState.Hidden -> if (selection.gloss is GlossState.OnHand) {
+            TextButton(onClick = onTranslate) { Text("Translate sentence", style = MaterialTheme.typography.bodySmall) }
+        }
         TranslationState.Loading -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
             Text("Translating…", style = MaterialTheme.typography.bodySmall)
@@ -252,6 +265,55 @@ private fun WordDetails(
         }
     }
 }
+
+/**
+ * A KNOWN word without a gloss for this sentence: meanings already stored (other sentences, related forms of the same
+ * lemma), most frequent first, and the button that runs the real contextual lookup.
+ */
+@Composable
+private fun OnHandDetails(m: LikelyMeanings, written: String, onLookUp: () -> Unit) {
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    Section("Likely meanings (not from this sentence)") {
+        val sub = listOfNotNull(
+            m.lemma?.takeIf { it.isNotBlank() && !it.equals(written, ignoreCase = true) }?.let { "from $it" },
+            m.partsOfSpeech.joinToString(", ").ifBlank { null },
+            m.lemmaMeaning,
+        ).joinToString(" · ")
+        if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.bodyMedium, color = muted)
+        if (m.isEmpty) {
+            Text("No meaning stored for this word yet", style = MaterialTheme.typography.bodyMedium, color = muted)
+        }
+        m.meanings.filter { !it.related }.forEachIndexed { i, meaning ->
+            MeaningLine(meaning, if (i == 0) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge)
+        }
+        val related = m.meanings.filter { it.related }
+        if (related.isNotEmpty()) {
+            Text(
+                "From related forms (${related.flatMap { it.forms }.distinct().joinToString(", ")}):",
+                style = MaterialTheme.typography.labelMedium, color = muted, modifier = Modifier.padding(top = 4.dp),
+            )
+            related.forEach { MeaningLine(it, MaterialTheme.typography.bodyMedium) }
+        }
+        if (m.otherMeanings.isNotEmpty()) {
+            Text("Other meanings: " + m.otherMeanings.joinToString(", "), style = MaterialTheme.typography.bodySmall)
+        }
+    }
+    FilledTonalButton(onClick = onLookUp) {
+        Icon(Icons.Default.Search, null, Modifier.size(18.dp))
+        Text("  Look up in this sentence")
+    }
+}
+
+@Composable
+private fun MeaningLine(m: LikelyMeaning, style: androidx.compose.ui.text.TextStyle) = Text(
+    buildAnnotatedString {
+        append(m.text)
+        val muted = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Normal)
+        if (m.count > 1) withStyle(muted) { append("  ×${m.count}") }
+        if (m.related) withStyle(muted) { append("  · ${m.forms.joinToString(", ")}") }
+    },
+    style = style,
+)
 
 @Composable
 private fun Section(title: String, content: @Composable () -> Unit) {

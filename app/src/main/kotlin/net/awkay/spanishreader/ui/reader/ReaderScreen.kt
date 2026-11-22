@@ -246,6 +246,7 @@ fun ReaderScreen(lessonId: Long, onBack: () -> Unit, onListen: () -> Unit) {
                     onNext = { vm.stepWord(NavDirection.NEXT) },
                     onStatus = vm::setStatus,
                     onRetry = vm::retryLookup,
+                    onLookUp = vm::lookUpInSentence,
                     onImprove = vm::improve,
                     onTranslate = vm::showTranslation,
                     onSpeak = { vm.speak(sel.token.text) },

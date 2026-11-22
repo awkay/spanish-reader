@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.awkay.spanishreader.SpanishReaderApp
 import net.awkay.spanishreader.audio.AudioState
+import net.awkay.spanishreader.core.gloss.LikelyMeanings
 import net.awkay.spanishreader.core.text.ListenScript
 import net.awkay.spanishreader.core.text.ListenSentence
 import net.awkay.spanishreader.core.text.Page
@@ -52,6 +53,12 @@ data class ReaderContent(
 sealed interface GlossState {
     data object Loading : GlossState
     data class Done(val result: LookupResult) : GlossState
+
+    /**
+     * A KNOWN word with no gloss for this sentence: what the device already holds (other sentences, related forms),
+     * shown without any network call until the learner asks for "Look up in this sentence".
+     */
+    data class OnHand(val meanings: LikelyMeanings) : GlossState
 }
 
 data class WordSelection(
@@ -270,12 +277,37 @@ class ReaderViewModel(private val app: SpanishReaderApp, private val lessonId: L
         val snap = snapshot.value
         val inherited = snap.inherited(form)
         _selection.value = WordSelection(token, sentence, familyLemma = inherited?.let { snap.lemmas[form] })
-        showTranslation()
         lookupJob?.cancel()
         lookupJob = viewModelScope.launch {
+            if (app.vocab.get(form)?.status == WordStatus.KNOWN) {
+                val exact = app.glossService.cached(token.text, sentence)
+                if (exact != null) {
+                    showTranslation()
+                    _selection.update { if (it?.token == token) it.copy(gloss = GlossState.Done(LookupResult.Found(exact))) else it }
+                } else {
+                    // Known words cost nothing: no AI call (gloss or translation) until "Look up in this sentence".
+                    val stored = app.glossService.storedTranslation(sentence)
+                    val onHand = app.onHand.forWord(token.text)
+                    _selection.update { cur ->
+                        if (cur?.token != token) cur
+                        else cur.copy(
+                            gloss = GlossState.OnHand(onHand),
+                            translation = stored?.let { TranslationState.Shown(it) } ?: cur.translation,
+                        )
+                    }
+                }
+                return@launch
+            }
+            showTranslation()
             app.vocab.tap(form, sentence, inherited)
             lookup()
         }
+    }
+
+    /** "Look up in this sentence" on a KNOWN word's sheet: the usual contextual lookup (cached), and the translation. */
+    fun lookUpInSentence() {
+        retryLookup()
+        showTranslation()
     }
 
     /**

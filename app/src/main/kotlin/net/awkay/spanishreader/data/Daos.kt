@@ -50,6 +50,13 @@ interface VocabDao {
     @Query("SELECT * FROM vocab WHERE form IN (:forms)")
     suspend fun getAll(forms: List<String>): List<VocabEntity>
 
+    /**
+     * Entries whose stored lemma is one of [lemmas] or whose own form is one of [forms] (both indexed), most recently
+     * seen first: candidates for a word's related forms. Keep each list under SQLite's bound-variable limit.
+     */
+    @Query("SELECT * FROM vocab WHERE lemma IN (:lemmas) OR form IN (:forms) ORDER BY last_seen DESC LIMIT :limit")
+    suspend fun byLemmaOrForm(lemmas: List<String>, forms: List<String>, limit: Int): List<VocabEntity>
+
     @Query("SELECT * FROM vocab ORDER BY last_seen DESC")
     fun observeAll(): Flow<List<VocabEntity>>
 

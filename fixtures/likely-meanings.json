@@ -1,0 +1,564 @@
+[
+    {
+        "name": "empty",
+        "own": {
+            "form": "banco"
+        },
+        "candidates": [],
+        "expected": {
+            "lemma": null,
+            "lemmaMeaning": null,
+            "partsOfSpeech": [],
+            "meanings": [],
+            "otherMeanings": [],
+            "relatedForms": []
+        }
+    },
+    {
+        "name": "merge and rank",
+        "own": {
+            "form": "banco",
+            "lemma": "banco",
+            "translation": "bank",
+            "glosses": [
+                {
+                    "form": "banco",
+                    "lemma": "banco",
+                    "partOfSpeech": "noun",
+                    "meaningInContext": "bench"
+                },
+                {
+                    "form": "banco",
+                    "lemma": "banco",
+                    "partOfSpeech": "noun",
+                    "meaningInContext": "bank"
+                },
+                {
+                    "form": "banco",
+                    "lemma": "banco",
+                    "partOfSpeech": "noun",
+                    "meaningInContext": "Bank."
+                },
+                {
+                    "form": "banco",
+                    "lemma": "banco",
+                    "partOfSpeech": "noun",
+                    "meaningInContext": "  bank "
+                },
+                {
+                    "form": "banco",
+                    "lemma": "banco",
+                    "partOfSpeech": "noun",
+                    "meaningInContext": "bench!"
+                },
+                {
+                    "form": "banco",
+                    "lemma": "banco",
+                    "partOfSpeech": "noun",
+                    "meaningInContext": "shoal",
+                    "otherMeanings": [
+                        "bench",
+                        "Pew",
+                        "pew."
+                    ]
+                },
+                {
+                    "form": "banco",
+                    "lemma": "banco",
+                    "partOfSpeech": "noun",
+                    "meaningInContext": "row"
+                },
+                {
+                    "form": "banco",
+                    "lemma": "banco",
+                    "partOfSpeech": "noun",
+                    "meaningInContext": "bank — of a river"
+                }
+            ]
+        },
+        "candidates": [],
+        "expected": {
+            "lemma": "banco",
+            "lemmaMeaning": null,
+            "partsOfSpeech": [
+                "noun"
+            ],
+            "meanings": [
+                {
+                    "text": "bank",
+                    "count": 3,
+                    "forms": []
+                },
+                {
+                    "text": "bench",
+                    "count": 2,
+                    "forms": []
+                },
+                {
+                    "text": "shoal",
+                    "count": 1,
+                    "forms": []
+                },
+                {
+                    "text": "row",
+                    "count": 1,
+                    "forms": []
+                },
+                {
+                    "text": "bank — of a river",
+                    "count": 1,
+                    "forms": []
+                }
+            ],
+            "otherMeanings": [
+                "Pew"
+            ],
+            "relatedForms": []
+        }
+    },
+    {
+        "name": "translation only",
+        "own": {
+            "form": "casa",
+            "lemma": "casa",
+            "translation": "home"
+        },
+        "candidates": [],
+        "expected": {
+            "lemma": "casa",
+            "lemmaMeaning": null,
+            "partsOfSpeech": [],
+            "meanings": [
+                {
+                    "text": "home",
+                    "count": 1,
+                    "forms": []
+                }
+            ],
+            "otherMeanings": [],
+            "relatedForms": []
+        }
+    },
+    {
+        "name": "related forms",
+        "own": {
+            "form": "fui",
+            "lemma": "ir",
+            "glosses": [
+                {
+                    "form": "fui",
+                    "lemma": "ir",
+                    "partOfSpeech": "verb",
+                    "meaningInContext": "I went",
+                    "otherMeanings": [
+                        "I left"
+                    ],
+                    "lemmaMeaning": "to go"
+                }
+            ]
+        },
+        "candidates": [
+            {
+                "form": "fue",
+                "lemma": "ir",
+                "translation": "went",
+                "glosses": [
+                    {
+                        "form": "fue",
+                        "lemma": "ir",
+                        "partOfSpeech": "verb",
+                        "meaningInContext": "he went"
+                    },
+                    {
+                        "form": "fue",
+                        "lemma": "ser",
+                        "partOfSpeech": "verb",
+                        "meaningInContext": "was",
+                        "otherMeanings": [
+                            "it was"
+                        ]
+                    },
+                    {
+                        "form": "fue",
+                        "lemma": "ir",
+                        "partOfSpeech": "verb",
+                        "meaningInContext": "I went"
+                    }
+                ]
+            },
+            {
+                "form": "vamos",
+                "lemma": "irse",
+                "glosses": [
+                    {
+                        "form": "vamos",
+                        "lemma": "ir",
+                        "partOfSpeech": "verb",
+                        "meaningInContext": "he went",
+                        "otherMeanings": [
+                            "let's go"
+                        ]
+                    }
+                ]
+            },
+            {
+                "form": "ir",
+                "glosses": [
+                    {
+                        "form": "ir",
+                        "lemma": "ir",
+                        "partOfSpeech": "verb",
+                        "meaningInContext": "to go",
+                        "lemmaMeaning": "to go"
+                    }
+                ]
+            },
+            {
+                "form": "casa",
+                "lemma": "casa",
+                "translation": "house"
+            },
+            {
+                "form": "Fui",
+                "lemma": "ir",
+                "translation": "same word"
+            }
+        ],
+        "expected": {
+            "lemma": "ir",
+            "lemmaMeaning": "to go",
+            "partsOfSpeech": [
+                "verb"
+            ],
+            "meanings": [
+                {
+                    "text": "I went",
+                    "count": 1,
+                    "forms": []
+                },
+                {
+                    "text": "he went",
+                    "count": 2,
+                    "forms": [
+                        "fue",
+                        "vamos"
+                    ]
+                },
+                {
+                    "text": "went",
+                    "count": 1,
+                    "forms": [
+                        "fue"
+                    ]
+                },
+                {
+                    "text": "to go",
+                    "count": 1,
+                    "forms": [
+                        "ir"
+                    ]
+                }
+            ],
+            "otherMeanings": [
+                "I left",
+                "let's go"
+            ],
+            "relatedForms": [
+                "fue",
+                "vamos",
+                "ir"
+            ]
+        }
+    },
+    {
+        "name": "family by own form and reflexive",
+        "own": {
+            "form": "levantar"
+        },
+        "candidates": [
+            {
+                "form": "levanto",
+                "lemma": "Levantarse",
+                "translation": "I get up"
+            },
+            {
+                "form": "levantó",
+                "glosses": [
+                    {
+                        "form": "levantó",
+                        "lemma": "levantar",
+                        "partOfSpeech": "verb",
+                        "meaningInContext": "lifted",
+                        "lemmaMeaning": "to lift"
+                    }
+                ]
+            }
+        ],
+        "expected": {
+            "lemma": "levantar",
+            "lemmaMeaning": "to lift",
+            "partsOfSpeech": [
+                "verb"
+            ],
+            "meanings": [
+                {
+                    "text": "I get up",
+                    "count": 1,
+                    "forms": [
+                        "levanto"
+                    ]
+                },
+                {
+                    "text": "lifted",
+                    "count": 1,
+                    "forms": [
+                        "levantó"
+                    ]
+                }
+            ],
+            "otherMeanings": [],
+            "relatedForms": [
+                "levanto",
+                "levantó"
+            ]
+        }
+    },
+    {
+        "name": "tidied verb lemmas",
+        "own": {
+            "form": "prepárate",
+            "lemma": "preparar",
+            "glosses": [
+                {
+                    "form": "prepárate",
+                    "lemma": "Prepararse",
+                    "partOfSpeech": "verb",
+                    "meaningInContext": "get ready",
+                    "verb": {
+                        "infinitive": "prepararse"
+                    }
+                },
+                {
+                    "form": "prepárate",
+                    "lemma": "prepárase",
+                    "partOfSpeech": "Verb",
+                    "meaningInContext": "prepare yourself",
+                    "verb": {
+                        "infinitive": "prepararse"
+                    }
+                },
+                {
+                    "form": "prepárate",
+                    "lemma": "preparar",
+                    "partOfSpeech": "imperative verb",
+                    "meaningInContext": "get ready!",
+                    "verb": {
+                        "infinitive": "preparar"
+                    }
+                }
+            ]
+        },
+        "candidates": [
+            {
+                "form": "preparo",
+                "lemma": "preparar",
+                "translation": "I prepare"
+            }
+        ],
+        "expected": {
+            "lemma": "preparar",
+            "lemmaMeaning": null,
+            "partsOfSpeech": [
+                "verb",
+                "imperative verb"
+            ],
+            "meanings": [
+                {
+                    "text": "get ready",
+                    "count": 2,
+                    "forms": []
+                },
+                {
+                    "text": "prepare yourself",
+                    "count": 1,
+                    "forms": []
+                },
+                {
+                    "text": "I prepare",
+                    "count": 1,
+                    "forms": [
+                        "preparo"
+                    ]
+                }
+            ],
+            "otherMeanings": [],
+            "relatedForms": [
+                "preparo"
+            ]
+        }
+    },
+    {
+        "name": "many related forms",
+        "own": {
+            "form": "hablo",
+            "lemma": "hablar"
+        },
+        "candidates": [
+            {
+                "form": "f1",
+                "lemma": "hablar",
+                "translation": "t1"
+            },
+            {
+                "form": "f2",
+                "lemma": "hablar",
+                "translation": "t2"
+            },
+            {
+                "form": "f3",
+                "lemma": "hablar",
+                "translation": "t3"
+            },
+            {
+                "form": "f4",
+                "lemma": "hablar",
+                "translation": "t4"
+            },
+            {
+                "form": "f5",
+                "lemma": "hablar",
+                "translation": "t5"
+            },
+            {
+                "form": "f6",
+                "lemma": "hablar",
+                "translation": "t6"
+            },
+            {
+                "form": "f7",
+                "lemma": "hablar",
+                "translation": "t7"
+            },
+            {
+                "form": "f8",
+                "lemma": "hablar",
+                "translation": "t8"
+            },
+            {
+                "form": "f9",
+                "lemma": "hablar",
+                "translation": "t9"
+            },
+            {
+                "form": "f10",
+                "lemma": "hablar",
+                "translation": "t10"
+            },
+            {
+                "form": "f11",
+                "lemma": "hablar",
+                "translation": "t11"
+            },
+            {
+                "form": "f12",
+                "lemma": "hablar",
+                "translation": "t12"
+            }
+        ],
+        "expected": {
+            "lemma": "hablar",
+            "lemmaMeaning": null,
+            "partsOfSpeech": [],
+            "meanings": [
+                {
+                    "text": "t1",
+                    "count": 1,
+                    "forms": [
+                        "f1"
+                    ]
+                },
+                {
+                    "text": "t2",
+                    "count": 1,
+                    "forms": [
+                        "f2"
+                    ]
+                },
+                {
+                    "text": "t3",
+                    "count": 1,
+                    "forms": [
+                        "f3"
+                    ]
+                }
+            ],
+            "otherMeanings": [],
+            "relatedForms": [
+                "f1",
+                "f2",
+                "f3"
+            ]
+        }
+    },
+    {
+        "name": "accents and case",
+        "own": {
+            "form": "sí",
+            "glosses": [
+                {
+                    "form": "sí",
+                    "lemma": "sí",
+                    "partOfSpeech": "adverb",
+                    "meaningInContext": "Yes"
+                },
+                {
+                    "form": "sí",
+                    "lemma": "sí",
+                    "partOfSpeech": "noun",
+                    "meaningInContext": "yes."
+                },
+                {
+                    "form": "sí",
+                    "lemma": "sí",
+                    "partOfSpeech": "noun",
+                    "meaningInContext": "Ñandú"
+                },
+                {
+                    "form": "sí",
+                    "lemma": "sí",
+                    "partOfSpeech": "noun",
+                    "meaningInContext": "ñandú"
+                }
+            ]
+        },
+        "candidates": [
+            {
+                "form": "si",
+                "lemma": "si",
+                "translation": "if"
+            }
+        ],
+        "expected": {
+            "lemma": "sí",
+            "lemmaMeaning": null,
+            "partsOfSpeech": [
+                "noun",
+                "adverb"
+            ],
+            "meanings": [
+                {
+                    "text": "Yes",
+                    "count": 2,
+                    "forms": []
+                },
+                {
+                    "text": "Ñandú",
+                    "count": 2,
+                    "forms": []
+                }
+            ],
+            "otherMeanings": [],
+            "relatedForms": []
+        }
+    }
+]

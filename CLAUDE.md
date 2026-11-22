@@ -9,7 +9,10 @@ Current state and next steps: `docs/STATUS.md` — read it first.
 - **Listen mode**: natural Latin American Spanish TTS, current sentence highlighted, speed control, loop sentence,
   background playback with lock-screen controls.
 - **Read mode**: paged text (~250 words/page). Words colored by status. Tap a word → bottom sheet with meaning
-  *in this sentence*, lemma, grammar note (conjugation/clitics), status buttons.
+  *in this sentence*, lemma, grammar note (conjugation/clitics), status buttons. A **KNOWN** word whose sentence has
+  no cached gloss makes no network call: the sheet shows "Likely meanings (not from this sentence)" from its stored
+  glosses and related forms of its lemma (`core/.../gloss/LikelyMeanings.kt`, ported in `web/src/core/meanings.ts`),
+  and "Look up in this sentence" runs the usual lookup.
 - **Vocabulary**: every word tapped is auto-added; list filterable by status, with saved context sentence.
 - **Verb practice** (menu): *Translate sentences*: a verb the reader has met + random tense/subject (picked locally);
   the AI writes an English sentence using known words and grades the Spanish answer in 3 tries with growing hints.
@@ -63,7 +66,7 @@ Rules:
   - Same client serves local Ollama (`http://<host>:11434/v1`) and z.ai GLM.
   - `AnthropicGlosser` (Claude Haiku 4.5) as quality fallback.
   - **Pre-gloss on import**: batch-gloss all non-KNOWN words of a lesson in the background, cache results, so taps
-    are instant and work offline. Live lookup only for cache misses.
+    are instant and work offline. Live lookup only for cache misses (and for KNOWN words only on request).
   - Offline fallback (later): Spanish→English dictionary from Wiktionary (kaikki.org extract).
 - **TTS**: cloud neural voice (Google Chirp HD or Azure Neural, es-MX/es-US) generated once per lesson and cached as
   MP3 with sentence timings; on-device Android TTS as fallback. Playback via Media3 `MediaSessionService`.

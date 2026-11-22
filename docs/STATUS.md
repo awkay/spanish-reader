@@ -1,6 +1,6 @@
 # Status
 
-_Last updated: 2026-11-17 (say-it / listen practice, both apps)_
+_Last updated: 2026-11-22 (Known words: no lookup until asked, likely meanings from what's stored; both apps)_
 
 **Android app: all planned features built; Tony uses it daily.** New: a **web app (PWA) for iPhone** plus a small Go
 server, **deployed 2026-10-01 at https://portal.fulcrologic.com** (Linode, build-6, nginx site in
@@ -10,8 +10,8 @@ The Android app's "Share to web" default URL moved there too (an old saved `span
 ## Build / verify
 ```
 scripts/install-android-sdk.sh          # each fresh cloud container
-./gradlew :core:test                     # 110 tests (2 live tests skipped without env vars)
-./gradlew :app:testDebugUnitTest         # 52 Robolectric/JVM tests incl. UI smoke test and v1→v3 migration
+./gradlew :core:test                     # 167 tests (2 live tests skipped without env vars)
+./gradlew :app:testDebugUnitTest         # 69 Robolectric/JVM tests incl. UI smoke test and migrations
 ./gradlew :app:assembleDebug             # app/build/outputs/apk/debug/app-debug.apk
 ```
 Live LLM check (not run by default):
@@ -20,7 +20,7 @@ Live LLM check (not run by default):
 Web app / server:
 ```
 cd server && go vet ./... && go test ./...    # gate delay/lockout, tokens, AI protocols, TTS (fake piper/lame), store
-cd web && npm ci && npm run typecheck && npm test && npm run build    # 30 tests incl. 13 golden-fixture tests
+cd web && npm ci && npm run typecheck && npm test && npm run build    # 71 tests incl. golden-fixture tests
 UPDATE_GOLDEN=1 ./gradlew :core:test --tests '*GoldenFixtureTest*'    # regenerate fixtures/ after changing :core text/prompt logic
 # e2e (Playwright, iPhone 13 profile) against a running server serving web/dist:
 BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_modules/playwright/index.mjs node web/e2e/smoke.mjs
@@ -51,6 +51,34 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
   glosses/translations/idioms under the app's keys (local results win), then pre-glosses only what's missing.
 - **Voice**: Tony chose Piper `es_MX-claude-high` (no es-CO voice exists in Piper; Azure has es-CO neural voices if
   ever wanted). Changing it is one env setting, `SR_PIPER_MODEL`.
+
+## Known words: likely meanings, lookup on request (2026-11-22; Android + web)
+- **Tony's request**: tapping a word already marked **KNOWN** shouldn't cost an AI call. When its sentence has no
+  cached gloss, the sheet opens at once with **"Likely meanings (not from this sentence)"** and makes no network call
+  at all (no AI gloss, no sentence translation, and on web no shared-cache pull). **"Look up in this sentence"** runs
+  the usual lookup (web: shared server cache, then AI; Android: AI), cached as always, so the next tap there is
+  instant; it also fetches the sentence translation. A stored translation is shown; otherwise "Translate sentence".
+  If the exact (form, sentence) gloss is cached the sheet is as before. Every other status (NEW, 1-4, Ignored, and a
+  NEW spelling colored by a Known family) still looks up automatically.
+- **What it shows**: the word's own meanings from every sentence it was glossed in (merged ignoring case, spacing and
+  punctuation, so "bank" = "Bank."; most frequent first with ×N), then meanings only **related forms of the same
+  lemma** gave, labeled with those forms ("From related forms (fui, vamos)"; word-family rules: lemma or own form,
+  reflexive `-se` ignored, plus the lemma itself when glossed), then "Other meanings" (the glosses' otherMeanings not
+  already listed), and "from ir · verb · to go". At most 5 own, 3 related, 5 other. Empty: "No meaning stored for
+  this word yet", still with the button. The saved vocabulary translation counts only when no gloss said it.
+- **Code**: `core/.../gloss/LikelyMeanings.kt` (pure; `LikelyMeanings.build(own, candidates)` over `StoredForm`s),
+  ported in `web/src/core/meanings.ts` and checked against `fixtures/likely-meanings.json` (written by
+  `GoldenFixtureTest`). Android gathers locally in `app/.../gloss/OnHandMeanings.kt` (indexed queries only:
+  `gloss_cache` by form key, `vocab` by `lemma IN (...) OR form IN (...)` via `LikelyMeanings.lemmaSpellings`);
+  `GlossState.OnHand` in `ReaderViewModel`; `OnHandDetails` in `WordSheet.kt`. Web: `onHandMeanings`,
+  `cachedGloss`, `storedTranslation` in `services.ts` (vocabulary family index in memory), `OnHand` in
+  `WordSheet.tsx`.
+- **Verified**: `LikelyMeaningsTest` (ranking, merging, related forms, otherMeanings, caps, empty), web
+  `meanings.test.ts` (fixture parity) and `onhand.test.ts` (no fetch while gathering; lookup goes cache → AI and
+  caches), Robolectric `KnownWordSheetTest` against a MockWebServer provider (Known word: stored and related meanings
+  shown with 0 requests, the button makes the gloss request; nothing stored: empty state; exact cache hit as before;
+  NEW word still looks up at once). `ReaderScreenshotTest.renderKnownWordSheet` renders the sheet (SCREENSHOT_DIR).
+  Not yet tried on the phones or in the web app in a browser.
 
 ## Conversation mode (2026-11-17; Android + server; tried by Tony on his Pixel 9a: works)
 - **Where**: "💬 Conversation" in the mortarboard practice menu. Android only (Tony's request).

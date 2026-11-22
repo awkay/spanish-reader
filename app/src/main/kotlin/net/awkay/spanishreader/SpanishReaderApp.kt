@@ -31,6 +31,7 @@ class SpanishReaderApp : Application() {
     val glossCache: RoomGlossCache by lazy { RoomGlossCache(database.glosses(), phrases) }
     val settings: SettingsRepository by lazy { SettingsRepository(this) }
     val glossService: GlossService by lazy { GlossService(settings, glossCache, sentences = phrases) }
+    val onHand: net.awkay.spanishreader.gloss.OnHandMeanings by lazy { net.awkay.spanishreader.gloss.OnHandMeanings(vocab, glossCache) }
     val backup: BackupService by lazy { BackupService(database) }
     val deviceTts: DeviceTts by lazy { DeviceTts(this) }
     val audioCache: SentenceAudioCache by lazy { SentenceAudioCache(File(filesDir, "tts")) }

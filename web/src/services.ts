@@ -6,6 +6,7 @@ import {
   glossUserPrompt, pageWindow, parseGlosses, parseSentences, planPreGloss, sentenceUserPrompt,
 } from './core/gloss.ts';
 import { formKey, sentenceHash } from './core/hash.ts';
+import { type LikelyMeanings, type StoredForm, buildLikelyMeanings, familyKeys } from './core/meanings.ts';
 import {
   type CommonVerb, type DrillCard, type DrillProgress, type DrillVerdict, answerWords, checkDrill, filled, isLearned, record, writeCards,
 } from './core/drill.ts';
@@ -17,7 +18,7 @@ import { type BackupFile, type BackupLesson, type SyncMeta, type SyncState, fing
 import { type Page, type TokenizedText, cleanImport, paginate, pageWordForms, suggestTitle, tokenize } from './core/text.ts';
 import {
   type VocabEntry, type WordDetail, Status, applyPageFinished, effectiveStatus, familyStatuses, inheritedStatus, markNewAsKnown,
-  onTap, setStatus,
+  normalizeLemma, onTap, setStatus,
 } from './core/vocab.ts';
 import * as db from './db.ts';
 import type { GlossRow, Lesson, SentenceRow } from './db.ts';
@@ -760,6 +761,63 @@ export async function lookup(form: string, sentence: string): Promise<Lookup> {
   }
   const any = await db.latestGlossForForm(fk);
   return any ? { gloss: any.gloss, fromOtherSentence: true } : { error };
+}
+
+/** The gloss cached on this device for [form] in exactly this [sentence]. Local only: no server, no AI. */
+export async function cachedGloss(form: string, sentence: string): Promise<Gloss | null> {
+  const row = await db.get<GlossRow>('glosses', db.glossKey(await sentenceHash(sentence), formKey(form)));
+  return row?.gloss ?? null;
+}
+
+/** The stored English translation of [sentence]. Local only: no server, no AI. */
+export async function storedTranslation(sentence: string): Promise<string | null> {
+  return (await db.get<SentenceRow>('sentences', await sentenceHash(sentence)))?.translation ?? null;
+}
+
+/** Vocabulary entries by word-family key (their lemma and their own form), rebuilt when the vocabulary changes. */
+let familyIndex: { vocab: Map<string, VocabEntry>; byKey: Map<string, VocabEntry[]> } | null = null;
+
+function familyMembers(keys: Set<string>): VocabEntry[] {
+  const v = vocab.get();
+  if (familyIndex?.vocab !== v) {
+    const byKey = new Map<string, VocabEntry[]>();
+    for (const e of v.values()) {
+      for (const k of new Set([normalizeLemma(e.lemma), normalizeLemma(e.form)])) {
+        if (k === null) continue;
+        const list = byKey.get(k);
+        if (list) list.push(e);
+        else byKey.set(k, [e]);
+      }
+    }
+    familyIndex = { vocab: v, byKey };
+  }
+  const out = new Set<VocabEntry>();
+  for (const k of keys) for (const e of familyIndex.byKey.get(k) ?? []) out.add(e);
+  return [...out];
+}
+
+/**
+ * "What's on hand" for a KNOWN word without a gloss for its sentence (port of Android's OnHandMeanings): its own
+ * glosses from any sentence and vocabulary entry, plus related forms of the same lemma and their glosses. Local only.
+ */
+export async function onHandMeanings(written: string): Promise<LikelyMeanings> {
+  const fk = formKey(written);
+  const newestFirst = (rows: GlossRow[] | undefined) => [...(rows ?? [])].sort((a, b) => b.storedAt - a.storedAt).map((r) => r.gloss);
+  const entry = vocab.get().get(fk);
+  const own: StoredForm = {
+    form: fk, lemma: entry?.lemma ?? null, translation: entry?.translation ?? null,
+    glosses: newestFirst((await db.glossesForForms([fk])).get(fk)),
+  };
+  const keys = familyKeys(own);
+  const entries = familyMembers(keys).filter((e) => e.form !== fk).sort((a, b) => b.lastSeenMillis - a.lastSeenMillis).slice(0, 40);
+  // The lemma itself may have glosses without a vocabulary entry ("ir" glossed but never tapped).
+  const bare = [...keys].filter((k) => k !== fk && !entries.some((e) => e.form === k));
+  const rows = await db.glossesForForms([...entries.map((e) => e.form), ...bare]);
+  const candidates: StoredForm[] = [
+    ...entries.map((e) => ({ form: e.form, lemma: e.lemma, translation: e.translation, glosses: newestFirst(rows.get(e.form)) })),
+    ...bare.filter((k) => (rows.get(k)?.length ?? 0) > 0).map((k) => ({ form: k, glosses: newestFirst(rows.get(k)) })),
+  ];
+  return buildLikelyMeanings(own, candidates);
 }
 
 /** "Improve answer": the stronger model sees the previous answer; the result replaces it everywhere. */

@@ -3,10 +3,12 @@ package net.awkay.spanishreader.ui
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.testing.WorkManagerTestInitHelper
@@ -15,6 +17,7 @@ import kotlinx.coroutines.runBlocking
 import net.awkay.spanishreader.MainActivity
 import net.awkay.spanishreader.ShareInbox
 import net.awkay.spanishreader.SpanishReaderApp
+import net.awkay.spanishreader.core.gloss.Gloss
 import net.awkay.spanishreader.core.vocab.WordStatus
 import net.awkay.spanishreader.data.AppSettings
 import org.junit.Before
@@ -69,6 +72,44 @@ class ReaderScreenshotTest {
         val bmp = compose.onRoot().captureToImage().asAndroidBitmap()
         File(dir).mkdirs()
         File(dir, "reader.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /** A KNOWN word's sheet with meanings from other sentences and related forms, to word-sheet-known.png. */
+    @Test
+    fun renderKnownWordSheet() {
+        val dir = System.getenv("SCREENSHOT_DIR") ?: return
+        runBlocking(Dispatchers.IO) {
+            app.vocab.setStatus("fue", WordStatus.KNOWN)
+            app.vocab.annotate("fue", "ir", "went")
+            app.glossCache.put("fue", "Ayer fue al mercado.", Gloss("fue", "ir", "verb", "went", otherMeanings = listOf("left", "was")))
+            app.glossCache.put("fue", "Él fue a casa.", Gloss("fue", "ir", "verb", "Went."))
+            app.glossCache.put("fue", "Se fue temprano.", Gloss("fue", "ir", "verb", "left"))
+            app.vocab.setStatus("fui", WordStatus.LEVEL_1)
+            app.vocab.annotate("fui", "ir", "I went")
+            app.glossCache.put("fui", "Fui al cine.", Gloss("fui", "ir", "verb", "I went", lemmaMeaning = "to go"))
+            app.vocab.setStatus("vamos", WordStatus.KNOWN)
+            app.vocab.annotate("vamos", "irse", null)
+            app.glossCache.put("vamos", "Nos vamos.", Gloss("vamos", "irse", "verb", "we're leaving"))
+        }
+        ActivityScenario.launch(MainActivity::class.java)
+        compose.runOnUiThread {
+            ShareInbox.offer(app, android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
+                .putExtra(android.content.Intent.EXTRA_SUBJECT, "Cuento")
+                .putExtra(android.content.Intent.EXTRA_TEXT, "Fue fue fue fue fue fue fue fue."))
+        }
+        compose.waitUntil(10_000) { compose.onAllNodes(hasText("Create lesson")).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasText("Create lesson")).performClick()
+        compose.waitUntil(10_000) { compose.onAllNodes(hasText("Page 1 of 1")).fetchSemanticsNodes().isNotEmpty() }
+        val node = compose.onNode(hasText("fue fue", substring = true))
+        val layout = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+        node.fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult].action!!.invoke(layout)
+        val box = layout.single().getBoundingBox(5)
+        node.performTouchInput { click(box.center) }
+        compose.waitUntil(10_000) { compose.onAllNodes(hasText("Likely meanings", substring = true)).fetchSemanticsNodes().isNotEmpty() }
+        compose.waitForIdle()
+        val bmp = compose.onRoot().captureToImage().asAndroidBitmap()
+        File(dir).mkdirs()
+        File(dir, "word-sheet-known.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 }
 

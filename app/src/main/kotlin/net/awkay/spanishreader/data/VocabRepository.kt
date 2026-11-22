@@ -41,6 +41,13 @@ class VocabRepository(
     suspend fun entries(forms: Collection<String>): Map<String, VocabEntry> =
         forms.distinct().chunked(MAX_BIND_ARGS).flatMap { dao.getAll(it) }.associate { it.form to it.toEntry() }
 
+    /**
+     * Candidates for related forms: entries whose stored lemma is one of [lemmaSpellings] or whose own form is one of
+     * [forms], most recently seen first (indexed lookups; see LikelyMeanings.lemmaSpellings).
+     */
+    suspend fun byLemmaOrForm(lemmaSpellings: Collection<String>, forms: Collection<String>, limit: Int): List<VocabEntry> =
+        dao.byLemmaOrForm(lemmaSpellings.take(MAX_BIND_ARGS / 2), forms.take(MAX_BIND_ARGS / 2), limit).map { it.toEntry() }
+
     suspend fun statuses(forms: Collection<String>): Map<String, WordStatus> =
         entries(forms).mapValues { it.value.status }
 

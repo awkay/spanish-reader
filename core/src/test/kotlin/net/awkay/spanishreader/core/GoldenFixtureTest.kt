@@ -12,7 +12,11 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
+import net.awkay.spanishreader.core.gloss.Gloss
 import net.awkay.spanishreader.core.gloss.GlossCache
+import net.awkay.spanishreader.core.gloss.LikelyMeanings
+import net.awkay.spanishreader.core.gloss.StoredForm
+import net.awkay.spanishreader.core.gloss.VerbForm
 import net.awkay.spanishreader.core.gloss.PreGlossPlanner
 import net.awkay.spanishreader.core.text.ImportCleaner
 import net.awkay.spanishreader.core.text.Paginator
@@ -225,6 +229,69 @@ class GoldenFixtureTest {
             }
         }
         return Json { prettyPrint = true }.encodeToString(JsonElement.serializer(), root) + "\n"
+    }
+
+    /**
+     * The KNOWN-word sheet's "likely meanings", so the web port aggregates stored glosses exactly as Android does:
+     * each case's input and the Kotlin result.
+     */
+    private fun likelyMeanings(): String {
+        fun g(form: String, meaning: String, lemma: String = form, pos: String = "noun", other: List<String> = emptyList(),
+              lemmaMeaning: String? = null, verb: VerbForm? = null) =
+            Gloss(form, lemma, pos, meaning, otherMeanings = other, lemmaMeaning = lemmaMeaning, verb = verb)
+        val cases = listOf(
+            "empty" to (StoredForm("banco") to emptyList()),
+            "merge and rank" to (StoredForm("banco", lemma = "banco", translation = "bank", glosses = listOf(
+                g("banco", "bench"), g("banco", "bank"), g("banco", "Bank."), g("banco", "  bank "), g("banco", "bench!"),
+                g("banco", "shoal", other = listOf("bench", "Pew", "pew.")), g("banco", "row"), g("banco", "bank — of a river"),
+            )) to emptyList()),
+            "translation only" to (StoredForm("casa", lemma = "casa", translation = "home") to emptyList()),
+            "related forms" to (StoredForm("fui", lemma = "ir", glosses = listOf(
+                g("fui", "I went", lemma = "ir", pos = "verb", lemmaMeaning = "to go", other = listOf("I left")),
+            )) to listOf(
+                StoredForm("fue", lemma = "ir", translation = "went", glosses = listOf(
+                    g("fue", "he went", lemma = "ir", pos = "verb"),
+                    g("fue", "was", lemma = "ser", pos = "verb", other = listOf("it was")),
+                    g("fue", "I went", lemma = "ir", pos = "verb"),
+                )),
+                StoredForm("vamos", lemma = "irse", glosses = listOf(g("vamos", "he went", lemma = "ir", pos = "verb", other = listOf("let's go")))),
+                StoredForm("ir", glosses = listOf(g("ir", "to go", lemma = "ir", pos = "verb", lemmaMeaning = "to go"))),
+                StoredForm("casa", lemma = "casa", translation = "house"),
+                StoredForm("Fui", lemma = "ir", translation = "same word"),
+            )),
+            "family by own form and reflexive" to (StoredForm("levantar") to listOf(
+                StoredForm("levanto", lemma = "Levantarse", translation = "I get up"),
+                StoredForm("levantó", glosses = listOf(g("levantó", "lifted", lemma = "levantar", pos = "verb", lemmaMeaning = "to lift"))),
+            )),
+            "tidied verb lemmas" to (StoredForm("prepárate", lemma = "preparar", glosses = listOf(
+                g("prepárate", "get ready", lemma = "Prepararse", pos = "verb", verb = VerbForm("prepararse")),
+                g("prepárate", "prepare yourself", lemma = "prepárase", pos = "Verb", verb = VerbForm("prepararse")),
+                g("prepárate", "get ready!", lemma = "preparar", pos = "imperative verb", verb = VerbForm("preparar")),
+            )) to listOf(StoredForm("preparo", lemma = "preparar", translation = "I prepare"))),
+            "many related forms" to (StoredForm("hablo", lemma = "hablar") to (1..12).map { StoredForm("f$it", lemma = "hablar", translation = "t$it") }),
+            "accents and case" to (StoredForm("sí", glosses = listOf(g("sí", "Yes", pos = "adverb"), g("sí", "yes."), g("sí", "Ñandú"), g("sí", "ñandú")))
+                to listOf(StoredForm("si", lemma = "si", translation = "if"))),
+        )
+        val json = Json { prettyPrint = true; encodeDefaults = true }
+        val input = Json { encodeDefaults = false }
+        val root = buildJsonArray {
+            for ((name, case) in cases) addJsonObject {
+                val (own, candidates) = case
+                put("name", name)
+                put("own", input.encodeToJsonElement(StoredForm.serializer(), own))
+                put("candidates", JsonArray(candidates.map { input.encodeToJsonElement(StoredForm.serializer(), it) }))
+                put("expected", json.encodeToJsonElement(LikelyMeanings.serializer(), LikelyMeanings.build(own, candidates)))
+            }
+        }
+        return json.encodeToString(JsonElement.serializer(), root) + "\n"
+    }
+
+    @Test
+    fun `likely meanings fixture is current`() {
+        val file = File("../fixtures/likely-meanings.json")
+        val expected = likelyMeanings()
+        if (System.getenv("UPDATE_GOLDEN") == "1" || !file.exists()) file.writeText(expected)
+        assertEquals(expected, file.readText(), "fixtures/likely-meanings.json is stale; regenerate with UPDATE_GOLDEN=1")
     }
 
     @Test
