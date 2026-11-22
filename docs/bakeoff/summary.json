@@ -113,7 +113,9 @@
   "estPageGlossUsd": 0.0105,
   "tokensIn": 11195,
   "tokensOut": 35047,
-  "failedChecks": []
+  "failedChecks": [],
+  "billedUsd": 0.11,
+  "costNote": "costUsd is what the harness saw; a stalled gloss call that timed out client-side was still billed (~$0.10), per the OpenRouter bill"
  },
  {
   "model": "google/gemini-3.5-flash-lite",
@@ -241,6 +243,7 @@
  },
  {
   "model": "qwen/qwen3.8-flash",
-  "note": "stopped after ~8 minutes without finishing; counted as too slow"
+  "note": "stopped after ~8 minutes without finishing; counted as too slow",
+  "billedUsd": 0.02
  }
 ]
