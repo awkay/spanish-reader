@@ -1,0 +1,30 @@
+{
+  "letter": "A",
+  "scores": {"glosses": 6, "sentences": 9, "drill": 8, "phrases": 0, "chat": 9, "overall": 5},
+  "oneLine": "Strong sentences, drill and chat with correct clitics and lemmas, but the phrases job failed outright and a few gloss grammar notes are flatly false (como 'capital letter', voseo 'dásela', quedé 'spelling change').",
+  "mistakes": [
+    {"job": "phrases", "item": "both decks", "what": "Job failed with no output: \"MalformedGlossResponseException: No usable sentences were written\"", "severity": "major"},
+    {"job": "glosses", "item": "como (Como pan todos los días.)", "what": "grammarNote \"Written with a capital letter here, so it does not mean 'as' or 'like' (which is also 'como', without an accent)\" is false: capitalization is just sentence-initial and says nothing about meaning; the parenthetical also muddles como vs cómo", "severity": "major"},
+    {"job": "glosses", "item": "dáselo", "what": "grammarNote \"In voseo regions the command would be 'dá' or 'dásela'\" is wrong: 'dásela' just changes the object to feminine, the voseo note is irrelevant to Mexican usage and confuses the learner", "severity": "major"},
+    {"job": "glosses", "item": "echar (echar de menos)", "what": "grammarNote \"'Echar de menos' is common in Spain and Latin America; 'extrañar' is also widely used\" understates regional reality: in Mexico/Latin America extrañar is the everyday verb and echar de menos sounds Peninsular", "severity": "major"},
+    {"job": "glosses", "item": "quedé", "what": "formation claims \"Regular -ar verb with a spelling change in the first person: quedé\"; there is no spelling change, quedé is fully regular", "severity": "minor"},
+    {"job": "glosses", "item": "quedé", "what": "meaningInContext \"stayed (with the pronoun me, it means to stay at home)\" wrongly attributes 'at home' to the pronoun; lemma given as quedar rather than quedarse", "severity": "minor"},
+    {"job": "glosses", "item": "dáselo", "what": "verb tense listed as \"present\" for an imperative", "severity": "minor"},
+    {"job": "glosses", "item": "dáselo", "what": "roots say dare is \"the source of English 'donate'\"; donate comes from donare, only a cognate", "severity": "minor"},
+    {"job": "glosses", "item": "fui", "what": "otherMeanings \"to walk\" is not a meaning of ir, and the key alternative 'I was (ser)' is missing from otherMeanings", "severity": "minor"},
+    {"job": "glosses", "item": "observándome", "what": "otherMeanings lists \"to watch\", which is the in-context meaning", "severity": "minor"},
+    {"job": "glosses", "item": "sino", "what": "otherMeanings \"otherwise\" belongs to 'si no', not sino", "severity": "minor"},
+    {"job": "drill", "item": "Usted ___ bien últimamente / Ayer ___ en la oficina", "what": "English \"you\" does not distinguish tú/usted/ustedes, and the Spanish blank in the preterite card has no subject cue; \"¿Usted ha estado bien...?\" is slightly less natural than \"¿Ha estado usted bien...?\"", "severity": "minor"},
+    {"job": "drill", "item": "I was sick last week.", "what": "English 'I was' does not force preterite over imperfect (estaba is also possible)", "severity": "minor"},
+    {"job": "drill", "item": "tense coverage", "what": "No conditional card; present has three cards while other tenses have one or two", "severity": "minor"},
+    {"job": "chat", "item": "reply1", "what": "\"Me encanta la playa con la familia\" is slightly unnatural (better 'ir a la playa en familia')", "severity": "minor"}
+  ],
+  "strengths": [
+    "Correct lemmas for fui=ir, fue=ser, vino noun, como=comer",
+    "Clitic roles right for se me olvidó (accidental se + IO me, verb agrees with la llave) and dáselo (se=IO replacing le, lo=DO)",
+    "me da pena correctly glossed as Mexican 'embarrassed'",
+    "All sentence translations correct; every idiom caught with good spans; no invented idioms in El perro come pan",
+    "Drill Spanish is natural and grammatical, including correct subjunctive after cuando with future meaning",
+    "Chat corrections exactly minimal: fixes a la playa/comimos and la comida/estuvo buena, leaves sentences 3 and 4 alone"
+  ]
+}

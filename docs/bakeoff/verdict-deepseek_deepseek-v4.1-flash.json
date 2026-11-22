@@ -1,0 +1,35 @@
+{
+  "letter": "B",
+  "scores": {"glosses": 7, "sentences": 9, "drill": 8, "phrases": 8, "chat": 8, "overall": 8},
+  "oneLine": "Solid, clean output across all five jobs with correct lemmas, clitics and corrections; the one real error is claiming 'echar de menos' is the standard Latin American way to say 'to miss', plus a handful of awkward notes and calques.",
+  "mistakes": [
+    {"job": "glosses", "item": "echar (Voy a echar de menos a mi familia.)", "what": "grammarNote says \"'Echar de menos' is the standard Latin American way to say 'to miss' someone\". That's backwards: in Latin America (Mexico especially) the everyday verb is 'extrañar', and 'echar de menos' sounds Peninsular. The note never mentions extrañar.", "severity": "major"},
+    {"job": "glosses", "item": "vino (Pedimos una botella de vino tinto.)", "what": "grammarNote says \"the article 'una botella de' and the adjective 'tinto' show it is the noun\". 'una botella de' is not an article, it's a noun phrase plus a preposition. Also 'wine (by the glass)' in otherMeanings is filler, not a different meaning.", "severity": "minor"},
+    {"job": "glosses", "item": "pena (Me da pena hablar en público.)", "what": "meaningInContext is right (embarrassment), but the grammarNote and phraseMeaning hedge with \"it makes me sad\" and never say that in Mexico 'me da pena' mainly means 'I'm embarrassed/shy'. The learner is left unsure which meaning applies.", "severity": "minor"},
+    {"job": "glosses", "item": "quedé (Me quedé en casa porque llovía.)", "what": "\"In Latin America 'quedarse' is the usual verb for staying somewhere\" adds a needless regional qualifier: 'quedarse' = 'to stay' everywhere.", "severity": "minor"},
+    {"job": "glosses", "item": "fui (Ayer fui al mercado con mi hermana.)", "what": "otherMeanings lists 'to fit (clothing)' for ir. That's a stretch: 'te va bien' means 'it suits you'; 'to fit' is quedar.", "severity": "minor"},
+    {"job": "glosses", "item": "olvidó (Se me olvidó la llave en casa.)", "what": "The 'se' clitic's refersTo is \"the forgetting event (impersonal)\", which is vague. The role ('accidental se') is right, though.", "severity": "minor"},
+    {"job": "drill", "item": "Yo ___ en casa la semana pasada. (estuve)", "what": "\"I was at home last week\" doesn't force the preterite: 'estaba' fits the English just as well, and the card allows only one try.", "severity": "minor"},
+    {"job": "drill", "item": "Usted ___ en la oficina desde temprano. (ha estado)", "what": "The English \"You have been at the office since early\" is awkward; 'since early this morning' would read better.", "severity": "minor"},
+    {"job": "drill", "item": "card set", "what": "3 of the 10 cards are present tense (two of them the same 'está' + state/location pattern), and there's no conditional card ('estaría').", "severity": "minor"},
+    {"job": "phrases", "item": "Which ones ... (two Cuáles cards)", "what": "Both cards drill plural 'Cuáles' ('Which ones are on sale today?' / 'Which ones do we need for the recipe?'), and no card drills singular 'Cuál'.", "severity": "minor"},
+    {"job": "phrases", "item": "¿___ cuesta el autobús a Puebla? (Cuánto)", "what": "The note \"Cuánto is masculine singular here\" is misleading: here it's the invariable adverb 'how much' and doesn't agree with any noun.", "severity": "minor"},
+    {"job": "phrases", "item": "¿___ es el carro que vamos a llevar? (De quién)", "what": "The Spanish is wordy and a bit unnatural for 'Whose car are we taking?'. '¿En el carro de quién nos vamos?' or '¿De quién es el carro?' would be more idiomatic.", "severity": "minor"},
+    {"job": "phrases", "item": "___ mi paraguas en el carro. (He dejado)", "what": "Mexican usage would say 'Dejé mi paraguas en el carro'. The present-perfect card leans Peninsular, even though the English forces it.", "severity": "minor"},
+    {"job": "phrases", "item": "___ un paraguas. (Toma)", "what": "The English \"Take an umbrella.\" doesn't force tú over usted ('Tome'). Also, 'Llévate un paraguas' is the more natural Mexican phrasing.", "severity": "minor"},
+    {"job": "phrases", "item": "Te ___. (voy a creer) / Ella ___ un regalo. (está recibiendo)", "what": "Both English prompts are unnatural: 'I am going to believe you' and 'She is receiving a gift'. The answers are grammatical, though.", "severity": "minor"},
+    {"job": "phrases", "item": "Llegamos / Pagamos notes", "what": "The notes list only the yo/tú/él forms (\"llegué, llegaste, llegó\", \"pagué, pagaste, pagó\") on cards whose answer is the nosotros form. They don't help.", "severity": "minor"},
+    {"job": "chat", "item": "reply1: Suena como un día muy tranquilo en la playa.", "what": "'Suena como un día...' is an English calque; natural Spanish is 'Suena a un día muy tranquilo' or 'Qué día tan tranquilo'.", "severity": "minor"},
+    {"job": "chat", "item": "reply2: El pozole es una gran elección, sobre todo con un buen caldo.", "what": "Pozole is a soup, so \"sobre todo con un buen caldo\" is an odd, almost empty remark. 'Una gran elección' is also slightly calqued ('¡Qué rico!' would be more natural).", "severity": "minor"},
+    {"job": "chat", "item": "Ayer comí en un restaurante y la comida estaba muy buena.", "what": "'estaba' is acceptable, but 'estuvo' is the more natural choice for a single meal eaten yesterday. A nit.", "severity": "minor"}
+  ],
+  "strengths": [
+    "All the tricky lemmas are right: fui=ir, fue=ser, vino=noun, como=comer. Good disambiguation notes.",
+    "Clitic roles are correct for dáselo (se=IO replacing le, lo=DO) and se me olvidó (accidental se + IO experiencer).",
+    "'llevar + time + gerund' and 'me da pena' (embarrassment) are right in context.",
+    "Sentences: accurate translations, all idioms caught (sin embargo, darse cuenta, a lo mejor, hace…que, echar de menos), and nothing invented for 'El perro come pan'.",
+    "Drill: 10 clean cards with correct estar forms and Mexican-neutral Spanish, and no ser/estar traps.",
+    "Phrases: 10 cards per deck, every question opens with ¿, and they use Mexican vocabulary (carro, renta, pastel, autobús) with no Spain-only words.",
+    "Corrections are minimal and accurate: a la playa + comimos; la comida + buena + past tense; sentences 3 and 4 left untouched, with 'Yo' kept."
+  ]
+}

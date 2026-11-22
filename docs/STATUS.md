@@ -71,6 +71,12 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
   `GlossServiceTest` (switch, copy, delete, improve/fallback choices), `SettingsProfilesTest` (Robolectric: radio
   switches the profile in use, copy keeps the key; renders `settings-ai.png` with `SCREENSHOT_DIR`).
 
+## Model bake-off (2026-11-22; experiment only, no code change)
+Eight models ran the app's real prompts via OpenRouter: glosses, sentences, drill cards, say-it cards and chat. Results,
+per-model mistakes and recommendations are in `docs/model-bakeoff.md`, with data in `docs/bakeoff/`. The harness was
+removed from the tests. In short: GLM 5.3 is the most accurate but slowest. Gemini 3.8 Flash comes close and is about 5× faster at
+glossing. Gemini 3.5 Flash Lite is best for conversation (fast, natural). No setting has been changed yet.
+
 ## Known words: likely meanings, lookup on request (2026-11-22; Android + web)
 - **Tony's request**: tapping a word already marked **KNOWN** shouldn't cost an AI call. When its sentence has no
   cached gloss, the sheet opens at once with **"Likely meanings (not from this sentence)"** and makes no network call

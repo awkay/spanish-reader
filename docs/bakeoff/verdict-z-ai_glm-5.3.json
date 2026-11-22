@@ -1,0 +1,32 @@
+{
+  "letter": "H",
+  "scores": {"glosses": 8, "sentences": 10, "drill": 9, "phrases": 8, "chat": 9, "overall": 9},
+  "oneLine": "Very strong all round: every lemma, clitic role and idiom is right, the drill and chat are clean, and the corrections are minimal (no over-correction); the flaws are a few peripheral gloss inaccuracies (an invented 'cash a check' meaning, a wrong 'stress shifts' explanation) and a couple of loosely cued verb cards.",
+  "mistakes": [
+    {"job": "glosses", "item": "encaja", "what": "otherMeanings lists \"to cash (a check)\". Encajar does not mean that (cashing a check is cobrar or hacer efectivo), so this is an invented meaning.", "severity": "major"},
+    {"job": "glosses", "item": "encaja", "what": "\"In Spain encajar also means to withstand a blow; in LatAm it is mostly 'to fit'\" is a doubtful regional claim. 'Encajar un golpe' is not specific to Spain.", "severity": "minor"},
+    {"job": "glosses", "item": "dáselo / observándome", "what": "The formation says the attached pronouns \"shift the stress\" (\"shifts stress back a syllable\"). The stress stays on da / -an-. The accent is written because the longer word becomes esdrújula, so the stated rule is wrong.", "severity": "minor"},
+    {"job": "glosses", "item": "fue", "what": "The grammarNote says \"describing a state, so it is ser\". States usually take estar. Ser is used here because the sentence characterizes an event, so the reasoning could mislead.", "severity": "minor"},
+    {"job": "glosses", "item": "llevo", "what": "Calls 'Llevo dos años viviendo...' \"the idiomatic LatAm way\". It is general Spanish, not specific to Latin America.", "severity": "minor"},
+    {"job": "glosses", "item": "quedé", "what": "Gives \"plain quedar = ... to arrange to meet (quedar con)\". 'Quedar con alguien' is mainly Spain usage. Mexico says 'quedar de vernos' or 'quedar en'.", "severity": "minor"},
+    {"job": "glosses", "item": "echar", "what": "The roots line says \"Latin ejectare\". The usual source is iectare/jactare. It also tags \"to fire (someone, LatAm)\" as Latin American, but that sense is general.", "severity": "minor"},
+    {"job": "drill", "item": "Yesterday you were at the beach with us.", "what": "The English 'you were' does not force tú over usted or ustedes, and no subject pronoun appears in the Spanish. 'Ayer' does force the preterite, so the tense is cued.", "severity": "minor"},
+    {"job": "drill", "item": "set coverage", "what": "There is no conditional card (estaría), and two present 3rd-singular cards (él está, ella está) say almost the same thing.", "severity": "minor"},
+    {"job": "phrases", "item": "The doctor is seeing patients right now.", "what": "The answer is \"está recibiendo\", but the English 'seeing' cues 'está viendo' or the more natural Mexican 'está atendiendo'. Nothing in the English leads to recibir.", "severity": "major"},
+    {"job": "phrases", "item": "Better take an umbrella in case it rains.", "what": "\"Mejor toma un paraguas\" is a calque of 'take'. The natural phrasing is 'Mejor llévate un paraguas', and the English does not force tú.", "severity": "minor"},
+    {"job": "phrases", "item": "I give the dog water every morning.", "what": "\"Yo doy agua al perro\" leaves out the doubled indirect object. The natural form is 'Le doy agua al perro'.", "severity": "minor"},
+    {"job": "phrases", "item": "Which dishes do you recommend? (to a waiter)", "what": "The note says \"cuáles, not qué\". '¿Qué platillos me recomienda?' is perfectly correct and the more common way to ask, so the note misleads, even though the blank does need Cuáles.", "severity": "minor"},
+    {"job": "phrases", "item": "What's for dinner?", "what": "The note \"Hay (there is/are) never changes form\" is filler and says nothing about qué, the word being drilled.", "severity": "minor"},
+    {"job": "chat", "item": "reply2", "what": "\"¿Ya probaste hacerlo en casa...?\" is slightly calqued. 'Ya intentaste prepararlo' would sound more natural.", "severity": "minor"},
+    {"job": "chat", "item": "Ayer comí en un restaurante y el comida es muy bueno.", "what": "The why for es→estaba only says \"use the past tense (estar, imperfect)\". It never explains the switch from ser to estar, and 'estuvo' would fit a single meal better.", "severity": "minor"}
+  ],
+  "strengths": [
+    "Every tricky lemma is right: fui=ir, fue=ser, vino as the noun, como=comer, sino as a conjunction.",
+    "The clitic roles are exactly right: dáselo (se = IO replacing le, lo = DO) and se me olvidó (accidental se, me = IO, la llave as subject).",
+    "Gets the regional notes right: extrañar is the usual verb in Mexico, and 'me da pena' means embarrassed. Echar de menos and me da pena are flagged as phrases.",
+    "Sentence translations are perfect. All target idioms are found with sensible spans, and nothing is invented for 'El perro come pan'.",
+    "The drill has 10 natural cards with Mexican vocabulary (salón de clases) and clear tense cues. It correctly uses 'Quieren que yo esté'.",
+    "The question-word deck covers all 8 targets with natural, grammatical Spanish and correct gender agreement (Cuánta comida).",
+    "The chat replies are short, natural Mexican Spanish ('¡Qué padre!', 'Se metieron al mar'). The corrections are minimal, both correct sentences are left untouched, and 'Yo' is kept."
+  ]
+}

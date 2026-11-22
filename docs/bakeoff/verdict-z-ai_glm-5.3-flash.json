@@ -1,0 +1,25 @@
+{
+  "letter": "G",
+  "scores": {"glosses": 9, "sentences": 9, "drill": 8, "phrases": 9, "chat": 8, "overall": 9},
+  "oneLine": "Very strong and accurate across all five jobs, with correct lemmas, clitics and regional notes, natural Mexican-flavored Spanish (carro, renta, aventón, pozole) and exact corrections; the flaws are one drill card where 'you' doesn't force usted and a gender-agreement slip in a chat reply.",
+  "mistakes": [
+    {"job": "drill", "item": "¿___ muy ocupado esta semana? (present-perfect, USTED)", "what": "English 'Have you been very busy this week?' and a Spanish sentence with no subject do not signal usted, so 'has estado' is just as valid as the expected 'ha estado'. Since a one-try local check marks it wrong, the card is broken.", "severity": "major"},
+    {"job": "drill", "item": "Tú ___ en la fiesta ayer. / Yo ___ enfermo la semana pasada.", "what": "'You were at the party yesterday' and 'I was sick last week' also allow estabas/estaba. The English doesn't force the preterite answers 'estuviste'/'estuve'.", "severity": "minor"},
+    {"job": "drill", "item": "Él ___ en la cocina / Ella ___ muy feliz", "what": "Two present-tense 3rd-singular cards both answer 'está'. That uses up a slot that could have gone to another tense, such as the conditional.", "severity": "minor"},
+    {"job": "chat", "item": "reply1: \"La playa con la familia siempre es divertido.\"", "what": "With 'la playa' as the subject, the adjective should agree: 'es divertida' (or rephrase: 'Ir a la playa ... es divertido'). This models exactly the gender-agreement error the corrections job fixes.", "severity": "major"},
+    {"job": "chat", "item": "reply2: \"¡Qué rico! El pozole es delicioso...\"", "what": "Redundant: 'How delicious! Pozole is delicious' says the same thing twice.", "severity": "minor"},
+    {"job": "glosses", "item": "encaja", "what": "Marks the ordinary verb plus preposition 'encaja en' as an idiom/phrase, and otherMeanings repeats 'to fit', the meaning in context.", "severity": "minor"},
+    {"job": "glosses", "item": "llevo", "what": "The phrase span is sentence-specific, 'llevo dos años viviendo', instead of the general pattern 'llevar + time + gerund'. That pattern is explained only in whyThisForm.", "severity": "minor"},
+    {"job": "sentences", "item": "Sin embargo, no se dio cuenta de nada.", "what": "'he didn't realize anything' is stiff English. 'he didn't notice a thing' would be more natural.", "severity": "minor"},
+    {"job": "phrases", "item": "¿De quién es esta chaqueta?", "what": "Mexicans would normally say 'chamarra'. 'Chaqueta' is understood but can carry a vulgar double meaning in Mexico.", "severity": "minor"}
+  ],
+  "strengths": [
+    "All lemma traps correct: fui=ir, fue=ser, vino=noun, como=comer, with clear notes on how to tell each pair apart.",
+    "Clitic roles correct for dáselo (se = IO replacing le, lo = DO) and se me olvidó (accidental se, me = IO, la llave = subject).",
+    "Correct regional notes: extrañar as the everyday LatAm verb, 'me da pena' = embarrassed in Mexico versus sorry in Spain.",
+    "All sentence idioms found with correct meanings, and nothing invented for 'El perro come pan'.",
+    "Phrase decks are complete (10 plus 10), grammatical and LatAm-appropriate (carro, regresas, renta, aventón), and the answers fit their blanks.",
+    "The corrections are exact: a la playa and comimos; la comida estaba muy buena; both correct sentences left alone, keeping 'Yo'.",
+    "Accurate etymologies (iactare, levare, quietare, si non, capsa)."
+  ]
+}

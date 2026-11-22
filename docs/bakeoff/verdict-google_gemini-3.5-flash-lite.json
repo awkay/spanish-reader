@@ -1,0 +1,31 @@
+{
+  "letter": "C",
+  "scores": {"glosses": 7, "sentences": 9, "drill": 8, "phrases": 6, "chat": 9, "overall": 7},
+  "oneLine": "Solid, accurate glosses, translations and chat with sensible corrections; let down by a wrong clitic analysis of 'se me olvidó', every question card missing the opening '¿', and a false 'cuáles + noun' rule.",
+  "mistakes": [
+    {"job": "glosses", "item": "olvidó (Se me olvidó la llave en casa.)", "what": "Clitics list only 'me' with role \"accidental se\"; 'me' is the indirect object (the person affected) and the accidental 'se' itself is missing from the analysis.", "severity": "major"},
+    {"job": "glosses", "item": "olvidó (Se me olvidó la llave en casa.)", "what": "Phrase given as \"olvidarse de\" = \"to forget about something\", which is not the construction in this sentence (se me olvidó + subject 'la llave'); no note that the key is the grammatical subject.", "severity": "minor"},
+    {"job": "glosses", "item": "dáselo", "what": "grammarNote \"In Latin America, 'dáselo' is standard in the 'tú' imperative\" is filler that implies a regional difference where there is none; otherMeanings \"to happen\" is doubtful for dar.", "severity": "minor"},
+    {"job": "glosses", "item": "echar (Voy a echar de menos a mi familia.)", "what": "No note that in Latin America 'extrañar' is the everyday verb for 'to miss' and 'echar de menos' sounds Spain-leaning.", "severity": "minor"},
+    {"job": "glosses", "item": "llevo (Llevo dos años viviendo en Monterrey.)", "what": "The 'llevar + time + gerund' construction is not flagged as a phrase or explained in a grammar note; lemmaMeaning just \"to carry\".", "severity": "minor"},
+    {"job": "glosses", "item": "quedé (Me quedé en casa porque llovía.)", "what": "Flags \"quedarse en casa\" as an idiom/phrase although it is plain compositional usage.", "severity": "minor"},
+    {"job": "drill", "item": "card count", "what": "Only 9 cards, three of them present tense; about 10 expected.", "severity": "minor"},
+    {"job": "drill", "item": "Cuando éramos niños, tú siempre ___ feliz.", "what": "English \"you were always happy\" (a lasting trait) does not clearly rule out 'eras feliz' (ser), so the card is ambiguous.", "severity": "minor"},
+    {"job": "drill", "item": "Usted ya ___ aquí antes, ¿verdad?", "what": "'ya ... antes' is redundant and 'ya' has nothing in the English to match it.", "severity": "minor"},
+    {"job": "phrases", "item": "all question-word cards (e.g. \"___ paciencia tiene usted con él?\")", "what": "Every question in deck 1 is missing the opening '¿' (answers like \"Cuánta\" don't carry it either), which teaches wrong punctuation.", "severity": "major"},
+    {"job": "phrases", "item": "___ restaurantes recomienda por aquí? (Cuáles)", "what": "Note \"Use cuáles before plural nouns when asking which\" is false as a rule (the standard is 'qué + noun': ¿Qué restaurantes...?), and it contradicts the model's own 'Qué materia' note \"Before a noun, what is translated as qué\".", "severity": "major"},
+    {"job": "phrases", "item": "___ calles llevan al mercado central? (Cuáles)", "what": "Again 'cuáles + noun' where 'qué calles' is the standard form. Colloquial at best. There is no proper 'cuál es...' card.", "severity": "minor"},
+    {"job": "phrases", "item": "___ azúcar le pone al café?", "what": "The Spanish uses usted ('le pone') but the English has no '(formal)' tag, unlike the other usted cards.", "severity": "minor"},
+    {"job": "phrases", "item": "Yo ___ mis llaves en la mesa de la cocina. (he dejado)", "what": "Mexican usage would normally use the preterite 'dejé' here; the present perfect sounds Spain-leaning.", "severity": "minor"},
+    {"job": "phrases", "item": "card count", "what": "Deck 2 has 9 cards (19 in all versus about 20 expected).", "severity": "minor"},
+    {"job": "chat", "item": "Ayer comí en un restaurante y el comida es muy bueno.", "what": "Keeps present 'es' in a past narrative ('estuvo/era' would fit 'Ayer'); acceptable as a minimal correction but missed.", "severity": "minor"}
+  ],
+  "strengths": [
+    "Correct lemmas on all the trap words: fui=ir, fue=ser, vino=noun, como=comer.",
+    "dáselo clitics (se = IO replacing le, lo = DO) and formation are correct.",
+    "'Me da pena' correctly glossed as embarrassment with a Latin American note.",
+    "Sentence translations are accurate, every target idiom is caught, and nothing is invented for 'El perro come pan'.",
+    "Drill Spanish is natural, with correct estar forms, and the English forces the tense in most cards.",
+    "Chat replies are short, natural and Mexican (pozole rojo o blanco); corrections fix exactly the errors and leave sentences 3 and 4 alone."
+  ]
+}
