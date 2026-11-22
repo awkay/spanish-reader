@@ -53,6 +53,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import net.awkay.spanishreader.core.gloss.GlossOptions
 import net.awkay.spanishreader.core.gloss.GlossProvider
 import net.awkay.spanishreader.data.AiProfile
 import net.awkay.spanishreader.data.AppSettings
@@ -237,6 +238,10 @@ private fun ProfileEditor(start: AiProfile, vm: SettingsViewModel, onDone: () ->
             Field("Base URL", p.baseUrl, placeholder = p.glossProvider.defaultBaseUrl ?: "http://192.168.1.x:11434/v1", keyboard = KeyboardType.Uri) { p = p.copy(baseUrl = it) }
             Field("Model", p.model, placeholder = p.glossProvider.defaultModel ?: modelHint(p.glossProvider)) { p = p.copy(model = it) }
             Field("API key${if (p.glossProvider.requiresApiKey) "" else " (optional)"}", p.apiKey, secret = true) { p = p.copy(apiKey = it) }
+            Field(
+                "Answer length limit, tokens (optional)", p.maxOutputTokens,
+                placeholder = "${GlossOptions.DEFAULT_MAX_OUTPUT_TOKENS}; 0 = no limit", keyboard = KeyboardType.Number,
+            ) { v -> p = p.copy(maxOutputTokens = v.filter { it.isDigit() }) }
             Field("Name (optional)", p.name, placeholder = p.copy(name = "").label) { p = p.copy(name = it) }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedButton({ vm.test(p.config) }, enabled = !vm.testing) { Text(if (vm.testing) "Testing…" else "Test") }

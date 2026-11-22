@@ -119,4 +119,17 @@ class SettingsMigrationTest {
         assertTrue(s.aiProfiles.isEmpty())
         assertTrue(!s.primaryGlosser.isComplete)
     }
+
+    @Test
+    fun answerLengthLimitIsStoredPerProfileAndReachesTheConfig() {
+        val limited = AiProfile("a", provider = GlossProvider.ZAI_RESPONSES.name, model = "glm-5.3-flash", maxOutputTokens = "8000")
+        val plain = AiProfile("b", model = "m")
+        val back = AiProfile.decode(AiProfile.encode(listOf(limited, plain)))
+        assertEquals(listOf(limited, plain), back)
+        assertEquals(8000, back[0].config.maxOutputTokens)
+        assertNull(back[1].config.maxOutputTokens) // blank = the app default
+        assertEquals(0, plain.copy(maxOutputTokens = "0").config.maxOutputTokens) // 0 = no limit
+        // Profiles saved before the setting existed have no field and read as blank.
+        assertEquals("", AiProfile.decode("""[{"id":"c","model":"m"}]""").single().maxOutputTokens)
+    }
 }

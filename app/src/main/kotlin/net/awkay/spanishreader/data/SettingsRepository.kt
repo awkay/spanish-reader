@@ -37,10 +37,13 @@ data class AiProfile(
     val baseUrl: String = "",
     val apiKey: String = "",
     val model: String = "",
+    /** Answer-length limit in tokens, as typed; blank = the app default, 0 = no limit. */
+    val maxOutputTokens: String = "",
 ) {
     val glossProvider: GlossProvider get() = runCatching { GlossProvider.valueOf(provider) }.getOrDefault(GlossProvider.OPENAI_COMPATIBLE)
 
-    val config: GlosserConfig get() = GlosserConfig(glossProvider, baseUrl.trim(), apiKey.trim(), model.trim())
+    val config: GlosserConfig
+        get() = GlosserConfig(glossProvider, baseUrl.trim(), apiKey.trim(), model.trim(), maxOutputTokens.trim().toIntOrNull()?.coerceAtLeast(0))
 
     /** [name], or one made from the service and model. */
     val label: String
@@ -52,7 +55,7 @@ data class AiProfile(
 
     companion object {
         fun of(config: GlosserConfig, id: String = newId(), name: String = "") =
-            AiProfile(id, name, config.provider.name, config.baseUrl, config.apiKey, config.model)
+            AiProfile(id, name, config.provider.name, config.baseUrl, config.apiKey, config.model, config.maxOutputTokens?.toString().orEmpty())
 
         fun newId(): String = java.util.UUID.randomUUID().toString()
 
@@ -61,6 +64,7 @@ data class AiProfile(
             for (a in list) add(buildJsonObject {
                 put("id", a.id); put("name", a.name); put("provider", a.provider)
                 put("baseUrl", a.baseUrl); put("apiKey", a.apiKey); put("model", a.model)
+                if (a.maxOutputTokens.isNotBlank()) put("maxOutputTokens", a.maxOutputTokens)
             })
         }.toString()
 
@@ -68,7 +72,7 @@ data class AiProfile(
             (Json.parseToJsonElement(text) as JsonArray).mapNotNull { e ->
                 val o = e as? JsonObject ?: return@mapNotNull null
                 fun str(k: String) = (o[k] as? JsonPrimitive)?.content.orEmpty()
-                str("id").takeIf { it.isNotEmpty() }?.let { AiProfile(it, str("name"), str("provider"), str("baseUrl"), str("apiKey"), str("model")) }
+                str("id").takeIf { it.isNotEmpty() }?.let { AiProfile(it, str("name"), str("provider"), str("baseUrl"), str("apiKey"), str("model"), str("maxOutputTokens")) }
             }
         }.getOrDefault(emptyList())
     }
