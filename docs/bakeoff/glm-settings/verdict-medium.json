@@ -1,0 +1,253 @@
+{
+ "letter": "S",
+ "scoresByRun": [
+  {
+   "glosses": 6,
+   "sentences": 9,
+   "drill": 7,
+   "phrases": 6,
+   "chat": 8,
+   "overall": 7
+  },
+  {
+   "glosses": 6,
+   "sentences": 8,
+   "drill": 9,
+   "phrases": 7,
+   "chat": 9,
+   "overall": 8
+  }
+ ],
+ "scores": {
+  "glosses": 6,
+  "sentences": 9,
+  "drill": 8,
+  "phrases": 6,
+  "chat": 8,
+  "overall": 7
+ },
+ "oneLine": "Solid, complete output in both runs with correct lemmas, clitics, idioms and corrections, but each run includes a few confidently false grammar or regional notes (echar de menos called standard, a made-up claim about the progressive, echar called irregular, an invented encajar meaning) and one broken card per exercise type (espero que yo esté, a creer card that drills ir, ¿Cuáles de estos vestidos es...?).",
+ "mistakes": [
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "echar (Voy a echar de menos a mi familia)",
+   "what": "grammarNote: \"'Echar de menos' is the standard way to say 'to miss'; Latin America also uses 'extrañar'\". This gets it backwards for the target dialect: in Latin America extrañar is the everyday verb and echar de menos sounds Spanish.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "echar",
+   "what": "roots: \"From Latin ictiare, from ictere (to throw); unrelated to 'hacer'\". The real source is iactare from iacere, and the hacer remark is filler.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "observándome",
+   "what": "grammarNote: \"Latin America commonly uses simple present or preterite where Spain prefers the progressive\". This regional claim is false (if anything, Latin America uses the progressive more), and it has nothing to do with the clitic or the form.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "dáselo",
+   "what": "grammarNote: \"In Spain this would also be 'dáselo' with tú\" points to a regional difference that doesn't exist. It is filler.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "olvidó (Se me olvidó la llave)",
+   "what": "clitic se refersTo \"the key (the thing forgotten)\". Accidental se doesn't refer to the key; the key is the subject.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "fui",
+   "what": "roots: \"(as in English 'was' being unrelated to 'go')\" is a confusing analogy. The English parallel is go/went.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "como",
+   "what": "grammarNote: \"the comparison word 'como' has no conjugation and would have 'pan' as its own subject\" is muddled and doesn't help.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "banco",
+   "what": "roots: \"From Latin bancus/banca (table), possibly via Germanic\". The word is Germanic in origin (via Italian banco), so the order of the history is muddled.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "pena",
+   "what": "lemmaMeaning \"embarrassment\" is only the Latin American idiom sense. The lemma's base meaning is sorrow or pity.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "quedé",
+   "what": "The example of quedar as 'to meet up' (\"¿quedamos a las ocho?\") is Spain-leaning usage. Mexico says 'quedamos de vernos'.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "drill",
+   "item": "Espero que yo ___ tranquilo durante la entrevista. (esté)",
+   "what": "With the same subject the infinitive is required ('Espero estar tranquilo'), so 'espero que yo esté' teaches an ungrammatical pattern.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "¿Crees que ___ llover esta tarde? (va a), verb creer",
+   "what": "The card is labeled verb creer / near-future, but the blank drills ir ('va a'). Creer is already given in the sentence, so the card doesn't drill its verb.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "¿___ asientos están libres? (Cuáles)",
+   "what": "Before a noun, standard Spanish uses qué. Cuáles + noun is colloquial, and the model's own note admits qué is usual, so a learner who says Qué would be marked wrong. The English 'still' is also missing from the Spanish.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "¿___ sabores de helado tienen? (Cuáles)",
+   "what": "Same problem: cuáles + noun where qué is the standard answer, and the English 'Which' doesn't force Cuáles.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "___ un paraguas; está lloviendo. (Toma)",
+   "what": "For 'take an umbrella (with you)', Mexican Spanish says 'Llévate un paraguas/una sombrilla'. 'Toma' means 'here, take it' (handing it over).",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "¿___ una propina para el mesero? (Has dejado)",
+   "what": "Mexican Spanish would normally say '¿Dejaste propina?'. The present perfect sounds peninsular here.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "chat",
+   "item": "Ayer comí en un restaurante y el comida es muy bueno.",
+   "what": "Keeps 'es muy buena' after 'Ayer comí', so it misses the past tense (fue/estuvo) that the context calls for.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "echar",
+   "what": "verb.formation: \"irregular infinitive: echar = e + char, from Latin iactare\". Echar is a regular -ar verb, and 'e + char' is a made-up breakdown.",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "encaja",
+   "what": "grammarNote: \"Also means 'to clash/fall out' in 'encajar los puños'\". This meaning and phrase are invented.",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "como",
+   "what": "grammarNote: \"Homograph with 'como' meaning 'as/like/I am like' from comer's first person too\" is garbled and false ('I am like' has nothing to do with comer).",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "olvidó",
+   "what": "clitic se refersTo \"the forgetting itself\", with the note \"it forgot itself on me\". This is a confusing account of accidental se.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "quedé",
+   "what": "\"bare 'quedar' is used for arranging to meet\" gives Spain-leaning usage as the general rule.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "sentences",
+   "item": "Hace dos años que vivo aquí.",
+   "what": "Phrase meaning \"structure expressing duration: 'I have ... for two years'\" is garbled English and doesn't say 'have been doing X for'.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "drill",
+   "item": "Dudo que yo ___ libre mañana. (esté)",
+   "what": "With the same subject, 'Dudo estar libre' is more natural, and the explicit 'yo' is unidiomatic. It is acceptable but not ideal.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "¿___ de estos vestidos es más barato? (Cuáles)",
+   "what": "'¿Cuáles de estos vestidos es...?' is ungrammatical because the verb is singular. The answer must be Cuál.",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "¿___ son tus frutas favoritas? (Cuáles)",
+   "what": "The note \"right before a noun, cuál/cuáles usually becomes qué\" doesn't apply to this card, which has no noun after the blank. It could confuse the learner.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "El maestro ___ tarea todos los días. (da)",
+   "what": "The English says 'gives us homework' but the Spanish has no 'nos', so the two don't match.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "___ tu paraguas, está lloviendo. (Toma)",
+   "what": "'Llévate tu paraguas/sombrilla' is the natural Mexican phrasing for 'take your umbrella'.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "¿___ una propina para el mesero? (Has dejado)",
+   "what": "The present perfect is less natural in Mexico than '¿Dejaste propina?'.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "chat",
+   "item": "reply1",
+   "what": "\"Un día en la playa siempre es rico\" is an odd use of rico (natural would be 'siempre es padre/bonito'). \"¿Cuál playa visitaste?\" is colloquial; '¿A qué playa fueron?' is more natural.",
+   "severity": "minor"
+  }
+ ],
+ "strengths": [
+  "Lemmas are right everywhere: fui=ir, fue=ser, vino as a noun, como=comer.",
+  "Clitic roles are right for dáselo (se as indirect object replacing le, lo as direct object) and se me olvidó (accidental se, me as indirect object).",
+  "Correct Latin American note on 'me da pena' (embarrassed) in both runs; run 2 also handles echar de menos vs extrañar correctly.",
+  "All sentence translations are correct, every target idiom is found, and no idiom is invented for 'El perro come pan'.",
+  "Drill sets are complete, with 10 cards covering every tense, and the Spanish is natural (aside from the subjunctive card in run 1).",
+  "Mexican vocabulary is used: chamarra, mesero, pozole details.",
+  "Chat corrections are minimal and right: a la playa, comimos, la comida buena; correct sentences left alone, 'Yo' kept; run 2 also fixes the tense with fue.",
+  "Chat replies are short, natural and keep the conversation going at the learner's level."
+ ],
+ "setting": "glm-5.3-flash effort medium"
+}

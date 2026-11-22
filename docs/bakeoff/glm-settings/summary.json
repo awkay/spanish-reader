@@ -1,0 +1,384 @@
+[
+ {
+  "setting": "low (app today)",
+  "runs": 2,
+  "checks": "56/56",
+  "medianCall": 3.7,
+  "totalS": [
+   86,
+   92
+  ],
+  "glossS": [
+   37,
+   35
+  ],
+  "drillS": [
+   11,
+   15
+  ],
+  "phrasesS": [
+   26,
+   29
+  ],
+  "chatS": [
+   10,
+   11
+  ],
+  "outTok": 6128,
+  "reasoning": 607,
+  "maxOneCall": 2692,
+  "incomplete": 0,
+  "costRun": 0.0046,
+  "pageCost": 0.016,
+  "glossOut": [
+   2692,
+   2517
+  ],
+  "glossCalls": [
+   1,
+   1
+  ],
+  "failed": []
+ },
+ {
+  "setting": "low, temp 1.0",
+  "runs": 2,
+  "checks": "56/56",
+  "medianCall": 3.3,
+  "totalS": [
+   71,
+   79
+  ],
+  "glossS": [
+   22,
+   32
+  ],
+  "drillS": [
+   11,
+   9
+  ],
+  "phrasesS": [
+   24,
+   25
+  ],
+  "chatS": [
+   11,
+   11
+  ],
+  "outTok": 5796,
+  "reasoning": 416,
+  "maxOneCall": 2562,
+  "incomplete": 0,
+  "costRun": 0.0044,
+  "pageCost": 0.015,
+  "glossOut": [
+   2562,
+   2413
+  ],
+  "glossCalls": [
+   1,
+   1
+  ],
+  "failed": []
+ },
+ {
+  "setting": "low, cap 4k",
+  "runs": 2,
+  "checks": "56/56",
+  "medianCall": 3.7,
+  "totalS": [
+   77,
+   93
+  ],
+  "glossS": [
+   31,
+   38
+  ],
+  "drillS": [
+   10,
+   10
+  ],
+  "phrasesS": [
+   22,
+   31
+  ],
+  "chatS": [
+   11,
+   11
+  ],
+  "outTok": 6096,
+  "reasoning": 416,
+  "maxOneCall": 2694,
+  "incomplete": 0,
+  "costRun": 0.0046,
+  "pageCost": 0.016,
+  "glossOut": [
+   2438,
+   2694
+  ],
+  "glossCalls": [
+   1,
+   1
+  ],
+  "failed": []
+ },
+ {
+  "setting": "low, cap 8k",
+  "runs": 2,
+  "checks": "56/56",
+  "medianCall": 3.8,
+  "totalS": [
+   87,
+   73
+  ],
+  "glossS": [
+   32,
+   21
+  ],
+  "drillS": [
+   12,
+   11
+  ],
+  "phrasesS": [
+   31,
+   29
+  ],
+  "chatS": [
+   11,
+   10
+  ],
+  "outTok": 6130,
+  "reasoning": 2104,
+  "maxOneCall": 2358,
+  "incomplete": 0,
+  "costRun": 0.0046,
+  "pageCost": 0.015,
+  "glossOut": [
+   2358,
+   2342
+  ],
+  "glossCalls": [
+   1,
+   1
+  ],
+  "failed": []
+ },
+ {
+  "setting": "low, cap 2k",
+  "runs": 2,
+  "checks": "32/56",
+  "medianCall": 4.7,
+  "totalS": [
+   107,
+   107
+  ],
+  "glossS": [
+   55,
+   53
+  ],
+  "drillS": [
+   12,
+   18
+  ],
+  "phrasesS": [
+   26,
+   23
+  ],
+  "chatS": [
+   12,
+   10
+  ],
+  "outTok": 7608,
+  "reasoning": 1768,
+  "maxOneCall": 2000,
+  "incomplete": 4,
+  "costRun": 0.0056,
+  "pageCost": 0.026,
+  "glossOut": [
+   4000,
+   4000
+  ],
+  "glossCalls": [
+   2,
+   2
+  ],
+  "failed": [
+   "gloss/echar de menos = idiom, miss: Model reply did not include this word",
+   "gloss/observándome: DO clitic: Model reply did not include this word",
+   "gloss/se me olvidó: me = IO: Model reply did not include this word"
+  ]
+ },
+ {
+  "setting": "none",
+  "runs": 4,
+  "checks": "110/111",
+  "medianCall": 4.9,
+  "totalS": [
+   91,
+   94,
+   126,
+   81
+  ],
+  "glossS": [
+   36,
+   44,
+   40,
+   30
+  ],
+  "drillS": [
+   11,
+   11,
+   13,
+   10
+  ],
+  "phrasesS": [
+   30,
+   27,
+   27,
+   27
+  ],
+  "chatS": [
+   11,
+   10,
+   43,
+   11
+  ],
+  "outTok": 6141,
+  "reasoning": 317,
+  "maxOneCall": 2789,
+  "incomplete": 0,
+  "costRun": 0.0046,
+  "pageCost": 0.016,
+  "glossOut": [
+   2789,
+   2566,
+   2708,
+   2349
+  ],
+  "glossCalls": [
+   1,
+   1,
+   1,
+   1
+  ],
+  "failed": [
+   "drill/ran: MalformedGlossResponseException: Only 0 usable cards for estar"
+  ]
+ },
+ {
+  "setting": "medium",
+  "runs": 2,
+  "checks": "56/56",
+  "medianCall": 5.0,
+  "totalS": [
+   130,
+   136
+  ],
+  "glossS": [
+   49,
+   45
+  ],
+  "drillS": [
+   13,
+   21
+  ],
+  "phrasesS": [
+   53,
+   55
+  ],
+  "chatS": [
+   11,
+   11
+  ],
+  "outTok": 9150,
+  "reasoning": 2840,
+  "maxOneCall": 3458,
+  "incomplete": 0,
+  "costRun": 0.0062,
+  "pageCost": 0.02,
+  "glossOut": [
+   3458,
+   3203
+  ],
+  "glossCalls": [
+   1,
+   1
+  ],
+  "failed": []
+ },
+ {
+  "setting": "high",
+  "runs": 2,
+  "checks": "56/56",
+  "medianCall": 9.9,
+  "totalS": [
+   276,
+   302
+  ],
+  "glossS": [
+   100,
+   96
+  ],
+  "drillS": [
+   43,
+   33
+  ],
+  "phrasesS": [
+   98,
+   136
+  ],
+  "chatS": [
+   25,
+   27
+  ],
+  "outTok": 20788,
+  "reasoning": 14347,
+  "maxOneCall": 6552,
+  "incomplete": 0,
+  "costRun": 0.0121,
+  "pageCost": 0.039,
+  "glossOut": [
+   6891,
+   6552
+  ],
+  "glossCalls": [
+   2,
+   1
+  ],
+  "failed": []
+ },
+ {
+  "setting": "omitted (z.ai default)",
+  "runs": 1,
+  "checks": "28/28",
+  "medianCall": 11.1,
+  "totalS": [
+   347
+  ],
+  "glossS": [
+   112
+  ],
+  "drillS": [
+   35
+  ],
+  "phrasesS": [
+   168
+  ],
+  "chatS": [
+   22
+  ],
+  "outTok": 23448,
+  "reasoning": 17325,
+  "maxOneCall": 8174,
+  "incomplete": 0,
+  "costRun": 0.0133,
+  "pageCost": 0.046,
+  "glossOut": [
+   8174
+  ],
+  "glossCalls": [
+   1
+  ],
+  "failed": []
+ }
+]

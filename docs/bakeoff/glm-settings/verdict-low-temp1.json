@@ -1,0 +1,287 @@
+{
+ "letter": "T",
+ "scores": {
+  "glosses": 7,
+  "sentences": 9,
+  "drill": 7,
+  "phrases": 7,
+  "chat": 9,
+  "overall": 8
+ },
+ "scoresByRun": [
+  {
+   "glosses": 8,
+   "sentences": 9,
+   "drill": 7,
+   "phrases": 8,
+   "chat": 10,
+   "overall": 8
+  },
+  {
+   "glosses": 7,
+   "sentences": 8,
+   "drill": 7,
+   "phrases": 6,
+   "chat": 9,
+   "overall": 7
+  }
+ ],
+ "oneLine": "Solid and mostly accurate: idioms, lemmas, clitics and corrections are right, but both runs use 'Espero que yo esté' in the drill, run 2 claims interrogative 'cómo' lost its accent, and run 2 drills 'haber' on a card labelled 'creer'.",
+ "mistakes": [
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "echar",
+   "what": "verb.formation calls it an \"irregular infinitive echar\"; echar is a fully regular -ar verb.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "olvidó",
+   "what": "Accidental se has refersTo \"the key (the thing affected)\". Se doesn't refer to the key (la llave is the subject). Roots \"From Latin oblivionem\" is wrong: olvidar comes from Vulgar Latin *oblitare (oblitus).",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "fue",
+   "what": "grammarNote \"ser for inherent qualities\" is a misleading rule for 'La fiesta fue increíble', which is an evaluation of an event, not an inherent quality.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "vino",
+   "what": "\"stress and context distinguish them\" is false: the noun vino and the verb vino are both stressed VI-no. Only context distinguishes them.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "encaja",
+   "what": "Formation \"en- + cajar + -ar\" is garbled; there is no 'cajar' (the word is en- + caja + -ar, as roots correctly says).",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "drill",
+   "item": "Espero que yo ___ libre mañana por la tarde.",
+   "what": "\"Espero que yo esté\" with the same subject is ungrammatical/unnatural; Spanish requires the infinitive: \"Espero estar libre\".",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "drill",
+   "item": "Ella ___ muy cansada hoy, así que está descansando.",
+   "what": "The visible part of the sentence contains \"está\", which gives away the answer.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "drill",
+   "item": "¿Usted ___ en esta ciudad por mucho tiempo?",
+   "what": "\"¿Ha estado en esta ciudad por mucho tiempo?\" is an English calque; natural Mexican Spanish is \"¿Lleva mucho tiempo en esta ciudad?\" / \"¿Hace mucho que está aquí?\"",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "¿___ platos están limpios?",
+   "what": "Cuáles + noun (\"¿Cuáles platos...?\") is colloquial; the standard form before a noun, and the better model for a learner, is \"¿Qué platos...?\"",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "¿___ de estas frutas prefieres?",
+   "what": "\"Which of these fruits do you prefer?\" naturally asks for one fruit (\"¿Cuál de estas frutas prefieres?\"). The English doesn't force the plural \"Cuáles\".",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "¿___ azúcar pones en tu café?",
+   "what": "The English can't force Cuánta over Cuánto, and \"el azúcar\" / \"cuánto azúcar\" is very common in Mexico, so a correct answer may feel wrong.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "___ mi paraguas en la oficina. (He dejado)",
+   "what": "For a just-happened event, Mexican usage strongly prefers the preterite \"Dejé mi paraguas\". The present perfect here is Spain-flavoured.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "Mi mamá ___ consejos todas las semanas.",
+   "what": "The English says \"gives me advice\" but the Spanish has no \"me\" (should be \"Mi mamá me da consejos\").",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "___ hablando aunque empieza la película.",
+   "what": "\"even after the movie starts\" isn't what \"aunque empieza\" says; it's awkward. Better: \"Sigue hablando aunque ya empezó la película\".",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "Toma un paraguas / La reunión va a ser larga / cenamos",
+   "what": "The \"(to a group)\" labels are meaningless on 'La reunión va a ser larga' and the nosotros 'cenamos' card. \"Toma un paraguas\" for 'take an umbrella (with you)' is less natural than \"Llévate un paraguas\".",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "como",
+   "what": "grammarNote says 'como' meaning 'how' has \"no accent since accent rules changed\". This is false: interrogative/exclamative \"cómo\" still takes an accent (the 2010 change was about solo and demonstratives).",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "echar",
+   "what": "There is no note that Latin America normally says 'extrañar'. Roots \"cf. 'ejecutar' cognate family\" is false: ejecutar comes from exsequi, not iactare.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "olvidó",
+   "what": "se is labelled \"pronominal verb\" with refersTo \"the key\" (se doesn't refer to the key, and this contradicts the 'accidental se' in whyThisForm). Roots \"Latin o- + oblivisci\" is garbled.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "fue",
+   "what": "\"ser used for essential qualities\" is a misleading rule for an event evaluation.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "vino",
+   "what": "\"accent and context distinguish them\" is false: neither vino carries an accent. meaningInContext \"red wine\" also glosses 'tinto' along with the tapped word.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "encaja",
+   "what": "\"note spelling: c, not qu\" is irrelevant filler. otherMeanings \"to receive\" is vague.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "quedé",
+   "what": "It marks \"quedarse en casa\" as an idiom/phrase, but it is just quedarse + a place, not an idiom.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "sentences",
+   "item": "Sin embargo, no se dio cuenta de nada.",
+   "what": "\"he didn't realize anything\" is unidiomatic English; \"he didn't notice anything\" is what it means.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "drill",
+   "item": "Espero que yo ___ tranquilo durante el examen.",
+   "what": "Same-subject \"Espero que yo esté\" is ungrammatical/unnatural; it should be \"Espero estar tranquilo\".",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "drill",
+   "item": "Tú ___ muy feliz cuando eras niño.",
+   "what": "For a general trait of childhood (\"You used to be very happy as a child\"), the natural choice is ser: \"Eras muy feliz de niño\". The card pushes estar where ser fits better.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "Creo que ___ lluvia esta tarde.",
+   "what": "Labelled verb \"creer\", but the answer \"va a haber\" drills haber, and 'creo' is already given. \"it's going to rain\" naturally calls for \"va a llover\", not \"va a haber lluvia\".",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "question-word deck",
+   "what": "Only 9 cards (about 10 expected), and cuánta is not covered.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "¿___ camisas están en rebaja? / ¿___ platillos recomiendan ustedes?",
+   "what": "Both use Cuáles + noun where standard Spanish uses \"¿Qué camisas...?\" / \"¿Qué platillos...?\". \"en rebaja\" is less usual in Mexico than \"en oferta\".",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "¿___ es el carro que usaste?",
+   "what": "The English \"Whose car did you borrow?\" doesn't match the Spanish (\"Whose is the car you used?\").",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "¿___ abre la doctora la oficina?",
+   "what": "For a doctor, Mexican Spanish says \"el consultorio\", not \"la oficina\". \"the doctor\" doesn't signal 'la doctora'.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "___ las escaleras, es más rápido. (Toma)",
+   "what": "\"Tomar las escaleras\" is an anglicism; a more natural phrasing is \"Vete/Sube por las escaleras\".",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "___ mi paraguas en la oficina. (He dejado)",
+   "what": "Mexico would use the preterite \"Dejé\" here; the present perfect is Spain-flavoured.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "Mi abuela ___ tamales cada diciembre.",
+   "what": "The English says \"gives us\" but the Spanish lacks \"nos\".",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "chat",
+   "item": "Ayer comí en un restaurante y el comida es muy bueno.",
+   "what": "It leaves present \"es\" in a past narrative (\"la comida es muy buena\") and translates it as \"the food is very good\"; \"estuvo muy buena\" was expected.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "chat",
+   "item": "reply2",
+   "what": "\"¿Lo has probado rojo o verde también?\" is slightly awkward; \"¿Has probado el rojo o el verde?\" is more natural.",
+   "severity": "minor"
+  }
+ ],
+ "strengths": [
+  "All lemma traps right in both runs (fui=ir, fue=ser, vino noun, como=comer).",
+  "Clitic roles for dáselo (se=IO replacing le, lo=DO) and se me olvidó (me=IO) are correct; the verb agrees with la llave.",
+  "Correct Latin American notes: me da pena = embarrassed; run 1 notes that extrañar is usual.",
+  "Sentence job: every target idiom found with good spans, and nothing invented for 'El perro come pan'.",
+  "Drill: 10 cards per run, a tense per card, answers fit the blanks, and the English matches the tense.",
+  "Chat: natural, short Mexican-flavoured replies (pozole, chamarra, carro). The corrections fix al playa / we ate / la comida buena, and both runs leave sentences 3 and 4 untouched (no over-correction).",
+  "Run 1 question-word deck covers all eight question words, including cuánta agreement."
+ ],
+ "setting": "glm-5.3-flash effort low-temp1"
+}

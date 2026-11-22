@@ -1,6 +1,6 @@
 # Status
 
-_Last updated: 2026-11-22 (Known words: no lookup until asked, likely meanings from what's stored; both apps)_
+_Last updated: 2026-11-22 (GLM 5.3 Flash settings experiment; answer-length limit; three AI-reply bug fixes; both apps)_
 
 **Android app: all planned features built; Tony uses it daily.** New: a **web app (PWA) for iPhone** plus a small Go
 server, **deployed 2026-10-01 at https://portal.fulcrologic.com** (Linode, build-6, nginx site in
@@ -10,7 +10,7 @@ The Android app's "Share to web" default URL moved there too (an old saved `span
 ## Build / verify
 ```
 scripts/install-android-sdk.sh          # each fresh cloud container
-./gradlew :core:test                     # 167 tests (2 live tests skipped without env vars)
+./gradlew :core:test                     # 182 tests (2 live tests skipped without env vars)
 ./gradlew :app:testDebugUnitTest         # 69 Robolectric/JVM tests incl. UI smoke test and migrations
 ./gradlew :app:assembleDebug             # app/build/outputs/apk/debug/app-debug.apk
 ```
@@ -20,7 +20,7 @@ Live LLM check (not run by default):
 Web app / server:
 ```
 cd server && go vet ./... && go test ./...    # gate delay/lockout, tokens, AI protocols, TTS (fake piper/lame), store
-cd web && npm ci && npm run typecheck && npm test && npm run build    # 71 tests incl. golden-fixture tests
+cd web && npm ci && npm run typecheck && npm test && npm run build    # 76 tests incl. golden-fixture tests
 UPDATE_GOLDEN=1 ./gradlew :core:test --tests '*GoldenFixtureTest*'    # regenerate fixtures/ after changing :core text/prompt logic
 # e2e (Playwright, iPhone 13 profile) against a running server serving web/dist:
 BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_modules/playwright/index.mjs node web/e2e/smoke.mjs
@@ -71,6 +71,33 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
 - **Tests**: `SettingsMigrationTest` (old settings → profiles, stable before and after the first save; fresh install),
   `GlossServiceTest` (switch, copy, delete, improve/fallback choices), `SettingsProfilesTest` (Robolectric: radio
   switches the profile in use, copy keeps the key; renders `settings-ai.png` with `SCREENSHOT_DIR`).
+
+## GLM 5.3 Flash settings + answer-length limit (2026-11-22)
+- **Experiment** (`docs/glm-settings.md`, data in `docs/bakeoff/glm-settings/`): the app's five AI jobs ran on
+  glm-5.3-flash via z.ai's Responses API at each effort level, with and without length caps, 2–4 runs each, graded
+  by fresh anonymised graders. **Tony's decision: stay on Flash at `low`** (the current setting).
+  - none ≈ low on z.ai, medium is 1.5× slower, high 3×, and an omitted effort means maximum thinking (4×).
+    None of them is better than low.
+  - **z.ai ignores `temperature`.** Reasoning tokens count toward `max_output_tokens`.
+- **Answer-length limit.** Default 16,000 tokens, reasoning included. The largest real reply was 2.7k at low and
+  8.2k at maximum thinking.
+  - `GlossOptions.maxOutputTokens`; per profile via Settings → AI account → "Answer length limit, tokens"
+    (blank = 16k, 0 = none). Server: `SR_AI_MAX_OUTPUT_TOKENS`.
+  - A cut-off reply (`incomplete` / `length` / `max_tokens`) is a `TruncatedResponseException`. A cut-off gloss
+    batch is split in halves (Android and web).
+- **Bugs fixed** (Kotlin + web port):
+  - A gloss item whose `form` names another word no longer goes to the id's word. Seen live: *encaja* showed
+    *quedé*'s "I stayed".
+  - A drill/say-it review that matches no card keeps the cards instead of failing the batch with "Only 0 usable
+    cards".
+  - Anthropic practice calls had `max_tokens` 1024.
+- **Not verified here:** the `:app` Robolectric suite. Maven Central kept answering 429 for one Robolectric jar in
+  this container. The app module compiles, its unit tests compile and the debug APK builds; CI runs the suite on
+  push.
+- **Next (prompt content, not settings):**
+  - The same-subject subjunctive drill situation ("Espero que yo esté").
+  - *echar de menos* called the Latin American norm.
+  - *cuáles* + noun.
 
 ## Model bake-off (2026-11-22; experiment only, no code change)
 Eight models ran the app's real prompts via OpenRouter: glosses, sentences, drill cards, say-it cards and chat. Results,

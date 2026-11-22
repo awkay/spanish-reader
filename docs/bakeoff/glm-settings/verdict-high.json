@@ -1,0 +1,251 @@
+{
+ "letter": "Q",
+ "scores": {
+  "glosses": 6,
+  "sentences": 9,
+  "drill": 6,
+  "phrases": 6,
+  "chat": 7,
+  "overall": 6
+ },
+ "scoresByRun": [
+  {
+   "glosses": 5,
+   "sentences": 9,
+   "drill": 7,
+   "phrases": 7,
+   "chat": 8,
+   "overall": 7
+  },
+  {
+   "glosses": 7,
+   "sentences": 9,
+   "drill": 6,
+   "phrases": 6,
+   "chat": 6,
+   "overall": 6
+  }
+ ],
+ "oneLine": "Mostly accurate and well explained, with clean sentence translations, but every run has a few real errors: false grammar or regional notes, a mismatched or ungrammatical card, and 'Espero que yo no esté' in both drills.",
+ "mistakes": [
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "encaja (Esa pieza no encaja en el rompecabezas.)",
+   "what": "The gloss returned is for a different word: form 'quedé', lemma 'quedar', meaning 'I stayed', with notes about 'llovía'. The learner gets nothing about encajar.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "vino",
+   "what": "\"'vino' with final stress is the noun 'wine'\" is false. Both the noun and venir's preterite are stressed VI-no; only context separates them.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "echar",
+   "what": "\"In much of Latin America 'echar de menos' is standard for 'to miss'\" gets the regional usage backwards. In Mexico and most of Latin America the everyday verb is extrañar, and echar de menos sounds Spanish.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "echar",
+   "what": "\"'echar de' alone can also mean 'to blame' regionally\" is an invented meaning.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "echar",
+   "what": "The formation \"e + char: -ar infinitive ending\" is a nonsense split; it should be ech- + -ar. The roots hedge too: \"Etymology debated; possibly ... iactare/factare\", when iactare is the accepted source.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "fui",
+   "what": "Roots: \"Fui comes from the Latin perfect fuī of ire\". fuī is the perfect of esse, not of ire. The formation field says this correctly, so the gloss contradicts itself.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "banco",
+   "what": "\"False friend warning\" is the wrong label. banco is a Spanish homonym (bench/bank), not a false friend of an English word.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "olvidó",
+   "what": "The literal \"it forgot itself to me\" is misleading. The se clitic is said to refer to \"the key\", but the key is the subject; se doesn't refer to anything.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "pena",
+   "what": "\"in some regions 'dar pena' can also mean 'to arouse pity'\" understates it. Pity is the main meaning in Spain and is common in Mexico too (me da pena el perrito).",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "drill",
+   "item": "Espero que yo no ___ equivocado. (esté)",
+   "what": "With the same subject, Spanish needs the infinitive: 'Espero no estar equivocado'. 'Espero que yo no esté' is ungrammatical, and the card drills it.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "drill",
+   "item": "¿Usted ___ antes en este museo?",
+   "what": "The word order is unnatural; '¿Usted ha estado en este museo antes?' or '¿Ha estado usted antes...?' would be normal.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "drill",
+   "item": "Tú ___ en tu cuarto cuando yo llamé.",
+   "what": "This is stilted; a native speaker would say 'cuando te llamé'.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "Creo que ___ esta tarde. (verb: creer)",
+   "what": "The card is labeled verb 'creer', but the answer is 'va a llover', so the drilled verb isn't the one blanked.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "¿___ hoteles están cerca de la playa? (Cuáles)",
+   "what": "Cuáles + noun is acceptable in Mexico, but 'Qué hoteles' is the standard answer. The note \"use cuáles before a plural noun\" teaches it as the rule.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "¿Le ___ una propina al mesero? (has dejado)",
+   "what": "Nothing in the English (\"Have you left...\") forces tú over usted; the other tú cards carry a '(to a friend)' cue and this one doesn't. Also, Mexican speakers would say '¿Ya le dejaste propina?'",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "¿___ son estas llaves en la mesa?",
+   "what": "Slightly awkward; '¿De quién son estas llaves que están en la mesa?' would be more natural.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "chat",
+   "item": "reply2: Es verdad que llevaría bastante tiempo prepararlo en casa.",
+   "what": "The conditional 'llevaría' is awkward and above A2-B1; 'sí lleva mucho tiempo' would be natural.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "chat",
+   "item": "correction 2: la comida era muy buena",
+   "what": "'estuvo muy buena' or 'estaba muy buena' is more natural for one specific meal than 'era'.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "fue",
+   "what": "\"'Fue' can mean ... 'was' (estar in some regions)\" is false. fue is never a form of estar (that would be estuvo).",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "pena",
+   "what": "The regional contrast is muddled: \"in Spain '¡qué pena!' often means 'what a pity!'\" (it does in Mexico too), and otherMeanings lists \"shame (Spain: ¡qué pena!)\", which contradicts it.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "echar",
+   "what": "There is no grammar note telling the learner that extrañar, not echar de menos, is the everyday Latin American verb.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "olvidó",
+   "what": "Roots: \"Old Spanish oblividare\" is an invented form; the source is Vulgar Latin *oblitare.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "llevo",
+   "what": "The 'llevar + time + gerund' construction is explained, but it isn't flagged as a phrase (isIdiomOrPhrase missing).",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "drill",
+   "item": "Usted ___ muy paciente conmigo. (ha estado)",
+   "what": "\"You have been very patient with me\" really needs ser: 'Usted ha sido muy paciente conmigo'. 'Ha estado muy paciente' is marginal.",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "drill",
+   "item": "Espero que yo no ___ equivocado. (esté)",
+   "what": "With the same subject, Spanish needs the infinitive: 'Espero no estar equivocado'. 'Espero que yo no esté' is ungrammatical.",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "Me ___ , ¿verdad? (van a creer)",
+   "what": "The note \"the pronoun goes before the conjugated form of ir, not on creer\" is false: 'van a creerme' is equally correct. There is also a stray space before the comma ('Me ___ , ¿verdad?').",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "___ tu jugo antes de que se enfríe. (Toma)",
+   "what": "The English says \"before it gets warm\", but 'se enfríe' means 'gets cold', so the translation contradicts the Spanish.",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "¿___ ciudades quieres visitar? (Cuáles)",
+   "what": "Cuáles + noun works in Mexico, but 'Qué ciudades' is the standard form, and the note teaches cuáles as the rule.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "chat",
+   "item": "reply2: ¿De qué te gusta más, rojo, verde o blanco?",
+   "what": "Ungrammatical. It should be '¿Cuál te gusta más: rojo, verde o blanco?' (or '¿De cuál...?').",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "chat",
+   "item": "correction 2: la comida es muy buena",
+   "what": "The present 'es' stays after 'Ayer comí', so the tense error ('estuvo/era muy buena') is missed. The English \"the food is very good\" keeps the mismatch.",
+   "severity": "minor"
+  }
+ ],
+ "strengths": [
+  "Clitic analysis is right in both runs: dáselo (se = IO replacing le, lo = DO) and se me olvidó (accidental se + IO me).",
+  "The lemma traps are all handled: fui=ir, fue=ser, vino as a noun, como=comer, with good context-based disambiguation.",
+  "Sentence translations and idiom spans are accurate (sin embargo, darse cuenta, a lo mejor, hace...que, echar de menos), and nothing is invented for 'El perro come pan'.",
+  "Me da pena is correctly glossed as embarrassment in the Mexican sense.",
+  "There are 10 cards per drill and per phrase deck, with good coverage of all eight question words, Mexican vocabulary (carro, mesero, boletos, jugo) and no Spain-only forms.",
+  "The chat replies are short and natural and keep the conversation going (pozole rojo/verde). Correct sentences 3 and 4 are left untouched, and the corrections' 'why' explanations are accurate."
+ ],
+ "setting": "glm-5.3-flash effort high"
+}

@@ -1,0 +1,273 @@
+{
+ "letter": "P",
+ "scores": {
+  "glosses": 6,
+  "sentences": 9,
+  "drill": 8,
+  "phrases": 6,
+  "chat": 9,
+  "overall": 7
+ },
+ "scoresByRun": [
+  {
+   "glosses": 6,
+   "sentences": 10,
+   "drill": 8,
+   "phrases": 6,
+   "chat": 9,
+   "overall": 7
+  },
+  {
+   "glosses": 6.5,
+   "sentences": 9,
+   "drill": 8,
+   "phrases": 6.5,
+   "chat": 9,
+   "overall": 7
+  }
+ ],
+ "oneLine": "Solid translations, drills and chat corrections, but both runs say 'echar de menos' is the Latin American norm (it's extrañar), both use 'espero que yo esté', and each run has a couple of broken phrase cards and false grammar notes.",
+ "mistakes": [
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "echar",
+   "what": "grammarNote: \"In Latin America 'ech(AR) de menos' is standard; Spain often uses 'echar en falta'.\" Backwards: in Latin America the everyday verb is extrañar, and echar de menos sounds Spanish. The note also has a glitch, \"ech(AR)\".",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "observándome",
+   "what": "formation: \"+ me attached; no accent needed\". Wrong: adding the pronoun makes observándome need its written accent, and the form shown has one.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "encaja",
+   "what": "otherMeanings \"to clash (with)\" and \"to overlap (seams)\" are made up. Encajar never means to clash, which is nearly its opposite.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "vino",
+   "what": "\"stress and context differ\". False: the noun vino and the verb vino (venir) are stressed the same way. Only context tells them apart.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "dáselo",
+   "what": "grammarNote: \"the accent on dá is preserved\". Wrong: the command is 'da' with no accent, and the accent is added when pronouns attach. This contradicts its own formation note (\"written accent added\"), and calling 'da' an \"irregular imperative stem dá\" is misleading.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "como",
+   "what": "formation contains confusing filler: \"stem-change verbs of this type show no change in -er verbs here\".",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "quedé",
+   "what": "Gives \"to meet up ('quedar con alguien')\" with no regional note. That is mainly Spain usage; Mexico says 'quedar de verse'.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "olvidó",
+   "what": "The accidental-se note, \"marks the event as happening to/together with someone\", is vague and the 'together with' part is odd.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "drill",
+   "item": "Espero que yo ___ libre cuando me llames.",
+   "what": "Same subject on both verbs, so this needs the infinitive: 'Espero estar libre'. 'Espero que yo esté' is unnatural and teaches the wrong structure.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "¿___ de estos platillos es el más picante?",
+   "what": "The answer \"Cuáles\" with singular 'es ... el más picante' is ungrammatical. It should be 'Cuál'.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "La reunión ___ corta. (ustedes)",
+   "what": "Leftover glitch: \"(ustedes)\" in the Spanish and \"(to a group)\" in the English suggest 'van a ser', but the subject is la reunión and the answer is \"va a ser\".",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "question-word deck",
+   "what": "Only 8 cards and no 'de quién' card, so one of the target question words is never drilled.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "¿___ tallas tienen en existencia?",
+   "what": "'Cuáles + noun' is colloquial. The standard form is 'Qué tallas', and \"Which sizes\" doesn't force Cuáles.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "___ un paraguas contigo.",
+   "what": "\"Toma un paraguas contigo\" is a calque. 'Llévate un paraguas' is the natural phrasing.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "¿___ el restaurante nuevo del centro? (formal)",
+   "what": "The answer \"conoce\" isn't capitalized at the start of the question.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "chat",
+   "item": "Ayer comí en un restaurante y el comida es muy bueno.",
+   "what": "Keeps \"es\" in a past-tense sentence. 'estuvo' (or 'era') would fit 'Ayer comí'.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "echar",
+   "what": "grammarNote: \"'Echar de menos' is the standard way to say 'to miss' in Latin America\". Wrong: the everyday Latin American verb is extrañar.",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "fue",
+   "what": "grammarNote: \"estar would sound odd with 'increíble' here\". False for Mexico, where 'La fiesta estuvo increíble' is very common and natural.",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "fue",
+   "what": "roots: \"From Latin esse/fovi stem\". 'fovi' is garbage. The Latin form is fui.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "echar",
+   "what": "formation: \"irregular infinitive form\". Filler and false, since infinitives are not irregular.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "llevo",
+   "what": "meaningInContext is cut off: \"I have been (living here for...\". It also marks the over-specific span \"llevo dos años viviendo\" as an idiom.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "olvidó",
+   "what": "The accidental se is given refersTo \"the key\". The se doesn't refer to the key: the key is the subject.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "dáselo",
+   "what": "\"se + lo is the standard spelling of 'le lo'\" is a confusing way to describe the le-to-se rule.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "sentences",
+   "item": "Sin embargo, no se dio cuenta de nada.",
+   "what": "\"he didn't realize anything\" is awkward English. 'he didn't notice anything' is better.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "drill",
+   "item": "Espero que yo ___ equivocado sobre esto.",
+   "what": "Same subject on both verbs, so this needs the infinitive: 'Espero estar equivocado'. 'Espero que yo esté' is unnatural.",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "drill",
+   "item": "¿Usted ___ en esta ciudad por mucho tiempo?",
+   "what": "Slightly calqued. 'Lleva mucho tiempo en esta ciudad' or 'ha estado ... mucho tiempo' without 'por' is more natural.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "El camión ___ en llegar tarde todos los días.",
+   "what": "\"sigue en llegar tarde\" is ungrammatical. It must be 'sigue llegando tarde', as the card's own note (seguir + gerund) says.",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "Ella ___ un paseo al perro todas las tardes.",
+   "what": "Unnatural calque and missing 'le'. Natural Spanish is 'saca a pasear al perro' (or 'le da un paseo al perro').",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "¿___ frutas compras en el mercado?",
+   "what": "'Cuáles + noun' is colloquial. The standard form is 'Qué frutas'.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "___ la medicina después del desayuno.",
+   "what": "The English doesn't say tú vs usted ('Tome'), so the answer \"Toma\" isn't forced.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "both decks",
+   "what": "9 cards per deck, slightly under the expected 10.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "chat",
+   "item": "reply1",
+   "what": "\"Yo también amo ir a la playa\" is a bit strong. 'A mí también me encanta' is more natural.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "chat",
+   "item": "Ayer comí en un restaurante y el comida es muy bueno.",
+   "what": "Keeps \"es\" in a past-tense sentence. 'estuvo' would fit.",
+   "severity": "minor"
+  }
+ ],
+ "strengths": [
+  "Right lemmas on every trap word in both runs: fui=ir, fue=ser, vino as a noun, como=comer.",
+  "Clitic roles for dáselo and se me olvidó are right, and me da pena is glossed with the Mexican meaning 'embarrassed'.",
+  "Sentence translations are accurate and catch every idiom (sin embargo, darse cuenta, a lo mejor, hace...que, echar de menos), with none invented in 'El perro come pan'.",
+  "Drill cards fit their blanks, cover a good range of tenses and avoid ser/estar traps, apart from the subjunctive card.",
+  "Chat corrections are minimal and correct: a la playa, comimos, la comida buena. Correct sentences are left alone, including keeping 'Yo'.",
+  "Chat replies are short, natural, Mexican-flavored (pozole, limón) and keep the conversation going.",
+  "Uses Mexican vocabulary in the phrases (chamarra, camión, boletos, platillos, mamá)."
+ ],
+ "setting": "glm-5.3-flash effort low"
+}

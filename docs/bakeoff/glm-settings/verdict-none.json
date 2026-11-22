@@ -1,0 +1,259 @@
+{
+ "letter": "R",
+ "scores": {
+  "glosses": 7,
+  "sentences": 9,
+  "drill": 3,
+  "phrases": 7,
+  "chat": 8,
+  "overall": 6
+ },
+ "scoresByRun": [
+  {
+   "glosses": 7,
+   "sentences": 9,
+   "drill": 6,
+   "phrases": 8,
+   "chat": 9,
+   "overall": 7
+  },
+  {
+   "glosses": 7,
+   "sentences": 9,
+   "drill": 0,
+   "phrases": 6,
+   "chat": 8,
+   "overall": 5
+  }
+ ],
+ "oneLine": "Solid, mostly accurate glosses, sentence translations and chat corrections, but drills are unreliable: one run's drill failed outright, the other has the flagged 'espero que yo no esté tarde' card, and both runs wrongly call 'echar de menos' the everyday Latin American way to say 'to miss'.",
+ "mistakes": [
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "echar (Voy a echar de menos a mi familia)",
+   "what": "grammarNote calls it 'the very common Latin American fixed expression 'echar de menos''; in Mexico/Latin America the everyday verb is extrañar, and echar de menos is mainly Spain. extrañar is never mentioned.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "echar",
+   "what": "roots: 'From Latin *iacere*... related to Spanish 'yacer'': echar comes from iactare, and yacer comes from iacēre ('to lie'), not from the verb meaning 'to throw'.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "observándome",
+   "what": "formation says 'no accent needed (stress on -án-)', which contradicts the form itself. The written accent IS required once -me is attached.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "dáselo",
+   "what": "formation: 'irregular imperative stem 'dá' (accent added because two pronouns are attached)'. 'da' is the ordinary tú command, and the accent comes from the stress landing on the third-to-last syllable. Calling 'dá' an irregular stem is misleading.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "olvidó",
+   "what": "clitic se refersTo 'the key': the accidental se doesn't refer to the key (the key is the subject). grammarNote presents 'se me olvidó' as specifically Latin American when it is used everywhere.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "fui",
+   "what": "roots text has a broken quote: \"from Latin 'fu- of 'ser/esse'\".",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "glosses",
+   "item": "quedé",
+   "what": "'quedar con alguien' = to arrange to meet is mainly Spain usage (Mexico says 'quedar de verse' / 'quedar en'). roots: quedar comes from quietare, not quiescere.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "echar (Voy a echar de menos a mi familia)",
+   "what": "grammarNote: 'In Latin America 'echar de menos' is very common for 'to miss'; 'extrañar' is also standard'. This reverses the regional reality: extrañar is the everyday Latin American verb.",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "echar",
+   "what": "formation: 'irregular verb, infinitive form after 'voy a''. echar is a fully regular -ar verb.",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "olvidó",
+   "what": "whyThisForm: 'the key forgot itself on me' is a garbled explanation (should be 'the key got forgotten on me').",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "como",
+   "what": "formation: \"first-conjugation-looking ending '-o' (regular -er verb ending '-o')\" is confusing filler.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "glosses",
+   "item": "llevo",
+   "what": "formation has a glitched stem: \"stem 'lle-v'\".",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "drill",
+   "item": "Espero que yo no ___ tarde a la reunión. (esté)",
+   "what": "Unnatural on two counts: with the same subject, Spanish needs the infinitive ('Espero no llegar tarde'), and 'estar tarde' is not idiomatic for 'be late' (llegar tarde). This teaches a wrong pattern.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "drill",
+   "item": "Usted ___ muy paciente con nosotros. (ha estado)",
+   "what": "'You have been very patient with us' describes a trait and would naturally be 'ha sido muy paciente'. The card forces estar where a native speaker would use ser.",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "drill",
+   "item": "whole job",
+   "what": "Failed with error 'MalformedGlossResponseException: Only 0 usable cards for estar', so no cards reached the learner.",
+   "severity": "major"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "¿___ idiomas hablas? (Cuáles)",
+   "what": "The note says 'before a plural noun, \"which\" is usually cuáles', but standard usage (and the most common Mexican usage) is '¿Qué idiomas hablas?'. 'Cuáles + noun' is colloquial at best, and the English doesn't force cuáles over qué.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "¿___ es la chamarra en la silla? (De quién)",
+   "what": "'la chamarra en la silla' is stiff; 'la chamarra que está en la silla' is more natural.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "The movie is going to be long. (to a group)",
+   "what": "The '(to a group)' tag is meaningless for a third-person subject and could mislead.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "Los niños ___ jugando en la lluvia.",
+   "what": "'bajo la lluvia' is the natural phrase. 'en la lluvia' is a calque.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "phrases",
+   "item": "___ al aeropuerto a las seis ayer.",
+   "what": "Word order is calqued from English. 'Ayer llegaron al aeropuerto a las seis' is more natural.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "¿___ de estos cuartos es la cocina? (Cuáles)",
+   "what": "Ungrammatical: a singular verb with a singular referent needs 'Cuál'. '¿Cuáles de estos cuartos es...?' is exactly the error to avoid.",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "¿___ carro usaste? (De quién)",
+   "what": "'¿De quién carro usaste?' is ungrammatical. Spanish needs '¿De quién es el carro que usaste?' or '¿El carro de quién usaste?', so the answer doesn't fit the blank.",
+   "severity": "major"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "¿___ cuesta la chaqueta? (Cuánto)",
+   "what": "For a Mexican learner, 'chamarra' is the everyday word for a jacket. 'chaqueta' mostly means a blazer there and carries a well-known vulgar slang meaning.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "¿___ sabores de helado tienen? (Cuáles)",
+   "what": "Same issue: the note claims 'cuáles is common' before a plural noun, but '¿Qué sabores...?' is the standard answer and the English doesn't force cuáles.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "___ una propina al mesero cada vez. (Da)",
+   "what": "Natural Spanish doubles the clitic: 'Le da una propina al mesero'.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "¿___ el restaurante nuevo del centro? (conoce)",
+   "what": "The answer is lowercase 'conoce' but opens the question, so it should be 'Conoce'.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "The meeting is going to be at three. (to a group)",
+   "what": "The '(to a group)' tag is irrelevant. The answer 'La reunión va a ser' bundles the subject into the blank.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "phrases",
+   "item": "What do you have for breakfast usually?",
+   "what": "Awkward English word order.",
+   "severity": "minor"
+  },
+  {
+   "run": 1,
+   "job": "chat",
+   "item": "reply1",
+   "what": "'Yo también amo ir a la playa' is less natural than 'A mí también me encanta...'. '¿Cuál playa fue?' is less natural than '¿A qué playa fueron?'.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "chat",
+   "item": "reply1",
+   "what": "'¿Hacía buen calor allá?' is an odd collocation. '¿Hizo calor?' or '¿Hacía buen tiempo?' would be natural.",
+   "severity": "minor"
+  },
+  {
+   "run": 2,
+   "job": "chat",
+   "item": "Ayer comí en un restaurante y el comida es muy bueno.",
+   "what": "It keeps present 'es' after 'Ayer comí' (estuvo/fue expected), and the english 'the food is very good' carries the tense mismatch.",
+   "severity": "minor"
+  }
+ ],
+ "strengths": [
+  "Every gloss gets the right lemma and part of speech, including the traps fui=ir, fue=ser, vino=noun and como=comer.",
+  "Clitic roles for dáselo (se = IO replacing le, lo = DO) and se me olvidó (accidental se + IO me) are correct in both runs.",
+  "'Me da pena' is correctly glossed as embarrassment with a Mexico/Latin America note.",
+  "The sentence translations are accurate and catch every idiom (sin embargo, darse cuenta, a lo mejor, hace…que, echar de menos), with none invented for 'El perro come pan'.",
+  "The chat corrections are minimal and correct: a la playa and comimos are fixed, la comida buena is fixed, and both correct sentences are left alone (Yo is kept).",
+  "The chat replies are short, warm and Mexican-flavored (pozole, rojo/verde/blanco) and keep the conversation going.",
+  "The run 1 question-word deck is clean, with Mexican vocabulary (chamarra, platillos, despensa)."
+ ],
+ "setting": "glm-5.3-flash effort none"
+}
