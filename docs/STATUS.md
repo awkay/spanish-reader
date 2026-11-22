@@ -63,7 +63,8 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
 - **New service preset "OpenRouter"** (`GlossProvider.OPENROUTER`, base URL https://openrouter.ai/api/v1, OpenAI-compatible
   client, model ids like `deepseek/deepseek-v4.1-flash`).
 - **Upgrade**: when no profiles are stored yet, the old settings become profiles (`migrate`): every provider that
-  had anything typed in (ids `legacy-<PROVIDER>`), the chosen provider active; a non-blank "improve model" becomes a
+  had anything typed in (ids `legacy-<PROVIDER>`; a slot holding only the defaults the old dropdown filled in when a
+  provider was merely picked is skipped), the chosen provider active; a non-blank "improve model" becomes a
   copy of the active profile with that model; the old implicit "Claude for Improve if set up" and the "fall back to
   Claude" switch become explicit choices. The old keys are left in place. `AppSettings.primaryGlosser`,
   `improveGlosser` and `fallbackGlosser` keep their meaning, so nothing else changed.

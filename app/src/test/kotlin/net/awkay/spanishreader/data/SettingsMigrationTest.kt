@@ -80,6 +80,39 @@ class SettingsMigrationTest {
         assertNull(s.fallbackGlosser) // the fallback switch was off
     }
 
+    /**
+     * Exactly what the previous version stored: a slot for every provider (empty strings), and a provider's default URL
+     * (plus Claude's default model) written as soon as it was picked in the dropdown. Slots holding only those defaults
+     * were never set up and don't become profiles; one with a URL or model the user typed does.
+     */
+    @Test
+    fun slotsHoldingOnlyDefaultsFromBrowsingTheDropdownAreLeftOut() = runTest {
+        val store = store()
+        store.edit {
+            for (gp in GlossProvider.entries) for (f in listOf("baseUrl", "apiKey", "model")) it[key(gp, f)] = ""
+            // Browsed: defaults filled in by the dropdown, nothing typed.
+            it[key(GlossProvider.OLLAMA_CLOUD, "baseUrl")] = "https://ollama.com/v1"
+            it[key(GlossProvider.ZAI, "baseUrl")] = "https://api.z.ai/api/paas/v4"
+            it[key(GlossProvider.ANTHROPIC, "baseUrl")] = "https://api.anthropic.com"
+            it[key(GlossProvider.ANTHROPIC, "model")] = "claude-haiku-4-5"
+            // Set up: a key typed in.
+            it[key(GlossProvider.ZAI_CODING, "baseUrl")] = "https://api.z.ai/api/coding/paas/v4"
+            it[key(GlossProvider.ZAI_CODING, "apiKey")] = "k"
+            it[key(GlossProvider.ZAI_CODING, "model")] = "glm-5.3-flash"
+            // A local server: only a URL typed (no key needed), not a default.
+            it[key(GlossProvider.OLLAMA_LOCAL, "baseUrl")] = "http://192.168.1.20:11434/v1"
+            // The one in use is kept even with nothing but its default URL.
+            it[stringPreferencesKey("gloss.provider")] = GlossProvider.ZAI_RESPONSES.name
+            it[key(GlossProvider.ZAI_RESPONSES, "baseUrl")] = "https://api.z.ai/api/v1"
+            it[stringPreferencesKey("gloss.improveModel")] = ""
+            it[booleanPreferencesKey("gloss.fallbackToAnthropic")] = false
+        }
+        val s = SettingsRepository(store).current()
+        assertEquals(listOf("legacy-OLLAMA_LOCAL", "legacy-ZAI_RESPONSES", "legacy-ZAI_CODING"), s.aiProfiles.map { it.id })
+        assertEquals("legacy-ZAI_RESPONSES", s.activeProfileId)
+        assertEquals("" to "", s.improveProfileId to s.fallbackProfileId) // Claude was never set up
+    }
+
     @Test
     fun aFreshInstallHasNoProfiles() = runTest {
         val s = SettingsRepository(store()).current()

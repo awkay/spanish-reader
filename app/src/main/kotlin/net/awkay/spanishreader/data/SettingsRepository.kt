@@ -235,7 +235,10 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val chosen = p[PROVIDER]?.let { runCatching { GlossProvider.valueOf(it) }.getOrNull() }
         val profiles = GlossProvider.entries.mapNotNull { gp ->
             val c = legacy(gp)
-            val used = c.baseUrl.isNotBlank() || c.apiKey.isNotBlank() || c.model.isNotBlank() || gp == chosen
+            // Earlier versions saved a slot for every service and filled in a service's default URL (and model, for
+            // Claude) as soon as it was picked in the dropdown; a slot holding only those defaults was never set up.
+            fun typed(value: String, default: String?) = value.isNotBlank() && value.trim() != default
+            val used = gp == chosen || c.apiKey.isNotBlank() || typed(c.baseUrl, gp.defaultBaseUrl) || typed(c.model, gp.defaultModel)
             if (used) AiProfile.of(c, id = "legacy-${gp.name}") else null
         }.toMutableList()
         val active = chosen?.let { "legacy-${it.name}" } ?: profiles.firstOrNull()?.id.orEmpty()
