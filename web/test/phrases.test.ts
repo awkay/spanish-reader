@@ -109,3 +109,14 @@ test('the writer numbers new cards after the shared ones and uses the reviewer',
   assert.equal(cards[0].english, 'Sentence 2');
   assert.ok(writes[0].includes('Old one'));
 });
+
+test('a review that names no draft, or writes the answer into the blank, keeps the drafts (as in :core)', () => {
+  const ts: Target[] = [{ questionWords: 'Qué' }, { questionWords: 'Cuál' }];
+  const drafts = [
+    { n: 1, english: "What's up?", spanish: '¿___ pasa?', answer: 'Qué', note: null },
+    { n: 2, english: 'Which one?', spanish: '¿___ es?', answer: 'Cuál', note: null },
+  ];
+  assert.throws(() => applyPhraseReview('{"cards":[{"ok":true},{"ok":true}]}', ts, drafts, []));
+  const out = applyPhraseReview('{"cards":[{"n":1,"ok":true,"spanish":"¿Qué pasa?"},{"n":2,"ok":true,"english":"Which is it?"}]}', ts, drafts, []);
+  assert.deepEqual(out, [drafts[0], { ...drafts[1], english: 'Which is it?' }]);
+});

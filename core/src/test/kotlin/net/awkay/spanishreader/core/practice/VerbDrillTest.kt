@@ -130,6 +130,29 @@ class VerbDrillTest {
     }
 
     @Test
+    fun `a review that names no card, or writes the answer into the blank, doesn't drop good cards`() {
+        val cards = (1..3).map { card.copy(id = "ser#$it", verb = "ser", answer = "fue", spanish = "Él ___ en la reunión $it.") }
+        // Items without "n" (or with numbers that aren't the cards') say nothing about the cards: unparseable.
+        assertFailsWith<MalformedGlossResponseException> {
+            Drill.applyReview("""{"cards":[{"ok":true,"spanish":"Él ___ maestro."},{"n":7,"ok":true}]}""", cards)
+        }
+        // The answer filled in, so no blank: the card stays as written; only "ok": false drops one.
+        val out = Drill.applyReview(
+            """{"cards":[{"n":1,"ok":true,"spanish":"Él fue en la reunión 1.","answer":"fue"},{"n":2,"ok":false},{"n":3,"ok":true}]}""", cards,
+        )
+        assertEquals(listOf(cards[0], cards[2]), out)
+    }
+
+    @Test
+    fun `the writer keeps the written cards when the review matches none of them`() = runTest {
+        val noNumbers = """{"cards":[${(1..10).joinToString(",") { """{"ok":true,"english":"E$it"}""" }}]}"""
+        val c = Fake(tenCards, noNumbers, noNumbers)
+        val cards = DrillWriter(c, c, kotlin.random.Random(1)).write(CommonVerb("estar", "to be"))
+        assertEquals(10, cards.size)
+        assertEquals("a1", cards[0].answer)
+    }
+
+    @Test
     fun `the writer retries an unparseable reply once, then has the cards reviewed`() = runTest {
         val writer = Fake("nothing", tenCards)
         val reviewer = Fake("""{"cards":[${(1..10).joinToString(",") { if (it == 4) """{"n":4,"ok":false}""" else """{"n":$it,"ok":true}""" }}]}""")

@@ -232,18 +232,23 @@ object Drill {
         for (el in JsonExtractor.candidates(text)) {
             val arr = (el as? JsonObject)?.get("cards") as? JsonArray ?: (el as? JsonArray) ?: continue
             val byNumber = cards.associateBy { it.number }
+            var matched = 0
             val out = arr.mapNotNull { item ->
                 val o = item as? JsonObject ?: return@mapNotNull null
                 val card = (o["n"] as? JsonPrimitive)?.content?.toIntOrNull()?.let(byNumber::get) ?: return@mapNotNull null
+                matched++
                 if ((o["ok"] as? JsonPrimitive)?.content == "false") return@mapNotNull null
                 val spanish = o.str("spanish")?.replace(Regex("_{2,}"), BLANK) ?: card.spanish
                 val answer = o.str("answer")?.let(::clean)?.takeIf { it.isNotEmpty() } ?: card.answer
-                if (spanish.split(BLANK).size != 2) return@mapNotNull null
+                // An edit that lost the blank (the answer written in) is unusable; only "ok": false rejects a card.
+                if (spanish.split(BLANK).size != 2) return@mapNotNull card
                 val also = (o["also"] as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.content?.let(::clean) }
                     ?.filter { it.isNotEmpty() && it != answer } ?: card.also
                 withHelpers(card.copy(english = o.str("english") ?: card.english, spanish = spanish, answer = answer, also = also))
             }.distinctBy { it.id }.sortedBy { it.number }
-            if (arr.isNotEmpty()) return out
+            // A review that names none of the cards (no or wrong "n") says nothing about them: treat it as unparseable,
+            // so the cards are kept as written instead of all being dropped.
+            if (matched > 0) return out
         }
         throw MalformedGlossResponseException("No review in reply: ${text.take(200)}")
     }

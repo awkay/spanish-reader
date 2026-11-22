@@ -150,19 +150,27 @@ export function applyReview(text: string, cards: DrillCard[]): DrillCard[] {
     if (!Array.isArray(arr)) continue;
     const byNumber = new Map(cards.map((c) => [cardNumber(c), c]));
     const out = new Map<string, DrillCard>();
+    let matched = 0;
     for (const item of arr) {
       if (typeof item !== 'object' || item === null) continue;
       const o = item as Record<string, unknown>;
       const card = byNumber.get(Number.parseInt(String(o.n), 10));
-      if (!card || String(o.ok) === 'false') continue;
+      if (!card) continue;
+      matched++;
+      if (String(o.ok) === 'false') continue;
       const spanish = str(o, 'spanish')?.replace(/_{2,}/g, BLANK) ?? card.spanish;
       const answer = (str(o, 'answer') && clean(str(o, 'answer')!)) || card.answer;
-      if (spanish.split(BLANK).length !== 2) continue;
+      // An edit that lost the blank (the answer written in) is unusable; only "ok": false rejects a card.
+      if (spanish.split(BLANK).length !== 2) {
+        if (!out.has(card.id)) out.set(card.id, card);
+        continue;
+      }
       const also = Array.isArray(o.also)
         ? o.also.filter((x): x is string => typeof x === 'string').map(clean).filter((x) => x && x !== answer) : card.also;
       if (!out.has(card.id)) out.set(card.id, withHelpers({ ...card, english: str(o, 'english') ?? card.english, spanish, answer, also }));
     }
-    if (arr.length) return [...out.values()].sort((a, b) => cardNumber(a) - cardNumber(b));
+    // A review naming none of the cards says nothing about them: unparseable, so the cards are kept as written.
+    if (matched > 0) return [...out.values()].sort((a, b) => cardNumber(a) - cardNumber(b));
   }
   throw new MalformedResponse(`No review in reply: ${text.slice(0, 200)}`);
 }

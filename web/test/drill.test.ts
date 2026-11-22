@@ -124,3 +124,10 @@ test('the writer retries an unparseable reply once, then has the cards reviewed'
   const rejectAll = JSON.stringify({ cards: Array.from({ length: 10 }, (_, i) => ({ n: i + 1, ok: false })) });
   await assert.rejects(writeCards(fake(tenCards).complete, { infinitive: 'ir', meaning: 'to go' }, seeded(2), fake(rejectAll).complete));
 });
+
+test("a review that names no card, or writes the answer into the blank, doesn't drop good cards (as in :core)", () => {
+  const cards = [1, 2, 3].map((i) => ({ ...card, id: `ser#${i}`, verb: 'ser', answer: 'fue', spanish: `Él ___ en la reunión ${i}.` }));
+  assert.throws(() => applyReview('{"cards":[{"ok":true,"spanish":"Él ___ maestro."},{"n":7,"ok":true}]}', cards));
+  const out = applyReview('{"cards":[{"n":1,"ok":true,"spanish":"Él fue en la reunión 1.","answer":"fue"},{"n":2,"ok":false},{"n":3,"ok":true}]}', cards);
+  assert.deepEqual(out, [cards[0], cards[2]]);
+});

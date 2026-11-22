@@ -226,13 +226,20 @@ object PhraseWriting {
         for (el in JsonExtractor.candidates(text)) {
             val arr = (el as? JsonObject)?.get("cards") as? JsonArray ?: (el as? JsonArray) ?: continue
             if (arr.isEmpty()) continue
-            return valid(arr.mapNotNull { item ->
+            var matched = 0
+            val reviewed = arr.mapNotNull { item ->
                 val o = item as? JsonObject ?: return@mapNotNull null
                 val d = o.int("n")?.let(byN::get) ?: return@mapNotNull null
+                matched++
                 if ((o["ok"] as? JsonPrimitive)?.content == "false") return@mapNotNull null
                 val note = if ("note" in o) o.str("note") else d.note
-                d.copy(english = o.str("english") ?: d.english, spanish = o.str("spanish") ?: d.spanish, answer = o.str("answer") ?: d.answer, note = note)
-            }, targets, avoid)
+                val edit = d.copy(english = o.str("english") ?: d.english, spanish = o.str("spanish") ?: d.spanish, answer = o.str("answer") ?: d.answer, note = note)
+                // An edit that lost the blank (the answer written in) is unusable; only "ok": false rejects a card.
+                if (edit.spanish.replace(Regex("_{2,}"), Drill.BLANK).split(Drill.BLANK).size != 2) d else edit
+            }
+            // A review naming none of the drafts says nothing about them: unparseable, so the drafts are kept.
+            if (matched == 0) continue
+            return valid(reviewed, targets, avoid)
         }
         throw MalformedGlossResponseException("No review in reply: ${text.take(200)}")
     }

@@ -141,6 +141,19 @@ class PhrasePoolTest {
     }
 
     @Test
+    fun `a review that names no draft, or writes the answer into the blank, keeps the drafts`() {
+        val targets = listOf(PhraseWriting.Target.Question("Qué"), PhraseWriting.Target.Question("Cuál"))
+        val drafts = listOf(PhraseWriting.Draft(1, "What's up?", "¿___ pasa?", "Qué", null), PhraseWriting.Draft(2, "Which one?", "¿___ es?", "Cuál", null))
+        assertFailsWith<MalformedGlossResponseException> {
+            PhraseWriting.applyReview("""{"cards":[{"ok":true},{"ok":true}]}""", targets, drafts, emptyList())
+        }
+        val out = PhraseWriting.applyReview(
+            """{"cards":[{"n":1,"ok":true,"spanish":"¿Qué pasa?"},{"n":2,"ok":true,"english":"Which is it?"}]}""", targets, drafts, emptyList(),
+        )
+        assertEquals(listOf(drafts[0], drafts[1].copy(english = "Which is it?")), out)
+    }
+
+    @Test
     fun `the writer numbers new cards after the shared ones and uses the reviewer`() = runTest {
         val writes = mutableListOf<String>()
         val writer = PhraseWriter(

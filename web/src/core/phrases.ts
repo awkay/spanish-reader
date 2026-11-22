@@ -197,17 +197,24 @@ export function applyPhraseReview(text: string, ts: Target[], drafts: Draft[], a
     const arr = cardsOf(el);
     if (!Array.isArray(arr) || !arr.length) continue;
     const out: Draft[] = [];
+    let matched = 0;
     for (const item of arr) {
       if (typeof item !== 'object' || item === null) continue;
       const o = item as Record<string, unknown>;
       const n = int(o.n);
       const d = n == null ? undefined : byN.get(n);
-      if (!d || String(o.ok) === 'false') continue;
-      out.push({
+      if (!d) continue;
+      matched++;
+      if (String(o.ok) === 'false') continue;
+      const edit = {
         ...d, english: str(o, 'english') ?? d.english, spanish: str(o, 'spanish') ?? d.spanish, answer: str(o, 'answer') ?? d.answer,
         note: 'note' in o ? str(o, 'note') : d.note,
-      });
+      };
+      // An edit that lost the blank (the answer written in) is unusable; only "ok": false rejects a card.
+      out.push(edit.spanish.replace(/_{2,}/g, BLANK).split(BLANK).length === 2 ? edit : d);
     }
+    // A review naming none of the drafts says nothing about them: unparseable, so the drafts are kept.
+    if (matched === 0) continue;
     return valid(out, ts, avoid);
   }
   throw new MalformedResponse(`No review in reply: ${text.slice(0, 200)}`);
