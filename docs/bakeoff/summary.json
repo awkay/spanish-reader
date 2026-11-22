@@ -108,14 +108,14 @@
    "phrases": 72.5,
    "chat": 11.1
   },
-  "costUsd": 0.00754,
+  "costUsd": 0.0209,
   "glossCostUsd14Words": 0.00098,
-  "estPageGlossUsd": 0.0105,
+  "estPageGlossUsd": 0.032,
   "tokensIn": 11195,
   "tokensOut": 35047,
   "failedChecks": [],
-  "billedUsd": 0.11,
-  "costNote": "costUsd is what the harness saw; a stalled gloss call that timed out client-side was still billed (~$0.10), per the OpenRouter bill"
+  "billedUsd": 0.1058,
+  "costNote": "From the OpenRouter activity export: one gloss request (provider Parasail) looped for 70,453 output tokens until the 240 s call timeout, cancelled but billed $0.0849. The other 14 requests cost $0.0209. The page estimate uses the successful 14-word retry (Fireworks, $0.00295)."
  },
  {
   "model": "google/gemini-3.5-flash-lite",

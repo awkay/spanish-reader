@@ -44,19 +44,23 @@ call, 2 calls at a time.
 | 1 | z-ai/glm-5.3 (current) | **9** | Best Spanish overall, with correct lemmas, clitics and regional notes; very slow | 28/28 | 7.2 s | 412 s | 111 s | $0.097 | $0.21 |
 | 2 | google/gemini-3.8-flash | **8.5** | Nearly as accurate, Mexico-aware, full decks; about 5× faster than GLM at glossing | 28/28 | 10.0 s | 128 s | 20 s | $0.080 | $0.12 |
 | 3 | z-ai/glm-5.3-flash | **8.5** | Very close to GLM 5.3 at a sixth of the cost; one gender slip in chat; drill writing slow | 28/28 | 6.4 s | 212 s | 41 s | $0.013 | $0.06 |
-| 4 | deepseek/deepseek-v4.1-flash | **8** | Clean, but says *echar de menos* is "the standard LatAm way"; one gloss call stalled and was billed about $0.10 anyway | 28/28 | 12.5 s | 415 s | 271 s | $0.11 billed* | $0.01 if nothing stalls |
+| 4 | deepseek/deepseek-v4.1-flash | **8** | Clean, but says *echar de menos* is "the standard LatAm way"; one gloss request looped (70k tokens) and was billed $0.085 | 28/28 | 12.5 s | 415 s | 271 s | $0.11 billed* | $0.03 if nothing stalls |
 | 5 | google/gemini-3.5-flash-lite | **7** | By far the fastest; terse notes, wrong *se me olvidó* clitics, every question card missing the opening ¿ | 27/28 | 1.4 s | 21 s | 6 s | $0.017 | $0.06 |
 | 6 | anthropic/claude-haiku-5.5 | **5** | Good drill and chat, but the say-it job produced nothing and several grammar notes are false | 26/27 | 3.9 s | 77 s | 30 s | $0.010 | $0.04 |
 | 7 | mistralai/mistral-small-2603 | **5** | Fast, cheap, excellent chat; drill and say-it cards are broken (wrong ser/estar, blanks that aren't the verb) | 27/28 | 1.9 s | 34 s | 13 s | $0.005 | $0.02 |
 | 8 | openai/gpt-5.4-nano | **4.5** | vino → lemma *venir*; "meanings" are whole-sentence translations; only 3 question cards | 27/28 | 2.5 s | 40 s | 16 s | $0.010 | $0.04 |
 | – | qwen/qwen3.8-flash | – | Didn't finish in about 8 min | – | – | – | – | – | – |
 
-\* **Checked against the OpenRouter bill.** The whole session cost $0.355, which matches the bill, and every other
-model's recorded cost matches its line on the bill within rounding. DeepSeek's doesn't: the harness recorded $0.008, but
-the bill shows $0.11. The difference is the stalled gloss call. The harness timed out after 180 s and retried, so it never
-saw a cost. The provider still billed the abandoned call, about $0.10, which is roughly 500k output tokens at list price.
-It most likely ran to its token limit. The app would pay for the same thing, because a client timeout doesn't stop
-billing. Qwen's partial run cost $0.02.
+\* **Checked against the OpenRouter bill and activity export.** The session cost $0.355 in total, and every other model's
+recorded cost matches its line on the bill. DeepSeek's 15 requests came to $0.106. One of them was **$0.085**: the
+glossing request went to the provider Parasail and produced **70,453 output tokens**, only 1,186 of them reasoning, so the
+rest was a loop in the visible answer. It ran until the app's 240 s per-call limit hung up. OpenRouter marked it
+cancelled but billed every token. The retry went to Fireworks and worked normally: 4,572 tokens in 30 s for $0.003.
+Without the stall DeepSeek's run cost $0.021. The harness had priced it at the cheapest listed provider rate, which gave
+$0.008, but the providers it actually used charged roughly $0.30–$2.20 per million output tokens. That puts glossing at
+about $0.03 a page, not $0.01. **Lesson for the app:** it sends no `max_tokens`, so a looping reply runs until the timeout
+and is billed in full, with any model. A cap of about 16k tokens would have stopped this one at about $0.02. Qwen's
+partial run cost $0.02.
 
 Chat is not what separates them. Every model fixed *al playa → a la playa*, *we ate → comimos* and *el comida → la
 comida … buena*. Every model also left both correct sentences alone and kept "Yo", so none over-corrected. Gemini 3.5
@@ -88,8 +92,8 @@ Flash Lite and GPT-5.4 nano kept the present "es" after "Ayer comí…". That is
 - *me da pena* hedges with "or: it makes me sad" and doesn't say that in Mexico it means embarrassed.
 - Chat: "Suena como un día…" is a calque (natural Spanish: *suena a*). "El pozole … sobre todo con un buen caldo" is an
   empty remark.
-- The gloss job took 271 s: the first call stalled and had to be retried. The stalled call was still billed, about $0.10, so
-  DeepSeek ended up costing more than any other model in the run.
+- The gloss job took 271 s: the first request, served by Parasail, looped for 70,453 tokens until the 240 s limit. It was
+  billed $0.085, which made DeepSeek the most expensive model in the run.
 
 **google/gemini-3.5-flash-lite**
 - *se me olvidó*: only *me*, mislabelled "accidental se". The phrase is given as *olvidarse de*, which is not this
@@ -138,8 +142,8 @@ Flash Lite and GPT-5.4 nano kept the present "es" after "Ayer comí…". That is
   where GLM 5.3 took 111 s, and costs about $0.12 per page against $0.21.
   - If you'd rather stay on the z.ai plan, **glm-5.3-flash** is nearly as accurate, at 41 s and about $0.06 per page
     through OpenRouter. On your plan it may cost nothing extra.
-  - Avoid DeepSeek. It looks cheapest at about $0.01 per page, but one stalled call was billed about $0.10, more than
-    ten times its whole recorded run. It also has a wrong regional note.
+  - Avoid DeepSeek. Normally about $0.03 per page, but one of its 15 requests looped and cost four times the rest of its
+    run put together. It also has a wrong regional note.
   - Avoid gpt-5.4-nano and mistral-small for glossing.
 - **(b) Writing and reviewing drill and say-it cards: z-ai/glm-5.3** if you can live with the wait. This runs in the
   background, and its cards were the cleanest. But writing one say-it batch took 4½ minutes.
