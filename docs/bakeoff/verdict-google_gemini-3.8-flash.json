@@ -1,0 +1,30 @@
+{
+  "letter": "D",
+  "scores": {"glosses": 9, "sentences": 7, "drill": 8, "phrases": 9, "chat": 9, "overall": 8},
+  "oneLine": "Strong, accurate and Mexico-aware across all five jobs; its only real lapse is missing the hace...que construction, plus a handful of small nits.",
+  "mistakes": [
+    {"job": "sentences", "item": "Hace dos años que vivo aquí.", "what": "\"phrases\": [] misses the hace + time + que construction (\"I've been ... for\"). The translation is right, but the job is to flag fixed phrases and this is one of the key ones.", "severity": "major"},
+    {"job": "glosses", "item": "olvidó (Se me olvidó la llave en casa.)", "what": "The clitic 'se' is labeled with refersTo \"the key (unintended action)\". 'se' doesn't refer to the key (the key is the subject). The role \"accidental se\" is right, but the referent is muddled.", "severity": "minor"},
+    {"job": "glosses", "item": "observándome", "what": "The formation says the accent keeps \"stress on the gerund stem syllable 'án'\". 'án' belongs to the -ando ending, not the stem.", "severity": "minor"},
+    {"job": "glosses", "item": "encaja", "what": "otherMeanings lists \"to corner someone\", a doubtful and non-standard sense. \"to take/handle well (criticism, a blow)\" is mainly Spain usage.", "severity": "minor"},
+    {"job": "glosses", "item": "quedé", "what": "Both otherMeanings (\"to meet up with someone\") and the clitic note (\"plain 'quedar' often means 'to arrange to meet'\") use the Spain sense of quedar. In Mexico it would be 'quedar de' + infinitive or 'quedar con'.", "severity": "minor"},
+    {"job": "glosses", "item": "llevo", "what": "The phrase span \"llevar dos años viviendo\" includes the specific duration instead of the general pattern llevar + time + gerund. It's handled well in grammarNote anyway.", "severity": "minor"},
+    {"job": "drill", "item": "Anoche yo ___ enfermo en la cama.", "what": "\"Last night I was sick in bed\" fits 'estaba' just as naturally as the expected 'estuve'. On a one-try, locally checked card that's an unfair miss.", "severity": "minor"},
+    {"job": "drill", "item": "Ayer tú ___ en el dentista por dos horas.", "what": "\"en el dentista\" is colloquial. \"con el dentista\" or \"en el consultorio del dentista\" would be a cleaner model sentence.", "severity": "minor"},
+    {"job": "phrases", "item": "¿___ son tus tacos favoritos? / ¿___ son tus días de descanso?", "what": "The English \"Which are your favorite tacos?\" and \"Which are your days off?\" is unnatural (an English speaker would say \"What are...\"). Also, two of the ten question-word cards both drill Cuáles.", "severity": "minor"},
+    {"job": "phrases", "item": "___ más agua todos los días. (Toma)", "what": "\"Drink more water every day.\" doesn't settle tú vs usted, so 'Tome' would be just as valid.", "severity": "minor"},
+    {"job": "phrases", "item": "___ la puerta principal abierta. (He dejado)", "what": "The present perfect here is less natural in Mexican usage than 'Dejé'. It works only because the card says the tense and the English forces it.", "severity": "minor"},
+    {"job": "chat", "item": "reply1: ¡Qué bien, los sándwiches saben mejor en la playa!", "what": "Comma splice inside the exclamation. It should be \"¡Qué bien! Los sándwiches saben mejor en la playa.\"", "severity": "minor"}
+  ],
+  "strengths": [
+    "All the trap lemmas are right: fui=ir, fue=ser (with a sound adjective cue), vino=noun, como=comer.",
+    "Clitic roles are right for dáselo (se = IO replacing le, lo = DO) and se me olvidó (accidental se + IO me).",
+    "Notes are regionally accurate: extrañar vs echar de menos in Latin America, and me da pena = embarrassed in Mexico.",
+    "The sino note correctly covers 'sino que' before a conjugated verb, and the etymologies are accurate (PIE *bheuh- / 'be', quietare, iactare).",
+    "No invented idioms in 'El perro come pan'. The other sentence translations are all correct.",
+    "Ten estar drill cards across seven tenses, with natural Spanish and correct estar contexts (subjunctive with a different subject, 'de vacaciones', 'lista para').",
+    "Both phrase decks are full (10 each), every question word in the list is covered, and the Mexican vocabulary is right (carro, recibo de la luz, maestro, fresas). The notes are correct (pagué g->gu, sigo).",
+    "The corrections are minimal and exact: a la playa + comimos; la comida estaba muy buena; it leaves the two correct sentences alone and doesn't drop 'Yo'.",
+    "Chat replies are short, natural and level-appropriate, and each ends with a question that keeps the conversation going."
+  ]
+}
