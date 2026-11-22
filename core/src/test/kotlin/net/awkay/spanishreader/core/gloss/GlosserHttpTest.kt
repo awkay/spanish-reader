@@ -84,7 +84,7 @@ class GlosserHttpTest {
         assertEquals("2023-06-01", req.headers["anthropic-version"])
         assertTrue(req.headers["content-type"]!!.startsWith("application/json"))
         assertEquals("claude-haiku-4-5", body["model"]!!.jsonPrimitive.content)
-        assertEquals(1024, body["max_tokens"]!!.jsonPrimitive.int)
+        assertEquals(GlossOptions.DEFAULT_MAX_OUTPUT_TOKENS, body["max_tokens"]!!.jsonPrimitive.int)
         assertTrue("Vuelvo a casa." in body["messages"]!!.jsonArray[0].jsonObject["content"]!!.jsonPrimitive.content)
     }
 

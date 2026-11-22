@@ -643,13 +643,16 @@ async function limited<T>(tasks: Array<() => Promise<T>>, concurrency: number): 
   return results;
 }
 
-/** Glosses requests in batches of 20 (2 at a time), retrying once on an unparseable reply. Missing ids = failed. */
+/**
+ * Glosses requests in batches of 20 (2 at a time), retrying once on an unparseable reply. Missing ids = failed.
+ * A batch whose answer hit the server's length limit (SR_AI_MAX_OUTPUT_TOKENS) is asked for in halves instead.
+ */
 export async function glossBatch(requests: GlossRequest[], improve = false): Promise<Map<string, Gloss>> {
   const out = new Map<string, Gloss>();
   const batches: GlossRequest[][] = [];
   for (let i = 0; i < requests.length; i += AI_BATCH) batches.push(requests.slice(i, i + AI_BATCH));
   let lastError: unknown = null;
-  await limited(batches.map((batch) => async () => {
+  const run = async (batch: GlossRequest[]): Promise<void> => {
     let pending = batch;
     for (let attempt = 0; attempt < 2 && pending.length; attempt++) {
       try {
@@ -657,11 +660,19 @@ export async function glossBatch(requests: GlossRequest[], improve = false): Pro
         parseGlosses(reply, pending).forEach((g, id) => out.set(id, g));
       } catch (e) {
         lastError = e;
-        if (!(e instanceof MalformedResponse)) break;
+        const truncated = e instanceof ApiError && e.data.truncated === true;
+        if (truncated && pending.length > 1) {
+          const half = Math.ceil(pending.length / 2);
+          await run(pending.slice(0, half));
+          await run(pending.slice(half));
+          return;
+        }
+        if (!(e instanceof MalformedResponse) && !truncated) break;
       }
       pending = pending.filter((r) => !out.has(r.id));
     }
-  }), 2);
+  };
+  await limited(batches.map((batch) => () => run(batch)), 2);
   if (out.size === 0 && requests.length && lastError) throw lastError;
   return out;
 }

@@ -41,7 +41,13 @@ data class GlosserConfig(
     val baseUrl: String = "",
     val apiKey: String = "",
     val model: String = "",
+    /** Answer-length limit in tokens (reasoning included): null = [GlossOptions.DEFAULT_MAX_OUTPUT_TOKENS], 0 = none. */
+    val maxOutputTokens: Int? = null,
 ) {
+    /** [options] with this config's answer-length limit applied. */
+    fun applyTo(options: GlossOptions): GlossOptions =
+        maxOutputTokens?.let { options.copy(maxOutputTokens = it.takeIf { n -> n > 0 }) } ?: options
+
     val effectiveBaseUrl: String get() = baseUrl.trim().ifEmpty { provider.defaultBaseUrl.orEmpty() }
     val effectiveModel: String get() = model.trim().ifEmpty { provider.defaultModel.orEmpty() }
 
@@ -86,20 +92,23 @@ object GlosserFactory {
     fun createCompleter(config: GlosserConfig, httpClient: OkHttpClient = defaultHttpClient, options: GlossOptions = GlossOptions()): TextCompleter =
         createSentenceAnalyzer(config, httpClient, options) as TextCompleter
 
-    private fun single(c: GlosserConfig, http: OkHttpClient, options: GlossOptions): Glosser = when (c.provider) {
-        GlossProvider.ZAI_RESPONSES -> OpenAiResponsesGlosser(
-            baseUrl = c.effectiveBaseUrl, apiKey = c.apiKey.trim().ifEmpty { null }, model = c.effectiveModel,
-            httpClient = http, options = options,
-        )
-        GlossProvider.ANTHROPIC -> AnthropicGlosser(
-            apiKey = c.apiKey.trim(), model = c.effectiveModel, httpClient = http, options = options, baseUrl = c.effectiveBaseUrl,
-        )
-        else -> OpenAiCompatibleGlosser(
-            baseUrl = c.effectiveBaseUrl, apiKey = c.apiKey.trim().ifEmpty { null }, model = c.effectiveModel,
-            httpClient = http, options = options,
-            // GLM models reason by default; glossing doesn't need it and it roughly doubles latency.
-            extraParams = if (c.provider.isZai) mapOf("thinking" to buildJsonObject { put("type", "disabled") }) else emptyMap(),
-        )
+    private fun single(c: GlosserConfig, http: OkHttpClient, baseOptions: GlossOptions): Glosser {
+        val options = c.applyTo(baseOptions)
+        return when (c.provider) {
+            GlossProvider.ZAI_RESPONSES -> OpenAiResponsesGlosser(
+                baseUrl = c.effectiveBaseUrl, apiKey = c.apiKey.trim().ifEmpty { null }, model = c.effectiveModel,
+                httpClient = http, options = options,
+            )
+            GlossProvider.ANTHROPIC -> AnthropicGlosser(
+                apiKey = c.apiKey.trim(), model = c.effectiveModel, httpClient = http, options = options, baseUrl = c.effectiveBaseUrl,
+            )
+            else -> OpenAiCompatibleGlosser(
+                baseUrl = c.effectiveBaseUrl, apiKey = c.apiKey.trim().ifEmpty { null }, model = c.effectiveModel,
+                httpClient = http, options = options,
+                // GLM models reason by default; glossing doesn't need it and it roughly doubles latency.
+                extraParams = if (c.provider.isZai) mapOf("thinking" to buildJsonObject { put("type", "disabled") }) else emptyMap(),
+            )
+        }
     }
 
     /** LLM batches can take tens of seconds; OkHttp's 10 s read timeout is far too short. */

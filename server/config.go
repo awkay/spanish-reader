@@ -25,6 +25,9 @@ type Config struct {
 	AIModel        string // SR_AI_MODEL, e.g. glm-5.3-flash
 	AIImproveModel string // SR_AI_IMPROVE_MODEL: model for "Improve answer" (default: SR_AI_MODEL)
 	VisionModel    string // SR_VISION_MODEL: reads photos for photo lessons; must accept images (default: SR_AI_MODEL)
+	// SR_AI_MAX_OUTPUT_TOKENS: most tokens one AI reply may use, reasoning included (default 16000, 0 = no limit).
+	// Stops a looping reply before the timeout so it isn't billed in full; see docs/glm-settings.md.
+	AIMaxOutputTokens int
 
 	PiperBin   string // SR_PIPER_BIN, e.g. /opt/piper/piper
 	PiperModel string // SR_PIPER_MODEL, e.g. /opt/piper/voices/es_MX-claude-high.onnx
@@ -91,6 +94,12 @@ func loadConfig() (*Config, error) {
 	}
 	if c.ASRDailyMinutes, err = envInt("SR_ASR_DAILY_MINUTES", 180); err != nil {
 		return nil, err
+	}
+	c.AIMaxOutputTokens = 16000
+	if v := env("SR_AI_MAX_OUTPUT_TOKENS", ""); v != "" {
+		if c.AIMaxOutputTokens, err = strconv.Atoi(v); err != nil || c.AIMaxOutputTokens < 0 {
+			return nil, fmt.Errorf("SR_AI_MAX_OUTPUT_TOKENS must be a number of tokens (0 = no limit), not %q", v)
+		}
 	}
 	if c.AccessCode == "" {
 		return nil, errors.New("SR_ACCESS_CODE is required")

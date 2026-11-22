@@ -17,9 +17,20 @@ data class GlossOptions(
     val maxConcurrency: Int = 2,
     val retry: RetryPolicy = RetryPolicy(),
     val temperature: Double = 0.2,
+    /**
+     * Most tokens one reply may use, reasoning included; null = no limit (the provider's own). Stops a reply that
+     * loops before the call timeout, so it isn't billed in full; a reply cut off here is a [TruncatedResponseException].
+     */
+    val maxOutputTokens: Int? = DEFAULT_MAX_OUTPUT_TOKENS,
 ) {
     init {
         require(maxBatchSize > 0 && maxConcurrency > 0)
+        require(maxOutputTokens == null || maxOutputTokens > 0)
+    }
+
+    companion object {
+        /** Real replies need at most ~4k tokens at low reasoning effort (20 glosses); see docs/glm-settings.md. */
+        const val DEFAULT_MAX_OUTPUT_TOKENS = 16_000
     }
 }
 
@@ -92,6 +103,7 @@ abstract class LlmGlosser(
 
     private suspend fun glossBatch(batch: List<GlossRequest>): List<GlossResult> {
         val found = HashMap<String, Gloss>()
+        val split = HashMap<String, GlossResult>()
         var pending = batch
         var lastError = "Model reply did not include this word"
         var fatal: Exception? = null
@@ -105,6 +117,13 @@ abstract class LlmGlosser(
                 found += GlossParser.parse(replyText(body), pending)
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: TruncatedResponseException) {
+                lastError = e.message!!
+                // Too long for the limit: ask for each half separately instead of resending the same batch.
+                if (pending.size > 1) {
+                    pending.chunked((pending.size + 1) / 2).forEach { half -> glossBatch(half).forEach { split[it.id] = it } }
+                    break
+                }
             } catch (e: MalformedGlossResponseException) {
                 lastError = e.message ?: "Malformed model reply"
             } catch (e: SerializationException) {
@@ -117,7 +136,7 @@ abstract class LlmGlosser(
             pending = pending.filter { it.id !in found }
         }
         return batch.map { r ->
-            found[r.id]?.let { GlossResult.Success(r.id, it) }
+            split[r.id] ?: found[r.id]?.let { GlossResult.Success(r.id, it) }
                 ?: GlossResult.Failure(r.id, fatal?.let { it.message ?: it.toString() } ?: lastError, fatal)
         }
     }

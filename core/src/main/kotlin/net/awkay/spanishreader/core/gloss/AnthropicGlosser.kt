@@ -19,10 +19,6 @@ class AnthropicGlosser(
     private val model: String = "claude-haiku-4-5",
     httpClient: OkHttpClient = OkHttpClient(),
     options: GlossOptions = GlossOptions(),
-    /** max_tokens for a single word; batches scale up by [tokensPerItem], capped at [maxTokensCap]. */
-    private val maxTokens: Int = 1024,
-    private val tokensPerItem: Int = 600,
-    private val maxTokensCap: Int = 16_000,
     baseUrl: String = "https://api.anthropic.com",
 ) : LlmGlosser(httpClient, options) {
     private val endpoint = baseUrl.trimEnd('/') + "/v1/messages"
@@ -30,7 +26,9 @@ class AnthropicGlosser(
     override fun buildRequest(system: String, user: String, itemCount: Int): Request {
         val body = buildJsonObject {
             put("model", model)
-            put("max_tokens", (tokensPerItem * itemCount).coerceIn(maxTokens, maxOf(maxTokens, maxTokensCap)))
+            // Required by the API. Only tokens produced are billed, so the answer-length limit itself is sent: the old
+            // 1024 for single-item calls could cut off drill/say-it batches, which are one "item".
+            put("max_tokens", options.maxOutputTokens ?: GlossOptions.DEFAULT_MAX_OUTPUT_TOKENS)
             put("temperature", options.temperature)
             put("system", system)
             putJsonArray("messages") {
@@ -51,6 +49,7 @@ class AnthropicGlosser(
 
     override fun replyText(responseBody: String): String {
         val root = Json.parseToJsonElement(responseBody) as? JsonObject
+        if ((root?.get("stop_reason") as? JsonPrimitive)?.content == "max_tokens") throw TruncatedResponseException(options.maxOutputTokens)
         val blocks = (root?.get("content") as? JsonArray).orEmpty().filterIsInstance<JsonObject>()
         val text = blocks.firstOrNull { (it["type"] as? JsonPrimitive)?.content == "text" }?.get("text") as? JsonPrimitive
         return text?.content

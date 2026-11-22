@@ -34,6 +34,7 @@ class OpenAiResponsesGlosser(
             put("input", user)
             put("temperature", options.temperature)
             reasoningEffort?.let { putJsonObject("reasoning") { put("effort", it) } }
+            options.maxOutputTokens?.let { put("max_output_tokens", it) }
             putJsonObject("text") { putJsonObject("format") { put("type", "json_object") } }
         }
         return Request.Builder()
@@ -43,11 +44,18 @@ class OpenAiResponsesGlosser(
             .build()
     }
 
-    /** Concatenates the `output_text` parts of `message` output items; reasoning items are skipped. */
+    /**
+     * Concatenates the `output_text` parts of `message` output items; reasoning items are skipped.
+     * `status: incomplete` with reason `max_output_tokens` means the reply hit the length limit.
+     */
     override fun replyText(responseBody: String): String {
         val root = Json.parseToJsonElement(responseBody) as? JsonObject
         (root?.get("error") as? JsonObject)?.let {
             throw MalformedGlossResponseException("Responses API error: $it")
+        }
+        val incomplete = ((root?.get("incomplete_details") as? JsonObject)?.get("reason") as? JsonPrimitive)?.content
+        if ((root?.get("status") as? JsonPrimitive)?.content == "incomplete" && incomplete == "max_output_tokens") {
+            throw TruncatedResponseException(options.maxOutputTokens)
         }
         val text = (root?.get("output") as? JsonArray).orEmpty()
             .filterIsInstance<JsonObject>()

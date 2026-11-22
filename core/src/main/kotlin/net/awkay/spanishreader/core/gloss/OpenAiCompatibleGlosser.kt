@@ -31,10 +31,14 @@ class OpenAiCompatibleGlosser(
 ) : LlmGlosser(httpClient, options) {
     private val endpoint = baseUrl.trimEnd('/') + "/chat/completions"
 
+    /** OpenAI's own API rejects `max_tokens` for reasoning models; every other server here takes `max_tokens`. */
+    internal val lengthField = if ("://api.openai.com" in baseUrl) "max_completion_tokens" else "max_tokens"
+
     override fun buildRequest(system: String, user: String, itemCount: Int): Request {
         val body = buildJsonObject {
             put("model", model)
             put("temperature", options.temperature)
+            options.maxOutputTokens?.let { put(lengthField, it) }
             putJsonObject("response_format") { put("type", "json_object") }
             extraParams.forEach { (k, v) -> put(k, v) }
             putJsonArray("messages") {
@@ -57,7 +61,9 @@ class OpenAiCompatibleGlosser(
 
     override fun replyText(responseBody: String): String {
         val root = Json.parseToJsonElement(responseBody) as? JsonObject
-        val message = ((root?.get("choices") as? JsonArray)?.firstOrNull() as? JsonObject)?.get("message") as? JsonObject
+        val choice = (root?.get("choices") as? JsonArray)?.firstOrNull() as? JsonObject
+        if ((choice?.get("finish_reason") as? JsonPrimitive)?.content == "length") throw TruncatedResponseException(options.maxOutputTokens)
+        val message = choice?.get("message") as? JsonObject
         return (message?.get("content") as? JsonPrimitive)?.content
             ?: throw MalformedGlossResponseException("No choices[0].message.content in response: ${responseBody.take(200)}")
     }

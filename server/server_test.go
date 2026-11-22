@@ -273,8 +273,45 @@ func TestAIProxyProtocols(t *testing.T) {
 
 	s.cfg.AIProtocol = "anthropic"
 	_, out = do(t, ts, "POST", "/api/ai", tok, map[string]any{"system": "S", "user": "U", "items": 10})
-	if out["text"] != `{"c":3}` || paths[2] != "/api/v1/v1/messages" || auths[2] != "k" || got[2]["max_tokens"].(float64) != 6000 {
+	if out["text"] != `{"c":3}` || paths[2] != "/api/v1/v1/messages" || auths[2] != "k" || got[2]["max_tokens"].(float64) != 16000 {
 		t.Fatalf("anthropic: %v %v %s", out, got[2], paths[2])
+	}
+	if got[0]["max_output_tokens"] != nil || got[1]["max_tokens"] != nil {
+		t.Fatalf("no limit configured, yet one was sent: %v %v", got[0], got[1])
+	}
+
+	// With a limit: sent to each protocol under its own name (Anthropic's is the limit itself).
+	s.cfg.AIMaxOutputTokens = 8000
+	for i, proto := range []string{"responses", "chat", "anthropic"} {
+		s.cfg.AIProtocol = proto
+		do(t, ts, "POST", "/api/ai", tok, map[string]any{"system": "S", "user": "U"})
+		field := map[string]string{"responses": "max_output_tokens", "chat": "max_tokens", "anthropic": "max_tokens"}[proto]
+		if v, _ := got[3+i][field].(float64); v != 8000 {
+			t.Fatalf("%s: %s = %v", proto, field, got[3+i][field])
+		}
+	}
+}
+
+func TestAIProxyFlagsCutOffReplies(t *testing.T) {
+	replies := map[string]string{
+		"responses": `{"status":"incomplete","incomplete_details":{"reason":"max_output_tokens"},"output":[{"type":"message","content":[{"type":"output_text","text":"{\"gl"}]}]}`,
+		"chat":      `{"choices":[{"finish_reason":"length","message":{"content":"{\"gl"}}]}`,
+		"anthropic": `{"stop_reason":"max_tokens","content":[{"type":"text","text":"{\"gl"}]}`,
+	}
+	proto := ""
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, replies[proto])
+	}))
+	defer upstream.Close()
+	s, ts := testServer(t, upstream.URL)
+	tok := login(t, ts)
+	s.cfg.AIMaxOutputTokens = 4000
+	for _, proto = range []string{"responses", "chat", "anthropic"} {
+		s.cfg.AIProtocol = proto
+		resp, out := do(t, ts, "POST", "/api/ai", tok, map[string]any{"system": "S", "user": "U"})
+		if resp.StatusCode != 502 || out["truncated"] != true || !strings.Contains(out["error"].(string), "cut off") {
+			t.Fatalf("%s: %d %v", proto, resp.StatusCode, out)
+		}
 	}
 }
 
@@ -384,5 +421,20 @@ func TestLessonsAndSentenceCache(t *testing.T) {
 	}
 	if resp, _ = do(t, ts, "GET", "/api/lessons/..%2f..%2fsecret", tok, nil); resp.StatusCode != 404 {
 		t.Fatal("path traversal must not work")
+	}
+}
+
+func TestAIMaxOutputTokensSetting(t *testing.T) {
+	t.Setenv("SR_ACCESS_CODE", "482913")
+	for v, want := range map[string]int{"": 16000, "8000": 8000, "0": 0} {
+		t.Setenv("SR_AI_MAX_OUTPUT_TOKENS", v)
+		c, err := loadConfig()
+		if err != nil || c.AIMaxOutputTokens != want {
+			t.Fatalf("%q: %v %v", v, c, err)
+		}
+	}
+	t.Setenv("SR_AI_MAX_OUTPUT_TOKENS", "lots")
+	if _, err := loadConfig(); err == nil {
+		t.Fatal("a non-number was accepted")
 	}
 }

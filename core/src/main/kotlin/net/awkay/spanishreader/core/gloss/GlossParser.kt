@@ -6,7 +6,14 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-class MalformedGlossResponseException(message: String) : Exception(message)
+open class MalformedGlossResponseException(message: String) : Exception(message)
+
+/**
+ * The provider stopped the reply at the answer-length limit ([GlossOptions.maxOutputTokens]); any text is partial.
+ * Reasoning tokens count toward the limit, so a model that thinks long can be cut off before it writes anything.
+ */
+class TruncatedResponseException(val limit: Int?) :
+    MalformedGlossResponseException("The AI's answer was cut off at the ${limit?.let { "$it-token " } ?: ""}answer-length limit")
 
 /** Turns raw model text into validated glosses keyed by request id. */
 object GlossParser {

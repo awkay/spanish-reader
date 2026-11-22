@@ -64,11 +64,21 @@ func (s *Server) handleAI(w http.ResponseWriter, r *http.Request) {
 	text, err := s.ai.Complete(r.Context(), req)
 	if err != nil {
 		log.Printf("ai: %v", err)
+		if errors.Is(err, errTruncated) {
+			// The client splits a gloss batch that was too long instead of resending it whole.
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadGateway)
+			_ = json.NewEncoder(w).Encode(map[string]any{"error": err.Error(), "truncated": true})
+			return
+		}
 		writeError(w, http.StatusBadGateway, err.Error())
 		return
 	}
 	writeJSON(w, map[string]string{"text": text})
 }
+
+// errTruncated: the provider stopped the reply at the answer-length limit (SR_AI_MAX_OUTPUT_TOKENS).
+var errTruncated = errors.New("the AI's answer was cut off at the answer-length limit")
 
 // Complete sends one request, retrying 429/5xx/network errors with backoff (honoring Retry-After).
 func (p *AIProxy) Complete(ctx context.Context, req aiRequest) (string, error) {
@@ -135,9 +145,11 @@ func (p *AIProxy) build(req aiRequest, model string) (string, []byte, map[string
 		url = base + "/v1/messages"
 		auth["x-api-key"] = p.cfg.AIKey
 		auth["anthropic-version"] = "2023-06-01"
-		maxTokens := 1024
-		if n := req.Items * 600; n > maxTokens {
-			maxTokens = min(n, 16000)
+		// Required by the API; only tokens produced are billed. The old 1024 for item-less calls (drill, say-it,
+		// chat) could cut off a batch of cards.
+		maxTokens := p.cfg.AIMaxOutputTokens
+		if maxTokens <= 0 {
+			maxTokens = 16000
 		}
 		var content any = req.User
 		if len(req.Images) > 0 {
@@ -171,6 +183,9 @@ func (p *AIProxy) build(req aiRequest, model string) (string, []byte, map[string
 		if (strings.Contains(base, "z.ai") || strings.Contains(base, "bigmodel.cn")) && req.Effort == "" {
 			b["thinking"] = map[string]string{"type": "disabled"} // GLM reasons by default; glossing doesn't need it
 		}
+		if p.cfg.AIMaxOutputTokens > 0 {
+			b["max_tokens"] = p.cfg.AIMaxOutputTokens
+		}
 		body = b
 	default: // responses
 		effort := "low"
@@ -187,11 +202,15 @@ func (p *AIProxy) build(req aiRequest, model string) (string, []byte, map[string
 			}
 			input = []map[string]any{{"role": "user", "content": parts}}
 		}
-		body = map[string]any{
+		b := map[string]any{
 			"model": model, "instructions": req.System, "input": input, "temperature": 0.2,
 			"reasoning": map[string]string{"effort": effort},
 			"text":      map[string]any{"format": map[string]string{"type": "json_object"}},
 		}
+		if p.cfg.AIMaxOutputTokens > 0 {
+			b["max_output_tokens"] = p.cfg.AIMaxOutputTokens // reasoning tokens count toward it
+		}
+		body = b
 	}
 	raw, _ := json.Marshal(body)
 	return url, raw, auth
@@ -200,6 +219,11 @@ func (p *AIProxy) build(req aiRequest, model string) (string, []byte, map[string
 // extract pulls the assistant text out of a provider response.
 func (p *AIProxy) extract(raw []byte) (string, error) {
 	var v struct {
+		Status            string `json:"status"`
+		IncompleteDetails *struct {
+			Reason string `json:"reason"`
+		} `json:"incomplete_details"`
+		StopReason string `json:"stop_reason"`
 		OutputText string `json:"output_text"`
 		Output     []struct {
 			Type    string `json:"type"`
@@ -209,7 +233,8 @@ func (p *AIProxy) extract(raw []byte) (string, error) {
 			} `json:"content"`
 		} `json:"output"`
 		Choices []struct {
-			Message struct {
+			FinishReason string `json:"finish_reason"`
+			Message      struct {
 				Content string `json:"content"`
 			} `json:"message"`
 		} `json:"choices"`
@@ -220,6 +245,18 @@ func (p *AIProxy) extract(raw []byte) (string, error) {
 	}
 	if err := json.Unmarshal(raw, &v); err != nil {
 		return "", fmt.Errorf("unreadable AI response: %v", err)
+	}
+	truncated := false
+	switch p.cfg.AIProtocol {
+	case "anthropic":
+		truncated = v.StopReason == "max_tokens"
+	case "chat":
+		truncated = len(v.Choices) > 0 && v.Choices[0].FinishReason == "length"
+	default:
+		truncated = v.Status == "incomplete" && v.IncompleteDetails != nil && v.IncompleteDetails.Reason == "max_output_tokens"
+	}
+	if truncated {
+		return "", fmt.Errorf("%w (%d tokens)", errTruncated, p.cfg.AIMaxOutputTokens)
 	}
 	var sb strings.Builder
 	switch p.cfg.AIProtocol {
