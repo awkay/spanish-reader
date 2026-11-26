@@ -181,10 +181,12 @@ private fun LessonCard(
                 Text("Page ${(row.lesson.currentPage + 1).coerceAtMost(row.pageCount)} of ${row.pageCount}", style = MaterialTheme.typography.bodySmall)
                 when (val g = row.preGloss) {
                     is PreGlossState.Running -> {
-                        Text("Pre-glossing ${g.done}/${g.total}", style = MaterialTheme.typography.bodySmall)
-                        if (g.total > 0) LinearProgressIndicator(progress = { g.done / g.total.toFloat() }, Modifier.fillMaxWidth().padding(top = 4.dp))
+                        Text(g.progress.describe(), style = MaterialTheme.typography.bodySmall)
+                        val fraction = g.progress.fraction
+                        if (fraction != null) LinearProgressIndicator(progress = { fraction }, Modifier.fillMaxWidth().padding(top = 4.dp))
+                        else LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 4.dp))
                     }
-                    PreGlossState.Waiting -> Text("Pre-gloss waiting for network…", style = MaterialTheme.typography.bodySmall)
+                    is PreGlossState.Waiting -> Text(g.why, style = MaterialTheme.typography.bodySmall)
                     is PreGlossState.Failed -> Text(
                         "Pre-gloss failed: ${g.error}", style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error, maxLines = 2, overflow = TextOverflow.Ellipsis,

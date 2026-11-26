@@ -33,6 +33,7 @@ import org.robolectric.annotation.Config
 import java.util.Collections
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 /** Runs the real worker against a fake OpenAI-compatible server and checks it glosses only the page window. */
 @RunWith(RobolectricTestRunner::class)
@@ -140,5 +141,34 @@ class PreGlossWorkerTest {
         assertIs<ListenableWorker.Result.Success>(run(2, 2)) // page 2 is cached already; only page 3 is new
         assertEquals(setOf("pd"), glossed.map { it.substring(0, 2) }.toSet())
         assertEquals(listOf("pd"), scannedSentences.map { it.substring(0, 2) })
+    }
+
+    @Test
+    fun reportsEachPhaseAndCountsBatchesAsTheyReturn() = runBlocking {
+        app.settings.update { it.copy(wordsPerPage = 50) }
+        app.settings.useConfig(GlosserConfig(GlossProvider.OPENAI_COMPATIBLE, server.url("/v1").toString(), model = "m"))
+        // 2 pages of 50 words; each page is 10 five-word sentences.
+        val text = (0 until 2).joinToString("\n") { p -> (0 until 10).joinToString(" ") { s -> (0 until 5).joinToString(" ") { w -> "p${'a' + p}s${'a' + s}w${'a' + w}" } + "." } }
+        val id = app.lessons.import("T", text)
+        val seen = Collections.synchronizedList(mutableListOf<androidx.work.Data>())
+        val worker = TestListenableWorkerBuilder<PreGlossWorker>(app)
+            .setInputData(workDataOf(PreGlossWorker.KEY_LESSON to id, PreGlossWorker.KEY_FROM_PAGE to 0, PreGlossWorker.KEY_PAGE_COUNT to 2))
+            .setProgressUpdater { _, _, data -> seen += data; androidx.work.impl.utils.futures.SettableFuture.create<Void>().apply { set(null) } }
+            .build()
+        assertIs<ListenableWorker.Result.Success>(worker.doWork())
+
+        fun phase(d: androidx.work.Data) = d.getString(PreGlossWorker.KEY_PHASE)
+        assertEquals(listOf("starting", "sentences", "words"), seen.map(::phase).distinct())
+        val sentences = seen.filter { phase(it) == "sentences" }
+        // Batches of 15 and 5 sentences, run side by side: either may come back first.
+        val counts = sentences.map { it.getInt(PreGlossWorker.KEY_DONE, -1) }
+        assertTrue(counts == listOf(0, 15, 20) || counts == listOf(0, 5, 20), counts.toString())
+        assertEquals(20, sentences.first().getInt(PreGlossWorker.KEY_TOTAL, 0))
+        val words = seen.filter { phase(it) == "words" }
+        assertEquals(listOf(0, 20, 40, 60, 80, 100), words.map { it.getInt(PreGlossWorker.KEY_DONE, -1) }) // every 20-word batch
+        assertEquals(100, words.last().getInt(PreGlossWorker.KEY_TOTAL, 0))
+        assertEquals(0 to 2, seen.last().getInt(PreGlossWorker.KEY_FROM_PAGE, -1) to seen.last().getInt(PreGlossWorker.KEY_TO_PAGE, -1))
+        val last = words.last()
+        assertTrue(last.getLong(PreGlossWorker.KEY_UPDATED, 0) >= last.getLong(PreGlossWorker.KEY_STARTED, Long.MAX_VALUE))
     }
 }

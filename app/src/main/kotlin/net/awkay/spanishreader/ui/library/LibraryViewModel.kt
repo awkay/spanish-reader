@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import net.awkay.spanishreader.SpanishReaderApp
+import net.awkay.spanishreader.core.gloss.PreGlossProgress
 import net.awkay.spanishreader.core.text.Paginator
 import net.awkay.spanishreader.core.text.Tokenizer
 import net.awkay.spanishreader.core.vocab.LessonStats
@@ -20,8 +21,10 @@ import net.awkay.spanishreader.data.LessonEntity
 import net.awkay.spanishreader.gloss.PreGlossWorker
 
 sealed interface PreGlossState {
-    data class Running(val done: Int, val total: Int) : PreGlossState
-    data object Waiting : PreGlossState
+    data class Running(val progress: PreGlossProgress) : PreGlossState
+
+    /** Not running yet: queued behind another run for the lesson, waiting to retry, or waiting for a network. */
+    data class Waiting(val why: String) : PreGlossState
     data class Failed(val error: String) : PreGlossState
 }
 
@@ -52,15 +55,27 @@ class LibraryViewModel(private val app: SpanishReaderApp) : ViewModel() {
                     ?: list.firstOrNull { !it.state.isFinished }
                     ?: list.firstOrNull { it.state == WorkInfo.State.FAILED }?.takeIf { list.none { i -> i.state == WorkInfo.State.SUCCEEDED } }
                 val state = when (info?.state) {
-                    WorkInfo.State.RUNNING -> PreGlossState.Running(
-                        info.progress.getInt(PreGlossWorker.KEY_DONE, 0), info.progress.getInt(PreGlossWorker.KEY_TOTAL, 0),
+                    WorkInfo.State.RUNNING -> PreGlossState.Running(progressOf(info))
+                    WorkInfo.State.BLOCKED -> PreGlossState.Waiting("Pre-gloss queued")
+                    WorkInfo.State.ENQUEUED -> PreGlossState.Waiting(
+                        if (info.runAttemptCount > 0) "Pre-gloss will try again shortly (attempt ${info.runAttemptCount + 1})"
+                        else "Pre-gloss waiting for network…",
                     )
-                    WorkInfo.State.ENQUEUED, WorkInfo.State.BLOCKED -> PreGlossState.Waiting
                     WorkInfo.State.FAILED -> PreGlossState.Failed(info.outputData.getString(PreGlossWorker.KEY_ERROR) ?: "failed")
                     else -> null
                 }
                 if (id == null || state == null) null else id to state
             }.toMap()
+    }
+
+    private fun progressOf(info: WorkInfo): PreGlossProgress {
+        val d = info.progress
+        return PreGlossProgress(
+            PreGlossProgress.Phase.byId(d.getString(PreGlossWorker.KEY_PHASE)),
+            d.getInt(PreGlossWorker.KEY_DONE, 0), d.getInt(PreGlossWorker.KEY_TOTAL, 0),
+            d.getLong(PreGlossWorker.KEY_STARTED, 0), d.getLong(PreGlossWorker.KEY_UPDATED, 0),
+            d.getInt(PreGlossWorker.KEY_FROM_PAGE, 0), d.getInt(PreGlossWorker.KEY_TO_PAGE, 0),
+        )
     }
 
     val rows: StateFlow<List<LessonRow>?> = combine(

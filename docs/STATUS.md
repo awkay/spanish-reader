@@ -52,6 +52,18 @@ BASE_URL=http://localhost:8090 CODE=… PLAYWRIGHT_MODULE=/opt/node22/lib/node_m
 - **Voice**: Tony chose Piper `es_MX-claude-high` (no es-CO voice exists in Piper; Azure has es-CO neural voices if
   ever wanted). Changing it is one env setting, `SR_PIPER_MODEL`.
 
+## Pre-gloss progress on the library cards (2026-11-26; Android)
+- **Tony's request**: see how fast background pre-glossing goes and how close it is to done. The lesson card shows one
+  line plus a bar, e.g. "Glossing words 120/300 · 60 a minute · about 3 min left · pages 4–6"; before that,
+  "Translating sentences 15/45 · …" (that step used to show "0/0" with no bar). Text and maths:
+  `core/.../gloss/PreGlossProgress.kt` (speed shown after 3 s; time left rounded up; "under a minute"; hours past 90 min).
+- `PreGlossWorker` publishes phase, counts, phase start / last update times and the page window through WorkManager
+  progress. Words go out in 20-word batches, two at a time as before, and are counted as each batch returns (it used to
+  report only after each 40 words); sentences in the analyzer's 15-sentence batches, also two at a time.
+- Waiting states are now told apart: "Pre-gloss queued" (behind another run for the lesson), "will try again shortly
+  (attempt n)" (after a failed attempt), "waiting for network…".
+- Tests: `PreGlossProgressTest` (text and maths), `PreGlossWorkerTest.reportsEachPhaseAndCountsBatchesAsTheyReturn`.
+
 ## AI accounts and models (2026-11-22; Android)
 - **Tony's request**: keep any number of AI setups and switch between them without retyping keys. Settings → "AI
   accounts and models" lists saved profiles (`AiProfile` in `app/.../data/SettingsRepository.kt`: name, service, base
